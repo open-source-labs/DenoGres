@@ -1,3 +1,2 @@
-import { Model } from 'denogres'
+import { Model } from '../src/model/Model.ts'
 // user model definition comes here    
-  

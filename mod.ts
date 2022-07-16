@@ -1,4 +1,4 @@
-import { ensureDir, ensureFile } from "https://deno.land/std/fs/ensure_dir.ts";
+import { ensureDir } from "https://deno.land/std/fs/ensure_dir.ts";
 import { parse, config } from "https://deno.land/std@0.148.0/dotenv/mod.ts";
 
 import "https://deno.land/x/dotenv/load.ts";
@@ -6,9 +6,15 @@ import "https://deno.land/x/dotenv/load.ts";
 import { serve } from "https://deno.land/std/http/server.ts";
 import * as postgres from "https://deno.land/x/postgres/mod.ts";
 
+import { tableListQuery, tableConstQuery, columnInfoQuery } from './src/queries/introspection.ts'
+import { sqlDataTypes } from './src/constants/sqlDataTypes.ts';
+
+const POOL_CONNECTIONS = 3;
+
 export const ConnectDb = async () => {
     const pool = new postgres.Pool(Deno.env.get('DATABASE_URI'), POOL_CONNECTIONS, true);
-    return await pool.connect();
+    const connection = await pool.connect();
+    return connection;
 }
 
 export const DisconnectDb = (connection: postgres.PoolClient) => {
@@ -30,9 +36,7 @@ switch(Deno.args[0]) {
         if(envVar.DATABASE_URI === "") {
             console.log('Please enter a valid DATABSE_URI value in .env')
         } else {
-            // QUERY DATABASE
-            const db = ConnectDb();
-
+          introspect();
         }
         console.log(Deno.env.get('DATABASE_URI'))
         break;
@@ -65,6 +69,7 @@ DATABASE_URI=" " // put your database connection URI here!!!
 
 // create db folder in root directory
 // inside the db folder, create db.ts file with db connection logic (with db uri from .env)
+/*
   const dbFilePath = "./db/";
   const dbFileContent = `
 import { serve } from "https://deno.land/std/http/server.ts";
@@ -78,12 +83,13 @@ export const pool = new postgres.Pool(dbURI, POOL_CONNECTIONS, true);
     Deno.writeTextFile(dbFilePath + "db.ts", dbFileContent);
     console.log('db.ts file created under db folder')
   })
+*/
 
 // create moodel folder in root directory
 // inside the model folder, create model.ts file with boilerplate code
   const modelFilePath = "./models/";
   const modelFileContent = `    
-import { Model } from 'denogres'
+import { Model } from './src/mode/Model.ts'
 // user model definition comes here    
   `
   ensureDir(modelFilePath).then(() => {
@@ -93,10 +99,56 @@ import { Model } from 'denogres'
 }
 
 //const dbURI = Deno.env.get('DATABASE_URI');
-const POOL_CONNECTIONS = 3;
+
 // export const pool = new postgres.Pool(dbURI, POOL_CONNECTIONS, true);
 
 // export const createConnection = async (pool: postgres.Pool) => {
 //     return await pool.connect();
 // }
 
+async function introspect() {
+  // QUERY DATABASE
+  const db = await ConnectDb();
+
+  interface TableListObj {
+    table_name: string;
+  }
+
+  const tableList = await db.queryObject(tableListQuery);
+  const columnList = await db.queryObject(columnInfoQuery);
+  const tableConstraints = await db.queryObject(tableConstQuery);
+
+  console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
+  'Constraint', tableConstraints.rows);
+
+  let autoCreatedModels = ``
+
+  // Add Each Table as a property to an Object
+  const tablesObj: Record<string, unknown> = {};
+
+  tableList.rows.forEach(el => {
+    tablesObj[el.table_name] = ``
+  })
+
+  // Add each table column to the corresponding object in tablesObj
+  columnList.rows.forEach(el => {
+    tablesObj[el.table_name] += `${el.column_name}!: ${sqlDataTypes[el.column_type]}\n`;
+  })
+
+  for(let i = 0; i < tableList.rows.length; i++){
+    const tableName = tableList.rows[i].table_name;
+
+    autoCreatedModels += `class ${tableList.rows[i].table_name} extends Model {\n` + 
+    `static table_name = '${tableName}',\n` +
+    `${tablesObj[tableName]}}\n\n`
+  }
+
+  Deno.writeTextFileSync('./models/model.ts', autoCreatedModels, {append: true})
+}
+
+
+/* 
+1. How to display relationships b/t tables
+2. Build the initial parsing and mapping logic (that can be added onto from results of other steps)
+3. The different types of table contraints? Or can the table constraint query be improved upon - BEN
+*/
