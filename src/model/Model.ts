@@ -1,170 +1,175 @@
 import { ConnectDb, DisconnectDb } from '../../mod.ts';
 
 export class Model {
-  table!: string;
-  query = '';
+  static table: string;
+  static columns: Record<string, Record<string, unknown>>;
+  static sql = '';
 
-  // Create records
+  // CREATE TABLE: create table schema in database
+  // input: (table, column datatype)
+  static create(table: string, ...column: string[]) {
+    this.sql += `CREATE TABLE ${table} (`;
+    for (let i = 0; i < column.length; i++) {
+      const words = column[i].toString().split(' ');
+      this.sql += ` ${words[0]} ${words[1]}`;
+      if (i !== column.length - 1) this.sql += ', ';
+    }
+    return this;
+  }
+
+  // INSERT INTO VALUES: add value(s) to column(s) in this table
+  // input: (column = value, ...)
+  static add(...value: string[]) {
+    this.sql += `INSERT INTO ${this.table} (`;
+    for (let i = 0; i < value.length; i++) {
+      const words = value[i].toString().split(' = ');
+      this.sql += ` ${words[0]}`;
+      if (i !== value.length - 1) this.sql += ' ,';
+      else this.sql += ')';
+    }
+    this.sql += ' VALUES (';
+    for (let i = 1; i < value.length; i++) {
+      const words = value[i].toString().split(' = ');
+      this.sql += ` ${words[1]}`;
+      if (i !== value.length - 1) this.sql += ' ,';
+      else this.sql += ')';
+    }
+    return this;
+  }
+
+  // UPDATE SET: update existing records
+  // input: (column = value, ...)
+  static update(...values: string[]) {
+    this.sql += `UPDATE ${this.table} SET`;
+    for (let i = 0; i < values.length; i++) {
+      const words = values[i].toString().split(' = ');
+      this.sql += ` ${words[0]} = '${words[1]}'`;
+      if (i !== values.length - 1) this.sql += ' ,';
+    }
+    return this;
+  }
+
   // Delete records
-  // UPDATE records
 
-  // table1.select(column1).where(column=x)
-  // SELECT
-
-  // let query = '';
-  // table.filter(column, condition)
-  filter(columnName: string, condition?: any, limit?: number) {
-    this.query += `SELECT ${columnName} FROM ${this.table}`;
-    if (condition) this.query += ` WHERE ${columnName} = ${condition}`;
-    if (limit) this.query += ` LIMIT ${limit}`;
-    return this.query;
+  // SELECT FROM: select column(s) from this table
+  // input: (column)
+  static filter(...column: string[]) {
+    this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
+    return this;
   }
 
-  // LIMIT (control number of records returned)
-  // limit(limit: number) {
-  //   query += `LIMIT ${limit}`
-  // }
-
-  // RELATIONSHIPS BETWEEN TABLES DEFINED
-
-  // types: inner, left, right, outer
-  // table1.filter(column, condition).join('inner', column1, column2, table2)
-  join(
-    type: string,
-    column1: string,
-    column2: string,
-    table2: string,
-    condition?: any
-  ) {
-    if (!this.query.includes('SELECT'))
-      this.query += `SELECT ${column1} FROM ${this.table}`;
-    switch (type) {
-      case 'inner':
-        this.query += ` INNER JOIN ${table2}`;
-        break;
-      case 'left':
-        this.query += ` LEFT JOIN ${table2}`;
-        break;
-      case 'right':
-        this.query += ` RIGHT JOIN ${table2}`;
-        break;
-      case 'outer':
-        this.query += ` FULL OUTER JOIN ${table2}`;
-        break;
-      default:
-        return 'Error';
+  // WHERE: add condition(s) to query
+  // input: (column = value)
+  static where(...condition: string[]) {
+    this.sql += ' WHERE';
+    for (let i = 0; i < condition.length; i++) {
+      const words = condition[i].toString().split(' = ');
+      this.sql += ` ${words[0]} = '${words[1]}'`;
+      if (i !== condition.length - 1) this.sql += ' AND';
     }
-    this.query += `ON ${this.table}.${column1} = ${table2}.${column2};`;
-    if (condition) this.query += ` WHERE ${condition}`;
-    return this.query;
+    return this;
   }
 
-  // LEFT JOIN
-  // leftJoin(column1: string, column2: string, table2: string) {
-  //   `SELECT ${column1}
-  //   FROM ${this.table}
-  //   LEFT JOIN ${table2}
-  //   ON ${this.table}.${column1} = ${table2}.${column2};`
-  // }
-  // RIGHT JOIN
-  // rightJoin(column1: string, column2: string, table2: string) {
-  //   `SELECT ${column1}
-  //   FROM ${this.table}
-  //   RIGHT JOIN ${table2}
-  //   ON ${this.table}.${column1} = ${table2}.${column2};`
-  // }
-  // OUTER JOIN
-  // outerJoin(column1: string, column2: string, table2: string, condition: any) {
-  //   `SELECT ${column1}
-  //   FROM ${this.table}
-  //   FULL OUTER JOIN ${table2}
-  //   ON ${this.table}.${column1} = ${table2}.${column2}
-  //   WHERE ${condition};`
-  // }
-  // group by
-  //table.filter(column, condition).sort('group', column, condition, order)
-  sort(type: string, columnName: string, condition?: any, order?: string) {
-    if (type !== 'group' && type !== 'order') return 'Error';
-    if (!this.query.includes('SELECT'))
-      this.query += `SELECT ${columnName} FROM ${this.table}`;
-    if (type === 'group') {
-      this.query += ` WHERE ${condition} GROUP BY ${columnName}`;
-    }
-    if (order) {
-      this.query += ` ORDER BY ${columnName} ${order}`; // order: ASC/DESC
-    }
-    return this.query;
+  // LIMIT: limit number of output rows
+  // input: (limitNumber)
+  static limit(limit: number) {
+    this.sql += ` LIMIT ${limit}`;
+    return this;
   }
 
-  // groupBy(columnName: string, condition: any){
-  //   `SELECT ${columnName}
-  //   FROM ${this.table}
-  //   WHERE ${condition}
-  //   GROUP BY ${columnName}
-  //   ORDER BY ${columnName};`
-  // }
-  // ORDER BY
-  // orderBy(columnName: [string], order: string) {
-  //   `SELECT ${columnName}
-  //   FROM ${this.table}
-  //   ORDER BY ${columnName} ${order};`
-  // }
-  // Average
-  average(columnName: string, condition: any) {
-    `SELECT AVG(${columnName})
-    FROM ${this.table}
-    WHERE ${condition};`;
+  // INNER-LEFT-RIGHT-FULL OUTER JOIN: join two tables together
+  // input: (joinType, column1, column2, table2)
+  static join(type: string, column1: string, column2: string, table2: string) {
+    if (type === 'inner') this.sql += ` INNER JOIN ${table2}`;
+    if (type === 'left') this.sql += ` LEFT JOIN ${table2}`;
+    if (type === 'right') this.sql += ` RIGHT JOIN ${table2}`;
+    if (type === 'full') this.sql += ` FULL JOIN ${table2}`;
+    this.sql += ` ON ${this.table}.${column1} = ${table2}.${column2}`;
+    return this;
   }
-  // Count
-  count(columnName: string, condition: any) {
-    `SELECT COUNT (${columnName})
-    FROM ${this.table}
-    WHERE ${condition};`;
+
+  // GROUP BY-ORDER BY: sort column(s)
+  // input: (sortingMethod, ASC/DESC, column(s))
+  static sort(method: string, order: string, ...column: string[]) {
+    if (method !== 'group' && method !== 'order') return console.log(`Error: sort method should be 'group' or 'order'`);
+    if (method === 'group') {
+      this.sql += ` GROUP BY ${column}`;
+    }
+    if (method === 'order') {
+      this.sql += ` ORDER BY ${column.toString()}`;
+    }
+    if (order !== 'ASC' && order !== 'DESC') return console.log('Error: The order of the sort method should be either ASC or DESC');
+    if (order === 'ASC' || order === 'DESC') {
+      this.sql += ` ${order}`;
+    }
+    return this;
   }
-  // SUM
-  sum(columnName: string, condition: any) {
-    `SELECT SUM(${columnName})
-    FROM ${this.table}
-    WHERE ${condition};`;
+
+  // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
+  // input: (aggregateFunction, column)
+  static calculate(type: string, column: string) {
+    if (type === 'count') this.sql += `SELECT COUNT(${column})`;
+    if (type === 'sum') this.sql += `SELECT SUM(${column})`;
+    if (type === 'min') this.sql += `SELECT MIN(${column})`;
+    if (type === 'max') this.sql += `SELECT MAX(${column})`;
+    if (type === 'average') this.sql += `SELECT AVG(${column})`;
+    else return console.log('Error');
+    this.sql += ` FROM ${this.table}`;
+    return this;
   }
-  // Min
-  min(columnName: string, condition: any) {
-    `SELECT MIN (${columnName})
-    FROM ${this.table}
-    WHERE ${condition};`;
-  }
-  // MAX
-  max(columnName: string, condition: any) {
-    `SELECT MAX(${columnName})
-    FROM ${this.table}
-    WHERE ${condition};`;
+
+  // execute query in database
+  static async query() {
+    const db = await ConnectDb();
+    console.log(this.sql);
+    // const sqlResult = await db.sqlObject(`SELECT species.name FROM people INNER JOIN species ON people.species_id = species._id WHERE people.name = 'Luke Skywalker'`)
+    const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
+    console.log(queryResult.rows);
+    return this;
   }
 }
 
-class Person extends Model {
-  static fields = {
-    name: String,
-    mass: String,
-    hair_color: String,
-    skin_color: String,
-    eye_color: String,
-    birth_year: String,
-    gender: String,
-    species: String
-  }
-}
-const test = new Person();
-test.table = 'people';
-test.filter('name');
-
-test.query;
-// test.filter(people, test.table);
-async function dbqueries() {
-  const db = await ConnectDb();
-  // const queryResult = await db.queryObject('SELECT * from people limit 5')
-  const queryResult = await db.queryObject(test.query); //db.queryObject(Model)
-  console.log(queryResult);
+interface Test {
+  id: number;
+  email: string;
 }
 
-// test.query = Person.filter('name');
-dbqueries();
+class Test extends Model {
+  static table = 'people';
+  static columns = {
+    id: {
+      type: 'number',
+    },
+  };
+}
+
+const testInstance = new Test();
+testInstance.id = 1;
+testInstance.email = 'abcde@gmail.com';
+
+//test.table = 'people';
+// test.filter('name').limit(5); // sql.limit
+// test.filter('name').where('gender','male');
+// Test
+//   .filter('species.name')
+//   .join('outer', 'species_id', '_id', 'species')
+//   .where('people.name = Luke Skywalker');
+// Test
+//   .filter('name', 'gender', 'hair_color')
+//   .where('gender = male', 'hair_color = black');
+Test.filter('name', 'gender').sort('order', 'DESC', 'gender').query();
+
+// Test.calculate('max', 'height');
+
+// class Person extends Model {
+//   static fields = {
+//     name: String,
+//     mass: String,
+//     hair_color: String,
+//     skin_color: String,
+//     eye_color: String,
+//     birth_year: String,
+//     gender: String,
+//     species: String
+//   }
+// }
