@@ -9,6 +9,8 @@ import * as postgres from "https://deno.land/x/postgres/mod.ts";
 import { tableListQuery, tableConstQuery, columnInfoQuery } from './src/queries/introspection.ts'
 import { sqlDataTypes } from './src/constants/sqlDataTypes.ts';
 
+import { createClassName } from './src/functions/StringFormat.ts'
+
 const POOL_CONNECTIONS = 3;
 
 export const ConnectDb = async () => {
@@ -124,23 +126,40 @@ async function introspect() {
   let autoCreatedModels = ``
 
   // Add Each Table as a property to an Object
-  const tablesObj: Record<string, unknown> = {};
+  const interfaceObj: Record<string, unknown> = {};
+  const columnsObj: Record<string, unknown> = {};
 
   tableList.rows.forEach(el => {
-    tablesObj[el.table_name] = ``
+    interfaceObj[el.table_name] = ``;
+    columnsObj[el.table_name] = ``
   })
 
-  // Add each table column to the corresponding object in tablesObj
+  // Add each table column to the corresponding object in intefaceObj and
+  // column details in columnsObj for the columns property
   columnList.rows.forEach(el => {
-    tablesObj[el.table_name] += `${el.column_name}!: ${sqlDataTypes[el.column_type]}\n`;
+    // Add column and type to interface
+    interfaceObj[el.table_name] += `  ${el.column_name}: ${sqlDataTypes[el.column_type]}\n`;
+
+    // Create the static columns property for the class
+    columnsObj[el.table_name] += `  ${el.column_name}: {\n` +
+    `    type: '${el.column_type}',\n`
+    if(el.not_null) columnsObj[el.table_name] += `    notNull: true,\n`
+    columnsObj[el.table_name] += `  },\n`
   })
 
   for(let i = 0; i < tableList.rows.length; i++){
     const tableName = tableList.rows[i].table_name;
+    const className = createClassName(tableName);
 
-    autoCreatedModels += `class ${tableList.rows[i].table_name} extends Model {\n` + 
-    `static table_name = '${tableName}',\n` +
-    `${tablesObj[tableName]}}\n\n`
+    autoCreatedModels += `\nexport interface ${className} {\n` +
+    `${interfaceObj[tableName]}}\n\n`
+
+    autoCreatedModels += `export class ${className} extends Model {\n` + 
+    `  static table_name = '${tableName}';\n` +
+    `  static columns = {\n` +
+    `${columnsObj[tableName]}` +
+    `  }\n` +
+    `}\n`
   }
 
   Deno.writeTextFileSync('./models/model.ts', autoCreatedModels, {append: true})
