@@ -39,9 +39,7 @@ export class Planet extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'planets__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   terrain: {
     type: 'varchar',
@@ -67,9 +65,7 @@ export class SpeciesInFilm extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'species_in_films__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   film_id: {
     type: 'int8',
@@ -97,9 +93,7 @@ export class PeopleInFilm extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'people_in_films__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   }
 }
@@ -119,9 +113,7 @@ export class Film extends Model {
   static columns = {
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'films__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   release_date: {
     type: 'date',
@@ -165,9 +157,7 @@ export class VesselsInFilm extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'vessels_in_films__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   vessel_id: {
     type: 'int8',
@@ -187,9 +177,7 @@ export class PlanetsInFilm extends Model {
   static columns = {
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'planets_in_films__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   planet_id: {
     type: 'int8',
@@ -221,9 +209,7 @@ export class Pilot extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'pilots__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   }
 }
@@ -267,9 +253,7 @@ export class Vessel extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'vessels__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   passengers: {
     type: 'int4',
@@ -316,9 +300,7 @@ export class Species extends Model {
   },
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'species__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   name: {
     type: 'varchar',
@@ -367,9 +349,7 @@ export class Person extends Model {
   static columns = {
   _id: {
     type: 'int4',
-    notNull: true,
-    defaultVal: 'people__id_seq',
-    autoIncrement: true,
+    notNull: true
   },
   height: {
     type: 'int4',
@@ -423,9 +403,61 @@ export class StarshipSpec extends Model {
   },
   _id: {
     type: 'int4',
+    notNull: true
+  },
+  vessel_id: {
+    type: 'int8',
     notNull: true,
-    defaultVal: 'starship_specs__id_seq',
-    autoIncrement: true,
+  },
+  }
+}
+
+export interface Test {
+  MGLT: string
+  hyperdrive_rating: string
+  _id: number
+  vessel_id: bigint
+}
+
+export class Test extends Model {
+  static table_name = 'test';
+  static columns = {
+  MGLT: {
+    type: 'varchar',
+  },
+  hyperdrive_rating: {
+    type: 'varchar',
+  },
+  _id: {
+    type: 'int4',
+    notNull: true
+  },
+  vessel_id: {
+    type: 'int8',
+    notNull: true,
+  },
+  }
+}
+
+export interface Test2 {
+  MGLT: string
+  hyperdrive_rating: string
+  _id: number
+  vessel_id: bigint
+}
+
+export class Test2 extends Model {
+  static table_name = 'test2';
+  static columns = {
+  MGLT: {
+    type: 'varchar',
+  },
+  hyperdrive_rating: {
+    type: 'varchar',
+  },
+  _id: {
+    type: 'int4',
+    notNull: true
   },
   vessel_id: {
     type: 'int8',
