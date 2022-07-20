@@ -1,32 +1,18 @@
-import { parse, config } from "https://deno.land/std@0.148.0/dotenv/mod.ts";
+import { parse, config } from './deps.ts'
 
 import "https://deno.land/x/dotenv/load.ts";
-
-import * as postgres from "https://deno.land/x/postgres/mod.ts";
 
 import { tableListQuery, tableConstQuery, columnInfoQuery } from './src/queries/introspection.ts'
 import { sqlDataTypes } from './src/constants/sqlDataTypes.ts';
 
 import { createClassName } from './src/functions/StringFormat.ts'
+import { ConnectDb, DisconnectDb } from './src/functions/Db.ts'
 
 import { init } from './src/functions/init.ts'
 import { sync } from './src/functions/sync.ts'
 
-const POOL_CONNECTIONS = 3;
-
-export const ConnectDb = async () => {
-    const pool = new postgres.Pool(Deno.env.get('DATABASE_URI'), POOL_CONNECTIONS, true);
-    const connection = await pool.connect();
-    return connection;
-}
-
-export const DisconnectDb = (connection: postgres.PoolClient) => {
-   connection.release();
-}
-
 switch(Deno.args[0]) {
     case '--init':
-        console.log('Initialized')
         init();
         break;
 
@@ -45,7 +31,7 @@ switch(Deno.args[0]) {
         break;
     }
     case '--db-sync': {
-      sync();
+      //sync();
       break;
     }
     default:
@@ -76,7 +62,7 @@ async function introspect() {
   console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
   'Constraint', tableConstraints.rows);
 
-  let autoCreatedModels = `import { Model } from '../src/model/Model.ts'\n// user model definition comes here `
+  let autoCreatedModels = `import { Model } from '../src/class/Model.ts'\n// user model definition comes here `
 
   // Add Each Table as a property to an Object
   const interfaceObj: Record<string, unknown> = {};
