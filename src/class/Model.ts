@@ -1,5 +1,5 @@
-import { ConnectDb, DisconnectDb } from '../../mod.ts';
-import { BelongsTo, FIELD_TYPE } from '../../Model_Creation/association'
+import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
+//import { BelongsTo, FIELD_TYPE } from '../../Model_Creation/association'
 
 export class Model {
   static table: string;

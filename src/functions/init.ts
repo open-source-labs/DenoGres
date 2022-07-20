@@ -17,7 +17,7 @@ DATABASE_URI=" " // put your database connection URI here!!!
 // inside the model folder, create model.ts file with boilerplate code
     const modelFilePath = "./models/";
     const modelFileContent = `    
-import { Model } from './src/mode/Model.ts'
+import { Model } from './src/class/Model.ts'
 // user model definition comes here    
     `
     ensureDir(modelFilePath).then(() => {

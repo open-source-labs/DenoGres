@@ -4,15 +4,19 @@ import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/int
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
 
-const db = await ConnectDb();
+const introspectDb = async () => {
+    const db = await ConnectDb();
 
-const tableList = await db.queryObject(tableListQuery);
-//const columnList = await db.queryObject(columnInfoQuery);
-//const tableConstraints = await db.queryObject(tableConstQuery);
+    const tableList = await db.queryObject(tableListQuery);
+    //const columnList = await db.queryObject(columnInfoQuery);
+    //const tableConstraints = await db.queryObject(tableConstQuery);
 
-console.log('Table List', tableList.rows)
-//console.log('Column Info', columnList.rows), 
-//console.log('Constraint', tableConstraints.rows);
+    console.log('Table List', tableList.rows)
+    //console.log('Column Info', columnList.rows), 
+    //console.log('Constraint', tableConstraints.rows);
+    return tableList;
+}
+
 
 const jsonify = (text: string): Record<string, unknown>[] => {
         // remove extraneous text
@@ -53,6 +57,7 @@ const createTable = (table_name: string, columns: Record<string, Record<string, 
 }
 
 export const sync = () => {
+    const tableList = introspectDb();
     // import typescript model of tables
     let modelText = Deno.readTextFileSync('./src/functions/temp_model.ts');
 

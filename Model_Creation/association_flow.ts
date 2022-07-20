@@ -1,5 +1,5 @@
 import { Model } from '../src/model/Model.ts'
-import { ConnectDb, DisconnectDb } from '../mod.ts';
+import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 
 
 abstract class Association {
