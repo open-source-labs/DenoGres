@@ -1,15 +1,16 @@
-import { ensureDir } from "https://deno.land/std/fs/ensure_dir.ts";
 import { parse, config } from "https://deno.land/std@0.148.0/dotenv/mod.ts";
 
 import "https://deno.land/x/dotenv/load.ts";
 
-import { serve } from "https://deno.land/std/http/server.ts";
 import * as postgres from "https://deno.land/x/postgres/mod.ts";
 
 import { tableListQuery, tableConstQuery, columnInfoQuery } from './src/queries/introspection.ts'
 import { sqlDataTypes } from './src/constants/sqlDataTypes.ts';
 
 import { createClassName } from './src/functions/StringFormat.ts'
+
+import { init } from './src/functions/init.ts'
+import { sync } from './src/functions/sync.ts'
 
 const POOL_CONNECTIONS = 3;
 
@@ -42,7 +43,11 @@ switch(Deno.args[0]) {
         }
         console.log(Deno.env.get('DATABASE_URI'))
         break;
-}
+    }
+    case '--db-sync': {
+      sync();
+      break;
+    }
     default:
         console.log(displayHelpMsg());
 }
@@ -56,64 +61,12 @@ function displayHelpMsg() {
 // flags:
 // -h, --help: display help message
 
-function init() {
-// create .env file in root directory 
-  const envFilePath = "./";
-  const envFileContent = `
-# See the documentation for more detail: // detail here!
-DATABASE_URI=" " // put your database connection URI here!!!
-  `
-  ensureDir(envFilePath).then(() => {
-    Deno.writeTextFile(envFilePath + ".env", envFileContent);
-    // + add .env in gitignor file (if no gitignore file, make one)
-    console.log('.env file created')
-  })
-
-// create db folder in root directory
-// inside the db folder, create db.ts file with db connection logic (with db uri from .env)
-/*
-  const dbFilePath = "./db/";
-  const dbFileContent = `
-import { serve } from "https://deno.land/std/http/server.ts";
-import * as postgres from "https://deno.land/x/postgres/mod.ts";
-const dbURI=Deno.env.get('DATABASE_URI')// fetching from .env file's DATABASE_URI
-const POOL_CONNECTIONS = 3; // number of connections (user can define this)
-// e.g. Create a database pool with three connections that are lazily established
-export const pool = new postgres.Pool(dbURI, POOL_CONNECTIONS, true);
-  `
-  ensureDir(dbFilePath).then(() => {
-    Deno.writeTextFile(dbFilePath + "db.ts", dbFileContent);
-    console.log('db.ts file created under db folder')
-  })
-*/
-
-// create moodel folder in root directory
-// inside the model folder, create model.ts file with boilerplate code
-  const modelFilePath = "./models/";
-  const modelFileContent = `    
-import { Model } from './src/mode/Model.ts'
-// user model definition comes here    
-  `
-  ensureDir(modelFilePath).then(() => {
-    Deno.writeTextFile(modelFilePath + "model.ts", modelFileContent);
-    console.log('model.ts file created under model folder')
-  })
-}
-
-//const dbURI = Deno.env.get('DATABASE_URI');
-
-// export const pool = new postgres.Pool(dbURI, POOL_CONNECTIONS, true);
-
-// export const createConnection = async (pool: postgres.Pool) => {
-//     return await pool.connect();
-// }
-
 async function introspect() {
   // QUERY DATABASE
   const db = await ConnectDb();
 
   interface TableListObj {
-    table_name: string;
+    table: string;
   }
 
   const tableList = await db.queryObject(tableListQuery);
@@ -123,12 +76,13 @@ async function introspect() {
   console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
   'Constraint', tableConstraints.rows);
 
-  let autoCreatedModels = ``
+  let autoCreatedModels = `import { Model } from '../src/model/Model.ts'\n// user model definition comes here `
 
   // Add Each Table as a property to an Object
   const interfaceObj: Record<string, unknown> = {};
   const columnsObj: Record<string, unknown> = {};
 
+  // Add property to each object for each table in the database
   tableList.rows.forEach(el => {
     interfaceObj[el.table_name] = ``;
     columnsObj[el.table_name] = ``
@@ -143,10 +97,25 @@ async function introspect() {
     // Create the static columns property for the class
     columnsObj[el.table_name] += `  ${el.column_name}: {\n` +
     `    type: '${el.column_type}',\n`
-    if(el.not_null) columnsObj[el.table_name] += `    notNull: true,\n`
-    columnsObj[el.table_name] += `  },\n`
+    if(el.not_null) columnsObj[el.table_name] += `    notNull: true,\n`;
+    // column constraints go here (default value and primary key)
+    // Create defaultVal and/or auto increment property
+    if (el.col_default && el.col_default.includes('nextval(')) {
+      columnsObj[el.table_name] += `    defaultVal: ${el.col_default.replaceAll("nextval(", "")
+      .replaceAll("::regclass)", "")},\n`;
+      columnsObj[el.table_name] += `    autoIncrement: true,\n`;
+    }
+    else if (el.col_default) columnsObj[el.table_name] += `    defaultVal: ${el.col_default}\n`;
+    columnsObj[el.table_name] += `  },\n` // closing out the column object
   })
 
+  tableConstraints.rows.forEach(el => {
+
+  })
+  
+
+
+    // Add the information for each table to the final output string
   for(let i = 0; i < tableList.rows.length; i++){
     const tableName = tableList.rows[i].table_name;
     const className = createClassName(tableName);
@@ -159,12 +128,12 @@ async function introspect() {
     `  static columns = {\n` +
     `${columnsObj[tableName]}` +
     `  }\n` +
+    // Add any table constraint information below here
     `}\n`
   }
-
-  Deno.writeTextFileSync('./models/model.ts', autoCreatedModels, {append: true})
+  // Create the model.ts file
+  Deno.writeTextFileSync('./models/model.ts', autoCreatedModels)
 }
-
 
 /* 
 1. How to display relationships b/t tables

@@ -1,8 +1,20 @@
 import { ConnectDb, DisconnectDb } from '../../mod.ts';
+import { BelongsTo, FIELD_TYPE } from '../../Model_Creation/association'
 
 export class Model {
   static table: string;
-  static columns: Record<string, Record<string, unknown>>;
+  static columns: {
+    [key: string]: {
+        type: string,
+        primaryKey?: boolean,
+        notNull?: boolean,
+        unique?: boolean,
+        checks?: string[],
+    }
+  };
+  static checks: string[];
+  static unique: string[];
+  static primaryKey: string[];
   static sql = '';
 
   // CREATE TABLE: create table schema in database
@@ -216,7 +228,28 @@ export class Model {
     console.log(queryResult.rows);
     return this;
   }
-}
+
+/* BELONGS TO... WIP
+  // create foreign key on this model
+  static belongsTo(targetModel:Model, options?:unknown) {
+    const foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
+    const columnAtt = { 
+      type: targetModel.columns.id.type,
+      association: { rel_type:'belongsTo', model: targetModel }
+     }
+    this.columns[foreignKey_ColumnName] = columnAtt 
+
+    let query = `ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
+    ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table}
+    ;`
+    //createForeignKeyQuery(this.table_name, foreignKey_ColumnName, this.columns[foreignKey_ColumnName])
+    //console.log('belongsTo createForeignKeyQuery: \n', query) 
+    // e.g. createForeignKeyQuery('users', 'profiles_id', users.profile_id)
+    return new BelongsTo(this, targetModel, query)
+  }
+*/
+
+} //end of Model class
 
 interface Test {
   id: number;
