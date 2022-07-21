@@ -71,7 +71,7 @@ export async function dbPull() {
       `${interfaceObj[tableName]}}\n\n`
   
       autoCreatedModels += `export class ${className} extends Model {\n` + 
-      `  static table_name = '${tableName}';\n` +
+      `  static table = '${tableName}';\n` +
       `  static columns = {\n` +
       `${columnsObj[tableName]}` +
       `  }\n` +
