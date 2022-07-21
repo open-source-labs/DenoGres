@@ -285,13 +285,13 @@ class Test extends Model {
   };
 }
 
-const testInstance = new Test();
-testInstance.name = 'kristen';
+// const testInstance = new Test();
+// testInstance.name = 'kristen';
 // testInstance.hair_color = 'black' ;
 // testInstance.save();
-testInstance.hair_color = 'brown'
+// testInstance.hair_color = 'brown'
 // testInstance.update();
-Test.select('*').where('name = kristen').query();
+// Test.select('*').where('name = kristen').query();
 
 // testInstance = {
 //   id: 1
