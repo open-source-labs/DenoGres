@@ -4,7 +4,7 @@ import "https://deno.land/x/dotenv/load.ts";
 
 import { init } from './src/functions/init.ts'
 import { sync } from './src/functions/sync.ts'
-import { introspect } from './src/functions/introspect.ts'
+import { dbPull } from './src/functions/dbPull.ts'
 
 switch(Deno.args[0]) {
     case '--init':
@@ -20,7 +20,7 @@ switch(Deno.args[0]) {
         if(envVar.DATABASE_URI === "") {
             console.log('Please enter a valid DATABASE_URI value in .env')
         } else {
-          introspect();
+          dbPull();
         }
         console.log(Deno.env.get('DATABASE_URI'))
         break;
