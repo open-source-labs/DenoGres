@@ -102,7 +102,7 @@ export class Model {
   // WHERE: add condition(s) to query
   // input: (column = value, AND/OR column = value, ...)
   static where(...condition: string[]) {
-    if (this.sql = '') this.sql += `SELECT * FROM ${this.table}`;
+    if (this.sql === '') this.sql += `SELECT * FROM ${this.table}`;
     this.sql += ' WHERE';
     let words: string[];
     for (let i = 0; i < condition.length; i++) {
