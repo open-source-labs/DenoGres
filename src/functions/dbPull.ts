@@ -22,7 +22,7 @@ export async function dbPull() {
     const tableConstraints = await db.queryObject(tableConstQuery);
   
     //console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
-    'Constraint', tableConstraints.rows);
+    //'Constraint', tableConstraints.rows);
   
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here `
   
