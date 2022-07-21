@@ -1,88 +1,91 @@
+import { ConnectDb, DisconnectDb } from './Db.ts'
 import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/introspection.ts'
-import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
 
-import { createClassName } from '../functions/StringFormat.ts'
-import { ConnectDb, DisconnectDb } from '../functions/Db.ts'
+// INTERFACES
+interface ITableQueryRecords {
+    table_name: string
+}
 
+interface IColumnQueryRecords {
+    schemaname: string
+    table_name: string
+    column_name: string
+    column_type: string
+    col_default: unknown
+    not_null: boolean
+}
 
-export async function introspect() {
-    // QUERY DATABASE
+interface IConstraint {
+  schemaname: string
+  table_name: string
+  conname: string
+}
+
+// TYPE GUARD FUNCTIONS
+const recordObjectType = (record: object): record is ITableQueryRecords => {
+    return 'table_name' in record;
+}
+
+const colRecordObjectType = (record: object): record is IColumnQueryRecords => {
+    return 'schemaname' in record && 'table_name' in record && 'column_name' in record &&
+        'column_type' in record && 'col_default' in record && 'not_null' in record;
+}
+
+const constraintObjectType = (record: object): record is IConstraint => {
+    return 'schemaname' in record && 'table_name' in record && 'conname' in record;
+}
+
+// Introspection Function
+const getDbData = async () => {
     const db = await ConnectDb();
-  
-    interface TableListObj {
-      table: string;
-    }
-  
+
     const tableList = await db.queryObject(tableListQuery);
     const columnList = await db.queryObject(columnInfoQuery);
-    const tableConstraints = await db.queryObject(tableConstQuery);
-  
-    console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
-    'Constraint', tableConstraints.rows);
-  
-    let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here `
-  
-    // Add Each Table as a property to an Object
-    const interfaceObj: Record<string, unknown> = {};
-    const columnsObj: Record<string, unknown> = {};
-  
-    // Add property to each object for each table in the database
-    tableList.rows.forEach(el => {
-      interfaceObj[el.table_name] = ``;
-      columnsObj[el.table_name] = ``
-    })
-  
-    // Add each table column to the corresponding object in intefaceObj and
-    // column details in columnsObj for the columns property
-    columnList.rows.forEach(el => {
-      // Add column and type to interface
-      interfaceObj[el.table_name] += `  ${el.column_name}: ${sqlDataTypes[el.column_type]}\n`;
-  
-      // Create the static columns property for the class
-      columnsObj[el.table_name] += `  ${el.column_name}: {\n` +
-      `    type: '${el.column_type}',\n`
-      if (el.not_null) columnsObj[el.table_name] += `    notNull: true,\n`;
-      // column constraints go here (default value and primary key)
-      // Create defaultVal and/or auto increment property
-      if (el.col_default && el.col_default.includes('nextval(')) {
-        columnsObj[el.table_name] += `    defaultVal: ${el.col_default.replaceAll("nextval(", "")
-          .replaceAll("::regclass)", "")},\n`;
-        columnsObj[el.table_name] += `    autoIncrement: true,\n`;
-      }
-      else if (el.col_default) columnsObj[el.table_name] += `    defaultVal: ${el.col_default}\n`;
-      columnsObj[el.table_name] += `  },\n` // closing out the column object
-    })
-  
-    tableConstraints.rows.forEach(el => {
-      // If constraint includes primary key, parse the primary key name and add to that column in table object
-        if (el.conname.includes("PRIMARY KEY")){
-          // let key = '';
-          // for (let i = 12; i < el.conname.length - 1; i++){
-          //   key += el.conname[i];
-          // }
-          columnsObj[el.table_name] += `    primaryKey: true,\n`;
-        }
-        // columnsObj[el.table_name] += `    primaryKey: true,\n`;
-    })
-    
-  
-  
-      // Add the information for each table to the final output string
-    for(let i = 0; i < tableList.rows.length; i++){
-      const tableName = tableList.rows[i].table_name;
-      const className = createClassName(tableName);
-  
-      autoCreatedModels += `\nexport interface ${className} {\n` +
-      `${interfaceObj[tableName]}}\n\n`
-  
-      autoCreatedModels += `export class ${className} extends Model {\n` + 
-      `  static table_name = '${tableName}';\n` +
-      `  static columns = {\n` +
-      `${columnsObj[tableName]}` +
-      `  }\n` +
-      // Add any table constraint information below here
-      `}\n`
+    const constraintList = await db.queryObject(tableConstQuery);
+
+    DisconnectDb(db);
+
+    return {
+        tableList: tableList.rows,
+        columnList: columnList.rows,
+        constraintList: constraintList.rows
     }
-    // Create the model.ts file
-    Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
-  }
+}
+
+export const introspect = async () => {
+    const { tableList, columnList, constraintList } = await getDbData();
+
+    // convert table list to an object
+    const tableListObj: Record<string, Record<string, Record<string, unknown>>> = {};
+
+    // Add each table to the tableListObj for easier access
+    tableList.forEach(el => {
+        if(typeof el === 'object' && el !== null && 'table_name' in el){
+            if(recordObjectType(el)) tableListObj[String(el.table_name)] = {};
+        }
+    });
+    // {person: {}, films: {}, species: {}}
+    // Add columns to the table's object in the tableListObj for easier look-up
+    columnList.forEach(el => {
+        if(typeof el === 'object' && el !== null && colRecordObjectType(el)){
+            tableListObj[el.table_name][el.column_name] = {};
+
+            const refObj = tableListObj[el.table_name][el.column_name];
+
+            refObj['column_type'] = el.column_type;
+            refObj['col_default'] = el.col_default;
+            refObj['not_null'] = el.not_null;
+    }
+    })
+
+    // Parse through the constraint table
+    constraintList.forEach(el => {
+        if (typeof el === 'object' && el !== null && constraintObjectType(el)){
+            if (el.conname.includes("PRIMARY KEY")){
+                const key = el.conname.replaceAll("PRIMARY KEY (","").replaceAll(")","");
+                tableListObj[el.table_name][key]['primaryKey'] = true;
+            }
+        }
+    })
+    return tableListObj;
+};

@@ -11,7 +11,7 @@ export class Model {
         notNull?: boolean,
         unique?: boolean,
         checks?: string[],
-        defaultVal?: null,
+        defaultVal?: string,
         autoIncrement?: boolean,
     }
   };
