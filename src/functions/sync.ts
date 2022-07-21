@@ -79,5 +79,3 @@ export const sync = async () => {
 
     //console.log(createTableQueries)
 }
-
-sync()
