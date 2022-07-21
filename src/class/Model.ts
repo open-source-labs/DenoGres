@@ -29,6 +29,17 @@ export class Model {
   //   return this;
   // }
 
+  save() {
+    Model.sql += `INSERT INTO ${Object.getPrototypeOf(this).constructor.table} (${Object.keys(this).toString()}) VALUES (`;
+    const values = Object.values(this);
+    for (let i = 0; i < values.length; i++) {
+      Model.sql += ` '${values[i]}'`
+      if (i !== values.length - 1) Model.sql += ' ,';
+      else Model.sql += ')';
+    }
+    return Model.query();
+  }
+
   // INSERT INTO VALUES: add value(s) to column(s) in this table
   // input: (column = value, ...)
   static add(...value: string[]) {
@@ -53,26 +64,34 @@ export class Model {
 
   // UPDATE SET: update existing records
   // input: (column = value, ...)
-  static update(...values: string[]) {
-    this.sql += `UPDATE ${this.table} SET`;
+  update() {
+    console.log(Object.getPrototypeOf(this).constructor.table);
+    Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
+    const keys = Object.keys(this);
+    const values = Object.values(this);
     for (let i = 0; i < values.length; i++) {
-      const words = values[i].toString().split(' = ');
-      this.sql += ` ${words[0]} = '${words[1]}'`;
-      if (i !== values.length - 1) this.sql += ' ,';
+      Model.sql += ` ${keys[i]} = '${values[i]}'`
+      if (i !== values.length - 1) Model.sql += ' ,';
     }
-    return this;
+    // for (let i = 0; i < values.length; i++) {
+    //   const words = values[i].toString().split(' = ');
+    //   Model.sql += ` ${words[0]} = '${words[1]}'`;
+    //   if (i !== values.length - 1) Model.sql += ' ,';
+    // }
+    return Model.query();
   }
 
   // DELETE FROM: delete table
   // input: delete()
   static delete() {
+    console.log(this.table)
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
 
   // SELECT FROM: select column(s) from this table
   // input: (column)
-  static filter(...column: string[]) {
+  static select(...column: string[]) {
     this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
     return this;
   }
@@ -134,48 +153,33 @@ export class Model {
     return this;
   }
 
-  // INNER-LEFT-RIGHT-FULL OUTER JOIN: join two tables together
-  // input: (joinType, column1, column2, table2)
-  static join(type: string, column1: string, column2: string, table2: string) {
-    if (
-      type !== 'inner' &&
-      type !== 'left' &&
-      type !== 'right' &&
-      type !== 'full'
-    )
-      console.log(
-        `Error in join method: type argument should be 'inner', 'left', 'right', or 'full'`
-      );
-    if (type === 'inner') this.sql += ` INNER JOIN ${table2}`;
-    if (type === 'left') this.sql += ` LEFT JOIN ${table2}`;
-    if (type === 'right') this.sql += ` RIGHT JOIN ${table2}`;
-    if (type === 'full') this.sql += ` FULL JOIN ${table2}`;
-    this.sql += ` ON ${this.table}.${column1} = ${table2}.${column2}`;
+  // INNER JOIN: selects records with matching values on both tables
+  // input: (column1, column2, table2)
+  static innerJoin(column1: string, column2: string, table2: string) {
+    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
-  // GROUP BY-ORDER BY: sort column(s)
-  // input: (sortingMethod, ASC/DESC, column(s))
-  // static sort(method: string, order: string, ...column: string[]) {
-  //   if (method !== 'group' && method !== 'order')
-  //     console.log(
-  //       `Error in sort method: method argument should be 'group' or 'order'`
-  //     );
-  //   if (method === 'group') {
-  //     this.sql += ` GROUP BY ${column}`;
-  //   }
-  //   if (method === 'order') {
-  //     this.sql += ` ORDER BY ${column.toString()}`;
-  //   }
-  //   if (order !== 'ASC' && order !== 'DESC')
-  //     console.log(
-  //       `Error in sort method: order argument should be 'ASC' or 'DESC'`
-  //     );
-  //   if (order === 'ASC' || order === 'DESC') {
-  //     this.sql += ` ${order}`;
-  //   }
-  //   return this;
-  // }
+  // LEFT JOIN: selects records from this table and matching values on table2
+  // input: (column1, column2, table2)
+  static leftJoin(column1: string, column2: string, table2: string){
+    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    return this;
+  }
+  
+  // RIGHT JOIN: selects records from table2 and matching values on this table
+  // input: (column1, column2, table2)
+  static rightJoin(column1: string, column2: string, table2: string) {
+    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    return this;
+  }
+
+  // FULL JOIN: selects all records when a match exists in either table
+  // input: (column1, column2, table2)
+  static fullJoin(column1: string, column2: string, table2: string){
+    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    return this;
+  }
 
   // GROUP BY: group rows with same values
   static group(...column: string[]) {
@@ -183,7 +187,7 @@ export class Model {
     return this;
   }
 
-  // ORDER BY: 
+  // ORDER BY: sort column(s) by ascending or descending order
   static order(order: string, ...column: string[]) {
       this.sql += ` ORDER BY ${column.toString()}`;
       
@@ -199,26 +203,32 @@ export class Model {
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   // input: (aggregateFunction, column)
-  static calculate(type: string, column: string) {
-    if (
-      type !== 'count' &&
-      type !== 'sum' &&
-      type !== 'min' &&
-      type !== 'max' &&
-      type !== 'average'
-    )
-      console.log(
-        `Error in calculate method: type argument should be 'count', 'sum', 'min', 'max', or 'average'`
-      );
-    if (type === 'count') this.sql += `SELECT COUNT(${column})`;
-    if (type === 'sum') this.sql += `SELECT SUM(${column})`;
-    if (type === 'min') this.sql += `SELECT MIN(${column})`;
-    if (type === 'max') this.sql += `SELECT MAX(${column})`;
-    if (type === 'average') this.sql += `SELECT AVG(${column})`;
-    this.sql += ` FROM ${this.table}`;
+  
+  static count(column: string) {
+   this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
+   return this;
+  }
+
+  static sum(column: string){
+    this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
+    return this;
+  }
+  
+  static avg(column: string) {
+    this.sql += `SELECT AVG(${column}) FROM ${this.table}`
     return this;
   }
 
+  static min(column: string){
+    this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
+    return this;
+  }
+
+  static max(column: string) {
+    this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
+    return this;
+  }
+  
   // execute query in database
   static async query() {
     const db = await ConnectDb();
@@ -253,7 +263,8 @@ export class Model {
 
 interface Test {
   id: number;
-  email: string;
+  name: string;
+  hair_color: string
 }
 
 class Test extends Model {
@@ -262,12 +273,27 @@ class Test extends Model {
     id: {
       type: 'number',
     },
+    name: {
+      type: 'string'
+    }
   };
 }
 
 const testInstance = new Test();
-testInstance.id = 1;
-testInstance.email = 'abcde@gmail.com';
+testInstance.name = 'kristen';
+// testInstance.hair_color = 'black' ;
+// testInstance.save();
+testInstance.hair_color = 'brown'
+// testInstance.update();
+Test.select('*').where('name = kristen').query();
+
+// testInstance = {
+//   id: 1
+//   name: 'kristen'
+//   save: () =>{
+ //  `INSERT ${this.Object.keys} 
+//}
+// }
 
 //test.table = 'people';
 // test.filter('name').limit(5); // sql.limit
@@ -280,7 +306,7 @@ testInstance.email = 'abcde@gmail.com';
 //   .filter('name', 'gender', 'hair_color')
 //   .where('gender = male', 'hair_color = black');
 // Test.filter('name', 'gender', 'height').group('people.name', 'people.gender', 'people.height').having('AVG(height) > 100').query();
-Test.filter('name').group('people.name').having('SUM(height) > 100').query();
+// Test.filter('name').group('people.name').having('SUM(height) > 100').query();
 //SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 // 
 // Test.filter('height').query();
 // Test.add('name = Tesia', 'hair_color = purple', 'gender = female').query();
@@ -289,9 +315,10 @@ Test.filter('name').group('people.name').having('SUM(height) > 100').query();
 //   .query();
 // Test.update('gender = male').query();
 // Test.delete().where('hair_color = purple').query();
-// Test.calculate('count', 'name').having('COUNT(name) > 5').query()
+// Test.calculate('count', 'name');
 // Test.calculate('average', 'height').query()
-
+// Test.sql = `SELECT UPPER(name) FROM people;`
+// Test.query()
 // Test.calculate('max', 'height');
 
 // class Person extends Model {
