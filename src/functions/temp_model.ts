@@ -409,6 +409,10 @@ export class StarshipSpec extends Model {
     type: 'int8',
     notNull: true,
   },
+  new_column: {
+    type: 'int4',
+    notNull: true
+  }
   }
 }
 

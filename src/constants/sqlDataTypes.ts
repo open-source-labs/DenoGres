@@ -8,3 +8,10 @@ export const sqlDataTypes = {
 
     varchar: 'string'
 }
+
+// temp
+export const FIELD_TYPE:{[typename:string]:string} = {
+    number: 'INT',
+    string: 'VARCHAR (50)',
+    uuid: 'UUID'
+  }

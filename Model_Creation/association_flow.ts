@@ -1,59 +1,31 @@
-import { Model } from '../src/model/Model.ts'
+import { Model } from '../src/class/Model.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
+//import { BelongsTo } from '../src/class/Association.ts'
 
-
-abstract class Association {
-  source: typeof Model;
-  target: typeof Model;
-  associationQuery:any;
-
-  constructor(source:typeof Model, target:typeof Model, associationQuery:any) {
-    this.source = source;
-    this.target = target;
-    this.associationQuery = associationQuery
-  }
-  abstract association_name:string;
-  async syncAssociation() {
-    console.log('syncing db...')
-    console.log(`executing ${this.associationQuery}`)
-    const db = await ConnectDb();
-    try {      
-      await db.queryObject(this.associationQuery)  
-    } catch (error) {
-      console.error(error)
-    } finally {
-      DisconnectDb(db)
-    }
-  }
-}
-
-class BelongsTo extends Association {
-  // Profile.belongsTo(User) // 
-  // created foreign key on this(source) model
-  constructor(source:typeof Model, target:typeof Model, query:any) {
-    super(source, target, query);
-  }
-  association_name = `${this.source.name}_belongsTo_${this.target.name}`
-}
-
-
-
+// sample test
 class User extends Model {
-  static table_name = 'users';
+  static table = 'users';
   static columns = {
     id: { type:'uuid', primaryKey: true },
     firstName: { type:'string', notNull: true },
     lastName: { type:'string', notNull: false }
   }
 }
-// Database Sync
-//User.sync() // create table in the database
 
 class Profile extends Model {
-  static table_name = 'profiles';
+  static table = 'profiles';
   static columns = {
     id: { type:'number', primaryKey: true, autoIncrement:true },
     email: { type:'string', notNull: true },
     address: { type:'string', notNull: false }
   }
 }
+
+// belongsTo test...
+const profile_user = Profile.belongsTo(User)
+//console.log("Asso-Query:", profile_user.associationQuery)
+console.log(profile_user)
+//console.log(profile_user.getAccesorName)
+//profile_user.syncAssociation() // db sync
+const p = new Profile(); // p.getUser()...?
+//p.getUser() // works but with type error

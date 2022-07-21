@@ -1,22 +1,22 @@
-import { Model } from '../src/model/Model.ts';
+import { Model } from '../src/class/Model.ts';
+
+interface User {
+    _id: number,
+    user_name: string
+}
 
 class User extends Model {
-    static tablename = 'users'
-    static fields = {
+    static table = 'users'
+    static columns = {
         _id: {type: 'number', primaryKey: true},
-        user_name: 'string'
+        user_name: {type: 'string'}
     }
-
-    _id!: number;
-    user_name!: string;
 }
 
 const user1 = new User();
 user1.user_name = 'one';
+user1.test();
 
-console.log(user1)
-
-const user2 = new User()
-console.log(user2)
-
-console.log(User.fields)
+// console.log(user1.save()) // Insert SQL statement
+// user1.user_name = 'two'
+// console.log(user1.update())

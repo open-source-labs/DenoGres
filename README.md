@@ -2,6 +2,7 @@
 Import Path: https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts
 
 To install CLI: deno install --allow-read --allow-write --allow-net --allow-env --name denogres https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts
+Ensure deno is added to PATH
 
 **How to use DenoGres methods**
  
@@ -53,4 +54,3 @@ Model.prototype.calculate(type: string, column: string)
 
 **Execute query in database
 Model.prototype.query()
-
