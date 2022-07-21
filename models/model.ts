@@ -1,4 +1,4 @@
-import { Model } from '../src/model/Model.ts'
+import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'
 // user model definition comes here 
 export interface Planet {
   surface_water: string

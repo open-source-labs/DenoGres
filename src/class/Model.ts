@@ -1,5 +1,6 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
-//import { BelongsTo, FIELD_TYPE } from '../../Model_Creation/association'
+import { BelongsTo } from './Association.ts'
+import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
 
 export class Model {
   static table: string;
@@ -10,6 +11,8 @@ export class Model {
         notNull?: boolean,
         unique?: boolean,
         checks?: string[],
+        defaultVal?: null,
+        autoIncrement?: boolean,
     }
   };
   static checks: string[];
@@ -80,6 +83,7 @@ export class Model {
   // WHERE: add condition(s) to query
   // input: (column = value, AND/OR column = value, ...)
   static where(...condition: string[]) {
+    // add select from if not in query
     this.sql += ' WHERE';
     let words: string[];
     for (let i = 0; i < condition.length; i++) {
@@ -229,9 +233,9 @@ export class Model {
     return this;
   }
 
-/* BELONGS TO... WIP
+  //BELONGS TO
   // create foreign key on this model
-  static belongsTo(targetModel:Model, options?:unknown) {
+  static belongsTo(targetModel:typeof Model, options?:unknown) {
     const foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
     const columnAtt = { 
       type: targetModel.columns.id.type,
@@ -240,14 +244,16 @@ export class Model {
     this.columns[foreignKey_ColumnName] = columnAtt 
 
     let query = `ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
-    ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table}
+    ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
     ;`
-    //createForeignKeyQuery(this.table_name, foreignKey_ColumnName, this.columns[foreignKey_ColumnName])
-    //console.log('belongsTo createForeignKeyQuery: \n', query) 
-    // e.g. createForeignKeyQuery('users', 'profiles_id', users.profile_id)
-    return new BelongsTo(this, targetModel, query)
+    return new BelongsTo(this, targetModel, query) // add foreignKey_ColumnName 
   }
-*/
+
+
+  test() {
+    console.log(Object.keys(this))
+    console.log(Object.getPrototypeOf(this).constructor.table)
+  }
 
 } //end of Model class
 
@@ -280,7 +286,9 @@ testInstance.email = 'abcde@gmail.com';
 //   .filter('name', 'gender', 'hair_color')
 //   .where('gender = male', 'hair_color = black');
 // Test.filter('name', 'gender', 'height').group('people.name', 'people.gender', 'people.height').having('AVG(height) > 100').query();
-Test.filter('name').group('people.name').having('SUM(height) > 100').query();
+// Test.filter('name').group('people.name').having('SUM(height) > 100').query();
+// running other file prints out this query...?
+
 //SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 // 
 // Test.filter('height').query();
 // Test.add('name = Tesia', 'hair_color = purple', 'gender = female').query();
