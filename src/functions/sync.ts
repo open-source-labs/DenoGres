@@ -58,24 +58,39 @@ export const sync = async () => {
 
     console.log(tableListObj)
 
-    modelArray.forEach(el => {
+    modelArray.forEach(el => { // el is an object representing a table
         // SQL statements for tables not currently in the database
         if(!tableListObj[String(el.table_name)]){
             createTableQueries += createTable(String(el.table_name), el.columns);
         } else {
             // Table exists - need to confirm all database structure aligns with model structure
             // iterate over the columns within the modelArray property
-            Object.keys(el.columns).forEach(colMA => {
+            Object.keys(el.columns).forEach(colMA => { // colMA is a column name
                 // if the column currently doesn't exist in the db
                 if(!tableListObj[el.table_name][colMA]) {
-                    alterTableQueries += `ALTER TABLE ${el.table_name} ADD` +
-                    ` ${colMA} ${el.columns[colMA].type}`
+                    alterTableQueries += `ALTER TABLE ${el.table_name} ADD ${colMA} `
+
+                    // Make column type SERIAL if auto-increment is true
+                    if(el.columns[colMA].autoIncrement){
+                        alterTableQueries += `SERIAL`
+                    } else {
+                        // Otherwise use 
+                        alterTableQueries += `${el.columns[colMA].type}`
+                    }
+
+                    // NEED TO CHECK ON COMPOSITE PRIMARY KEYS
+                    if(el.columns[colMA].primaryKey) alterTableQueries += ` PRIMARY KEY`
+
                     // NEED TO IMPLEMENT OTHER INFORMATION
-                    console.log(alterTableQueries)
+
+                    // add semi-colon at end of alter
+                    alterTableQueries += ';'
                 }
             })
+
+            // MAYBE PARSE THE ALTERTABLE QUERY FOR MULTIPLE PRIMARY KEY STATEMENTS? REMOVE AND THEN extract column name
         }
     })
 
-    //console.log(createTableQueries)
+    console.log(createTableQueries, alterTableQueries)
 }

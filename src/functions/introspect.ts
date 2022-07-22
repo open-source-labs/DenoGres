@@ -73,8 +73,13 @@ export const introspect = async () => {
             const refObj = tableListObj[el.table_name][el.column_name];
 
             refObj['column_type'] = el.column_type;
-            refObj['col_default'] = el.col_default;
             refObj['not_null'] = el.not_null;
+
+            if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
+                refObj['autoIncrement'] = true;
+            } else {
+                refObj['col_default'] = el.col_default;
+            }
     }
     })
 
