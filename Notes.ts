@@ -141,4 +141,10 @@ user.id = 1 // -> works
 user.name = 'Jane Doe'
 
 user.save(); -> INSERT users(id, name) values (1, 'Jane Doe')
+
+PRIMARY KEY
+If multiple columns are the primary key it needs to be added compositely NOT on each column
+IMPORTANT FOR INTROSPECTION AND SYNC
+
+NEED TO CONFIRM HOW TO EDIT/ADD TO COMPOSITE PRIMARY KEYS
 */
