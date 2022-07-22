@@ -45,6 +45,7 @@ const getDbData = async () => {
 
     DisconnectDb(db);
 
+    console.log('tableList=', tableList, 'columnList=', columnList, 'constraintList=', constraintList);
     return {
         tableList: tableList.rows,
         columnList: columnList.rows,

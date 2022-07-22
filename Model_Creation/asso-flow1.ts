@@ -1,4 +1,5 @@
 import { Model } from '../src/class/Model.ts'
+
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 //import { BelongsTo } from '../src/class/Association.ts'
 
@@ -12,6 +13,11 @@ class User extends Model {
   }
 }
 
+interface Profile {
+  id:number;
+  email:string;
+  address?:string;
+}
 class Profile extends Model {
   static table = 'profiles';
   static columns = {
@@ -24,8 +30,14 @@ class Profile extends Model {
 // belongsTo test...
 const profile_user = Profile.belongsTo(User)
 //console.log("Asso-Query:", profile_user.associationQuery)
-console.log(profile_user)
+console.log("Profile Model:", Profile)
 //console.log(profile_user.getAccesorName)
 //profile_user.syncAssociation() // db sync
 const p = new Profile(); // p.getUser()...?
-//p.getUser() // works but with type error
+p.email = '111@111.com'
+p.user_id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
+p.getUser() // works but with type error
+
+
+// # this is test db with few test tables
+// DATABASE_URI="postgres://mwgfqyrs:uiGLKJB7o3O2zNJJIiCrGu3JBwFNqoQn@jelani.db.elephantsql.com/mwgfqyrs"

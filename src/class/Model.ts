@@ -240,25 +240,49 @@ export class Model {
     // const sqlResult = await db.sqlObject(`SELECT species.name FROM people INNER JOIN species ON people.species_id = species._id WHERE people.name = 'Luke Skywalker'`)
     const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
     console.log(queryResult.rows);
-    return this;
+    //return this; // WE CHANGED THIS
+    return queryResult.rows;
   }
 
   //BELONGS TO
-  // create foreign key on this model
-  static belongsTo(targetModel:typeof Model, options?:unknown) {
-    const foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
+  // create foreign key on this model (if not exist)
+  static belongsTo(targetModel:typeof Model, options?:any) {
+
+    // foreign key of the source table
+    // ======== ADD LOGIC TO CHECK EXISTING FOREIGN KEY IN THE MODEL =======
+    const foreignKey_ColumnName = options ? options?.foreignKey_ColumnName 
+      || `${targetModel.name.toLocaleLowerCase()}_id`
+       : `${targetModel.name.toLocaleLowerCase()}_id`
+
+       // mapping column name of target table
+    // ======== ADD LOGIC TO FIND PRIMARY KEY IN THE TARGET MODEL =======
+    // default should be primary key of target table
+
+    // need to find primary key for the target model... how?
+    // const targetModel_PrimaryKey_ColumnName = 'id'
+    //const mappingTarget_ColumnName = options ? options.mappingTarget_ColumnName || 
+
     const columnAtt = { 
-      type: targetModel.columns.id.type,
+      type: targetModel.columns._id.type,
       association: { rel_type:'belongsTo', model: targetModel }
      }
     this.columns[foreignKey_ColumnName] = columnAtt 
 
-    let query = `ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
+    const mappingDetails = {
+      foreignKey_ColumnName : foreignKey_ColumnName,
+      mappingTarget_ColumnName : 'id',// hardcoded as 'id' here now. Could be extend to have other than id, or user can have options to choose mapping key
+    }
+
+    let associationQuery = `ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
     ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
     ;`
-    return new BelongsTo(this, targetModel, query) // add foreignKey_ColumnName 
-  }
+    // this will NOT executed unless use explictly execute sync() on association instance created below
 
+    console.log('mappingDetails:', mappingDetails)
+    console.log('belongsTo Query:', associationQuery)
+    
+    return new BelongsTo(this, targetModel, associationQuery, mappingDetails) 
+  }
 
   test() {
     console.log(Object.keys(this))
