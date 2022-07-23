@@ -7,7 +7,7 @@ abstract class Association {
   associationQuery:any;
   mappingDetails:any;
 
-  constructor(source:typeof Model, target:typeof Model, associationQuery:any, mappingDetails:any) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, associationQuery:string) {
     this.source = source;
     this.target = target;
     this.associationQuery = associationQuery
@@ -95,6 +95,7 @@ function addMethodToModel<T extends BelongsTo>(association:T, targetModel:typeof
   //console.log(methodName)
   Object.defineProperty(targetModel.prototype, ModelMethod, {
     enumerable: false, 
+    //writable: true,
     value() {
       return association.getAssociatedData(this)
     } // 'this' is the instance calling 'ModelMethod' method

@@ -38,6 +38,3 @@ p.email = '111@111.com'
 p.user_id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
 p.getUser() // works but with type error
 
-
-// # this is test db with few test tables
-// DATABASE_URI="postgres://mwgfqyrs:uiGLKJB7o3O2zNJJIiCrGu3JBwFNqoQn@jelani.db.elephantsql.com/mwgfqyrs"
