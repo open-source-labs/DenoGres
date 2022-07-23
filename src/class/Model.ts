@@ -15,7 +15,7 @@ export class Model {
   static checks: string[];
   static unique: string[];
   static primaryKey: string[];
-  static sql = '';
+  private static sql = '';
 
   // CREATE TABLE: create table schema in database
   // input: (table, column datatype)
@@ -28,21 +28,102 @@ export class Model {
   //   }
   //   return this;
   // }
+  // static id: string;
+  // static finalID: string;
 
-  save() {
-    Model.sql += `INSERT INTO ${Object.getPrototypeOf(this).constructor.table} (${Object.keys(this).toString()}) VALUES (`;
+  private async primaryKey() {
+    Model.sql =
+      `SELECT a.attname
+      FROM pg_index i
+      JOIN pg_attribute a ON a.attrelid = i.indrelid
+      AND a.attnum = ANY(i.indkey)
+      WHERE i.indrelid = '${Object.getPrototypeOf(this).constructor.table}'::regclass
+      AND i.indisprimary`;
+    const pk = await Model.query();
+    return pk[0].attname;
+  }
+
+  async save() {
+    const table = Object.getPrototypeOf(this).constructor.table
+    const keys = Object.keys(this)
     const values = Object.values(this);
+
+    Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
-      Model.sql += ` '${values[i]}'`
+      Model.sql += ` '${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ' ,';
       else Model.sql += ')';
     }
-    return Model.query();
+    await Model.query();
+
+    const pk = await this.primaryKey();
+
+    Model.sql += `SELECT ${pk} FROM ${table} WHERE`
+    for (let i = 0; i < values.length; i++) {
+      Model.sql += ` ${keys[i]} = '${values[i]}'`;
+      if (i !== values.length - 1) Model.sql += ' AND';
+    }
+    const pkObj = await Model.query();
+    this[pk] = pkObj[0][pk]
+
+    // Model.sql += `INSERT INTO ${Object.getPrototypeOf(this).constructor.table} (${Object.keys(this).toString()}) VALUES (`;
+    // const values = Object.values(this);
+    // for (let i = 0; i < values.length; i++) {
+    //   Model.sql += ` '${values[i]}'`
+    //   if (i !== values.length - 1) Model.sql += ' ,';
+    //   else Model.sql += ')';
+    // }
+    // Model.query();
+    // Model.sql = '';
+    // Model.id = `SELECT id FROM ${Object.getPrototypeOf(this).constructor.table} WHERE ${Object.keys(this)[0]} = ${Object.values(this)[0]}`
+    // Model.query();
+
+    return this;
   }
+
+  async update() {
+    const pk = await this.primaryKey();
+
+    // console.log(pk[0])
+    Model.sql = '';
+    Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
+    const keys = Object.keys(this);
+    // console.log(keys)
+    const values = Object.values(this).filter(value => value !== this[pk]);
+    // console.log(values)
+    for (let i = 0; i < values.length; i++) {
+      Model.sql += ` ${keys[i]} = '${values[i]}'`;
+      if (i !== values.length - 1) Model.sql += ' ,';
+    }
+    // console.log(this)
+    // console.log(this[pk])
+    Model.sql += ` WHERE ${pk} = ${this[pk]}`
+    return await Model.query();
+
+    // console.log(Model.id);
+    // Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
+    // //this {name: 'kristen', hair_color: 'black'}
+    // // 
+    // const keys = Object.keys(this);
+    // const values = Object.values(this);
+    // for (let i = 0; i < values.length; i++) {
+    //   Model.sql += ` ${keys[i]} = '${values[i]}'`
+    //   if (i !== values.length - 1) Model.sql += ' ,';
+    }
+
+    // const primaryKey = `SELECT a.attname
+    // FROM   pg_index i
+    // JOIN   pg_attribute a ON a.attrelid = i.indrelid
+    //                      AND a.attnum = ANY(i.indkey)
+    // WHERE  i.indrelid = '${Object.getPrototypeOf(this).constructor.table}'::regclass
+    // AND    i.indisprimary`;
+
+    // return Model;
+  
 
   // INSERT INTO VALUES: add value(s) to column(s) in this table
   // input: (column = value, ...)
-  static add(...value: string[]) {
+  static insert(...value: string[]) {
     //['name = Tesia', 'hair_color = purple', 'gender = female']
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
@@ -64,21 +145,14 @@ export class Model {
 
   // UPDATE SET: update existing records
   // input: (column = value, ...)
-  update() {
-    console.log(Object.getPrototypeOf(this).constructor.table);
-    Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
-    const keys = Object.keys(this);
-    const values = Object.values(this);
-    for (let i = 0; i < values.length; i++) {
-      Model.sql += ` ${keys[i]} = '${values[i]}'`
-      if (i !== values.length - 1) Model.sql += ' ,';
+  static edit(...condition: string[]) {
+    this.sql += `UPDATE ${this.table} SET`;
+    for (let i = 0; i < condition.length; i++) {
+      const words = condition[i].toString().split(' = ');
+      this.sql += ` ${words[0]} = '${words[1]}'`;
+      if (i !== condition.length - 1) this.sql += ' ,';
     }
-    // for (let i = 0; i < values.length; i++) {
-    //   const words = values[i].toString().split(' = ');
-    //   Model.sql += ` ${words[0]} = '${words[1]}'`;
-    //   if (i !== values.length - 1) Model.sql += ' ,';
-    // }
-    return Model.query();
+    return this;
   }
 
   // DELETE FROM: delete table
@@ -97,8 +171,12 @@ export class Model {
   }
 
   // WHERE: add condition(s) to query
-  // input: (column = value, AND/OR column = value, ...)
+  // input: (NOT column x value, AND/OR NOT column x value, ...)
+  // input: (column LIKE value, OR column NOT LIKE value)
   static where(...condition: string[]) {
+    //this.sql = '';
+    if (this.sql === '') this.sql += `SELECT * FROM ${this.table}`;
+    //this.sql += `SELECT * FROM ${this.table} WHERE`;
     this.sql += ' WHERE';
     let words: string[];
     for (let i = 0; i < condition.length; i++) {
@@ -117,6 +195,9 @@ export class Model {
       } else if (condition[i].includes(' <= ')) {
         words = condition[i].toString().split(' <= ');
         this.sql += ` ${words[0]} <= '${words[1]}'`;
+      } else if (condition[i].includes(' LIKE ')) {
+        words = condition[i].toString().split(' LIKE ');
+        this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
     return this;
@@ -202,7 +283,7 @@ export class Model {
   }
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
-  // input: (aggregateFunction, column)
+  // input: (column)
   
   static count(column: string) {
    this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
@@ -230,13 +311,15 @@ export class Model {
   }
   
   // execute query in database
-  static async query() {
+  static async query(print?: string) {
     const db = await ConnectDb();
-    console.log(this.sql);
+    // const pk = await this.primaryKey();
+    if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     // const sqlResult = await db.sqlObject(`SELECT species.name FROM people INNER JOIN species ON people.species_id = species._id WHERE people.name = 'Luke Skywalker'`)
     const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
-    console.log(queryResult.rows);
-    return this;
+    // if (!this.sql.includes('SELECT a.attname') && !this.sql.includes('UPDATE') && !this.sql.includes('INSERT')) console.log(queryResult.rows);
+    this.sql = '';
+    return queryResult.rows;
   }
 
 /* BELONGS TO... WIP
@@ -262,7 +345,7 @@ export class Model {
 } //end of Model class
 
 interface Test {
-  id: number;
+  _id: number;
   name: string;
   hair_color: string
 }
@@ -270,7 +353,7 @@ interface Test {
 class Test extends Model {
   static table = 'people';
   static columns = {
-    id: {
+    _id: {
       type: 'number',
     },
     name: {
@@ -280,12 +363,17 @@ class Test extends Model {
 }
 
 const testInstance = new Test();
+testInstance.name = 'tesia';
+testInstance.hair_color = 'black' ;
+await testInstance.save();
+// // Test {name = 'kristen', hair_color = 'black'}
+// // testInstance.hair_color = 'brown'
 testInstance.name = 'kristen';
-// testInstance.hair_color = 'black' ;
-// testInstance.save();
-testInstance.hair_color = 'brown'
-// testInstance.update();
-Test.select('*').where('name = kristen').query();
+// // Test {name = 'tesia', hair_color: 'brown'}
+await testInstance.update();
+
+
+// Test.select('*').where('_id = 143').query();
 
 // testInstance = {
 //   id: 1
