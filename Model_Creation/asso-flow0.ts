@@ -5,7 +5,6 @@ import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 // testing Person.belongsTo(Species)
 
 
-
 interface Species {
   _id: number
   name: string
@@ -24,8 +23,9 @@ class Species extends Model {
     name: {
       type: 'varchar',
       notNull: true,
+    }
   }
-}
+  static foreignKey = []
 }
 
 interface Person {
@@ -47,6 +47,7 @@ class Person extends Model {
       type: 'int8',
     },  
   }
+  static foreignKey = []
 }
 
 
@@ -63,14 +64,14 @@ class Person extends Model {
 //const luke = result.rows[0]
 
 
-const test = await Person.where('name = Luke Skywalker').query()
-console.log("luke: ",test)
+//const test = await Person.where('name = Luke Skywalker').query()
+//console.log("luke: ",test)
 const luke = new Person();
 luke._id = 1;
 luke.species_id = 1n;
-const a = Person.belongsTo(Species, { foreignKey_ColumnName: 'species_id'})
-// console.log(Person)
+await Person.belongsTo(Species)
+//console.log("Person Model: ", Person.foreignKey)
 
-// luke.getSpecies();
+luke.getSpecies();
 
 

@@ -18,7 +18,29 @@ interface IColumnQueryRecords {
 interface IConstraint {
   schemaname: string
   table_name: string
-  conname: string
+  condef: string
+  contype: string
+}
+
+interface ITableListObj {
+    [key: string]: {
+        columns: {
+            [key: string]: {
+                type: string,
+                primaryKey?: boolean,
+                notNull?: boolean,
+                unique?: boolean,
+                checks?: string[],
+                defaultVal?: unknown,
+                autoIncrement?: boolean,
+                association?: { rel_type: string, model: unknown, mappedCol: string}
+            }
+        };
+        checks: string[];
+        unique?: string[];
+        primaryKey?: string[];
+        association?: { rel_type: string, model: unknown, mappedCol: string}
+    }
 }
 
 // TYPE GUARD FUNCTIONS
@@ -32,8 +54,9 @@ const colRecordObjectType = (record: object): record is IColumnQueryRecords => {
 }
 
 const constraintObjectType = (record: object): record is IConstraint => {
-    return 'schemaname' in record && 'table_name' in record && 'conname' in record;
+    return 'schemaname' in record && 'table_name' in record && 'condef' in record;
 }
+
 
 // Introspection Function
 const getDbData = async () => {
@@ -45,7 +68,7 @@ const getDbData = async () => {
 
     DisconnectDb(db);
 
-    console.log('tableList=', tableList, 'columnList=', columnList, 'constraintList=', constraintList);
+    //console.log('tableList=', tableList, 'columnList=', columnList, 'constraintList=', constraintList);
     return {
         tableList: tableList.rows,
         columnList: columnList.rows,
@@ -57,41 +80,56 @@ export const introspect = async () => {
     const { tableList, columnList, constraintList } = await getDbData();
 
     // convert table list to an object
-    const tableListObj: Record<string, Record<string, Record<string, unknown>>> = {};
+    const tableListObj: ITableListObj = {};
 
     // Add each table to the tableListObj for easier access
     tableList.forEach(el => {
         if(typeof el === 'object' && el !== null && 'table_name' in el){
-            if(recordObjectType(el)) tableListObj[String(el.table_name)] = {};
+            if(recordObjectType(el)) tableListObj[String(el.table_name)] = {columns: {}, checks: []};
         }
     });
-    // {person: {}, films: {}, species: {}}
-    // Add columns to the table's object in the tableListObj for easier look-up
+
     columnList.forEach(el => {
         if(typeof el === 'object' && el !== null && colRecordObjectType(el)){
-            tableListObj[el.table_name][el.column_name] = {};
+            tableListObj[el.table_name].columns[el.column_name] = {type: el.column_type};
 
-            const refObj = tableListObj[el.table_name][el.column_name];
+            const refObj = tableListObj[el.table_name].columns[el.column_name];
 
-            refObj['column_type'] = el.column_type;
-            refObj['not_null'] = el.not_null;
+            refObj['notNull'] = el.not_null;
 
             if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
                 refObj['autoIncrement'] = true;
             } else {
-                refObj['col_default'] = el.col_default;
+                refObj['defaultVal'] = el.col_default;
             }
     }
     })
 
-    // Parse through the constraint table
+    // PRIMARY & UNIQUE & CHECK CONSTRAINTS
     constraintList.forEach(el => {
         if (typeof el === 'object' && el !== null && constraintObjectType(el)){
-            if (el.conname.includes("PRIMARY KEY")){
-                const key = el.conname.replaceAll("PRIMARY KEY (","").replaceAll(")","");
-                tableListObj[el.table_name][key]['primaryKey'] = true;
+            if (el.contype === 'p'){
+                const key = el.condef.replaceAll("PRIMARY KEY (","").replaceAll(")","");
+                if (key.includes(',')){
+                    tableListObj[el.table_name].primaryKey = key.replaceAll(' ', '').split(',');
+                } else {
+                tableListObj[el.table_name].columns[key]['primaryKey'] = true;
+                }
+            } else if (el.contype === 'u'){
+                const key = el.condef.replaceAll("UNIQUE (","").replaceAll(")","");
+                // Check if it's composite
+                if(key.includes(',')) {
+                    tableListObj[el.table_name].unique = key.replaceAll(' ', '').split(',')
+                } else {
+                    tableListObj[el.table_name].columns[key]['unique'] = true;
+                }
+            }
+            else if (el.contype === 'c'){
+                const val = el.condef.replaceAll("CHECK (", "").replace(")",""); 
+                    tableListObj[el.table_name].checks.push(val);       
             }
         }
     })
+    
     return tableListObj;
 };
