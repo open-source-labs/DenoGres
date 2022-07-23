@@ -6,14 +6,14 @@ SELECT class.relname AS table_name
 
 export const tableConstQuery = `
 SELECT tables.schemaname, class.relname AS table_name, 
-  pg_get_constraintdef(pg_constraint.oid) AS conname
+  pg_get_constraintdef(pg_constraint.oid) AS condef, contype
   FROM pg_class class
-
   INNER JOIN pg_tables tables on class.relname = tables.tablename
-  LEFT JOIN pg_constraint ON class.oid = pg_constraint.conrelid
+  INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   WHERE tables.schemaname = 'public'
 ;
 `
+
 export const columnInfoQuery = `
 SELECT tables.schemaname, 
 class.relname AS table_name,

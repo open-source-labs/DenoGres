@@ -1,4 +1,4 @@
-import { Model } from '../src/model/Model.ts'
+import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'
 // user model definition comes here 
 export interface Planet {
   surface_water: string
@@ -14,7 +14,7 @@ export interface Planet {
 }
 
 export class Planet extends Model {
-  static table_name = 'planets';
+  static table = 'planets';
   static columns = {
   surface_water: {
     type: 'varchar',
@@ -42,6 +42,7 @@ export class Planet extends Model {
     notNull: true,
     defaultVal: 'planets__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   terrain: {
     type: 'varchar',
@@ -59,7 +60,7 @@ export interface SpeciesInFilm {
 }
 
 export class SpeciesInFilm extends Model {
-  static table_name = 'species_in_films';
+  static table = 'species_in_films';
   static columns = {
   species_id: {
     type: 'int8',
@@ -70,6 +71,7 @@ export class SpeciesInFilm extends Model {
     notNull: true,
     defaultVal: 'species_in_films__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   film_id: {
     type: 'int8',
@@ -85,7 +87,7 @@ export interface PeopleInFilm {
 }
 
 export class PeopleInFilm extends Model {
-  static table_name = 'people_in_films';
+  static table = 'people_in_films';
   static columns = {
   film_id: {
     type: 'int8',
@@ -100,6 +102,7 @@ export class PeopleInFilm extends Model {
     notNull: true,
     defaultVal: 'people_in_films__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   }
 }
@@ -115,13 +118,14 @@ export interface Film {
 }
 
 export class Film extends Model {
-  static table_name = 'films';
+  static table = 'films';
   static columns = {
   _id: {
     type: 'int4',
     notNull: true,
     defaultVal: 'films__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   release_date: {
     type: 'date',
@@ -157,7 +161,7 @@ export interface VesselsInFilm {
 }
 
 export class VesselsInFilm extends Model {
-  static table_name = 'vessels_in_films';
+  static table = 'vessels_in_films';
   static columns = {
   film_id: {
     type: 'int8',
@@ -168,6 +172,7 @@ export class VesselsInFilm extends Model {
     notNull: true,
     defaultVal: 'vessels_in_films__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   vessel_id: {
     type: 'int8',
@@ -183,13 +188,14 @@ export interface PlanetsInFilm {
 }
 
 export class PlanetsInFilm extends Model {
-  static table_name = 'planets_in_films';
+  static table = 'planets_in_films';
   static columns = {
   _id: {
     type: 'int4',
     notNull: true,
     defaultVal: 'planets_in_films__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   planet_id: {
     type: 'int8',
@@ -209,7 +215,7 @@ export interface Pilot {
 }
 
 export class Pilot extends Model {
-  static table_name = 'pilots';
+  static table = 'pilots';
   static columns = {
   vessel_id: {
     type: 'int8',
@@ -224,6 +230,7 @@ export class Pilot extends Model {
     notNull: true,
     defaultVal: 'pilots__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   }
 }
@@ -245,7 +252,7 @@ export interface Vessel {
 }
 
 export class Vessel extends Model {
-  static table_name = 'vessels';
+  static table = 'vessels';
   static columns = {
   name: {
     type: 'varchar',
@@ -270,6 +277,7 @@ export class Vessel extends Model {
     notNull: true,
     defaultVal: 'vessels__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   passengers: {
     type: 'int4',
@@ -309,7 +317,7 @@ export interface Species {
 }
 
 export class Species extends Model {
-  static table_name = 'species';
+  static table = 'species';
   static columns = {
   language: {
     type: 'varchar',
@@ -319,6 +327,7 @@ export class Species extends Model {
     notNull: true,
     defaultVal: 'species__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   name: {
     type: 'varchar',
@@ -363,13 +372,14 @@ export interface Person {
 }
 
 export class Person extends Model {
-  static table_name = 'people';
+  static table = 'people';
   static columns = {
   _id: {
     type: 'int4',
     notNull: true,
     defaultVal: 'people__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   height: {
     type: 'int4',
@@ -413,7 +423,7 @@ export interface StarshipSpec {
 }
 
 export class StarshipSpec extends Model {
-  static table_name = 'starship_specs';
+  static table = 'starship_specs';
   static columns = {
   MGLT: {
     type: 'varchar',
@@ -426,6 +436,7 @@ export class StarshipSpec extends Model {
     notNull: true,
     defaultVal: 'starship_specs__id_seq',
     autoIncrement: true,
+    primaryKey: true,
   },
   vessel_id: {
     type: 'int8',

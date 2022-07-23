@@ -1,5 +1,6 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
-//import { BelongsTo, FIELD_TYPE } from '../../Model_Creation/association'
+import { BelongsTo } from './Association.ts'
+import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
 
 export class Model {
   static table: string;
@@ -10,13 +11,16 @@ export class Model {
         notNull?: boolean,
         unique?: boolean,
         checks?: string[],
+        defaultVal?: string,
+        autoIncrement?: boolean,
+        association?: { rel_type: string, model: typeof Model, mappedCol: string}
     }
   };
   static checks: string[];
   static unique: string[];
   static primaryKey: string[];
   private static sql = '';
-
+  static foreignKey: { columns: string[], mappedColumns: string[], rel_type: string, model: typeof Model }[];
   // CREATE TABLE: create table schema in database
   // input: (table, column datatype)
   // static create(table: string, ...column: string[]) {
@@ -322,25 +326,80 @@ export class Model {
     return queryResult.rows;
   }
 
-/* BELONGS TO... WIP
-  // create foreign key on this model
-  static belongsTo(targetModel:Model, options?:unknown) {
-    const foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
-    const columnAtt = { 
-      type: targetModel.columns.id.type,
-      association: { rel_type:'belongsTo', model: targetModel }
-     }
-    this.columns[foreignKey_ColumnName] = columnAtt 
+  //BELONGS TO
+  // create foreign key on this model (if not exist)
+  static async belongsTo(targetModel:typeof Model, options?:any) {
+    // this table name : this.table
+    // target table name : targetModel.table
+    let foreignKey_ColumnName:string
+    let associationQuery = ''
 
-    let query = `ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
-    ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table}
-    ;`
-    //createForeignKeyQuery(this.table_name, foreignKey_ColumnName, this.columns[foreignKey_ColumnName])
-    //console.log('belongsTo createForeignKeyQuery: \n', query) 
-    // e.g. createForeignKeyQuery('users', 'profiles_id', users.profile_id)
-    return new BelongsTo(this, targetModel, query)
+    // foreign key of the this table for target table (string or null)
+    const existingForeignKey = await getForeignKey(this.table, targetModel.table)
+    console.log('EXISTING FOREIGN KEY: ', existingForeignKey)
+
+    // primary key of target table
+    const targetTablePrimaryKey = await getprimaryKey(targetModel.table)
+    console.log('TARGET MODEL PRIME KEY: ', targetTablePrimaryKey)
+    // (stretch?) user can have options to choose mapping key other than primary key
+
+    // IF foreign key (constraints already exist in this table)
+    if(!existingForeignKey) {
+      foreignKey_ColumnName = existingForeignKey
+      const columnAtt = { 
+        //type: targetModel.columns[targetTablePrimaryKey].type,
+        association: { rel_type: 'belongsTo', model: targetModel, mappedCol: targetTablePrimaryKey } 
+       }
+      Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
+      //this.columns[foreignKey_ColumnName] = columnAtt 
+      
+    } else {
+      // creating new foreign key
+      //foreignKey_ColumnName = options ? options?.foreignKey_ColumnName : `${targetModel.name.toLocaleLowerCase()}_id`
+      // option... later...
+      foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
+      const columnAtt = { 
+        type: targetModel.columns[targetTablePrimaryKey].type,
+        association: { rel_type: 'belongsTo', model: targetModel, mappedCol: targetTablePrimaryKey } 
+       }
+      this.columns[foreignKey_ColumnName] = columnAtt 
+
+      // only if there's NO existing association or existing foreign key
+      associationQuery = `
+      ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
+      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
+      ;` // and this will NOT executed unless use explictly execute sync() on association instance created below
+      //console.log('associationQuery:', associationQuery)
+    }
+
+    // Add table constraints to static property 'foreignKay'
+    this.foreignKey.push({
+      columns:[foreignKey_ColumnName],
+      mappedColumns: [targetTablePrimaryKey],
+      rel_type: 'belongsTo',
+      model: targetModel
+    })
+
+    const mappingDetails = {
+      association_type: 'belongsTo',
+      association_name: `${this.name}_belongsTo_${targetModel.name}`,
+      targetModel: targetModel,
+      foreignKey_ColumnName : foreignKey_ColumnName,
+      mappingTarget_ColumnName : targetTablePrimaryKey,
+    }
+    // maybe making associations object in Model class? 
+    // e.g.
+    // { Person_belongsTo_Species:mappingDetails }
+
+    //console.log('mappingDetails:', mappingDetails)
+        
+    return new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
   }
-*/
+
+  test() {
+    console.log(Object.keys(this))
+    console.log(Object.getPrototypeOf(this).constructor.table)
+  }
 
 } //end of Model class
 
@@ -362,16 +421,15 @@ class Test extends Model {
   };
 }
 
-const testInstance = new Test();
-testInstance.name = 'tesia';
-testInstance.hair_color = 'black' ;
-await testInstance.save();
+// const testInstance = new Test();
+// testInstance.name = 'tesia';
+// testInstance.hair_color = 'black' ;
+// await testInstance.save();
 // // Test {name = 'kristen', hair_color = 'black'}
 // // testInstance.hair_color = 'brown'
-testInstance.name = 'kristen';
+// testInstance.name = 'kristen';
 // // Test {name = 'tesia', hair_color: 'brown'}
-await testInstance.update();
-
+// await testInstance.update();
 
 // Test.select('*').where('_id = 143').query();
 
@@ -395,6 +453,8 @@ await testInstance.update();
 //   .where('gender = male', 'hair_color = black');
 // Test.filter('name', 'gender', 'height').group('people.name', 'people.gender', 'people.height').having('AVG(height) > 100').query();
 // Test.filter('name').group('people.name').having('SUM(height) > 100').query();
+// running other file prints out this query...?
+
 //SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 // 
 // Test.filter('height').query();
 // Test.add('name = Tesia', 'hair_color = purple', 'gender = female').query();
@@ -421,3 +481,44 @@ await testInstance.update();
 //     species: String
 //   }
 // }
+
+
+//helper function to find existing foreign key related to target table
+async function getForeignKey<T>(thisTable:string, targetTable:string){
+  const queryText = `SELECT a.attname
+  FROM pg_constraint c 
+  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
+  WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`
+  let result:any
+  const db = await ConnectDb();
+    try {      
+      result = await db.queryObject(queryText, [thisTable, targetTable])  
+      //console.log("RESULT: ",result.rows[0].attname)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      DisconnectDb(db)
+    }
+    return result.rows[0].attname
+}
+
+//helper function to find primary key of target table
+async function getprimaryKey<T>(tableName:string){
+  const queryText = `SELECT a.attname 
+  FROM pg_index i
+  JOIN pg_attribute a ON a.attrelid = i.indrelid
+  AND a.attnum = ANY(i.indkey)
+  WHERE i.indrelid = $1::regclass
+  AND i.indisprimary`;
+  let result:any
+  const db = await ConnectDb();
+    try {      
+      result = await db.queryObject(queryText, [tableName])  
+      //console.log("RESULT: ",result.rows[0].attname)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      DisconnectDb(db)
+    }
+    return result.rows[0].attname
+}

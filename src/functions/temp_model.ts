@@ -409,6 +409,18 @@ export class StarshipSpec extends Model {
     type: 'int8',
     notNull: true,
   },
+  new_column: {
+    type: 'int4',
+    notNull: true,
+    autoIncrement: true,
+    primaryKey: true
+  },
+  new_column2: {
+    type: 'int4',
+    notNull: true,
+    autoIncrement: true,
+    primaryKey: true
+  }
   }
 }
 
@@ -439,14 +451,14 @@ export class Test extends Model {
   }
 }
 
-export interface Test2 {
+export interface Test3 {
   MGLT: string
   hyperdrive_rating: string
   _id: number
   vessel_id: bigint
 }
 
-export class Test2 extends Model {
+export class Test3 extends Model {
   static table_name = 'test2';
   static columns = {
   MGLT: {

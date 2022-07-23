@@ -1,29 +1,19 @@
-import { ConnectDb, DisconnectDb } from './Db.ts'
-import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/introspection.ts'
+import { introspect } from './introspect.ts';
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
 
-const introspectDb = async () => {
-    const db = await ConnectDb();
-
-    const tableList = await db.queryObject(tableListQuery);
-    //const columnList = await db.queryObject(columnInfoQuery);
-    //const tableConstraints = await db.queryObject(tableConstQuery);
-
-    console.log('Table List', tableList.rows)
-    //console.log('Column Info', columnList.rows), 
-    //console.log('Constraint', tableConstraints.rows);
-    return tableList;
+interface ModelInfo {
+    table_name: string
+    columns: Record<string, Record<string, unknown>>
 }
 
-
-const jsonify = (text: string): Record<string, unknown>[] => {
+const jsonify = (text: string): ModelInfo[] => {
         // remove extraneous text
         text = text.replaceAll(/export interface \w+ {[\n +\w+: \w+]+}/g, ''). // interfaces
         replaceAll('  static ', ''). // static
         replaceAll(/export class \w+ extends Model/g, ''). // class boilerplate
-        replaceAll("import { Model } from '../src/model/Model.ts'\n", ''). // initial wording
+        replaceAll("import { Model } from './src/class/Model.ts'\n", ''). // initial wording
         replaceAll(/\/\/ user model definition comes here \n+/g, ''). // initial wording
         replaceAll(/\n+/g, ''). // all line breaks
         replaceAll(';', ',').
@@ -56,26 +46,51 @@ const createTable = (table_name: string, columns: Record<string, Record<string, 
     return queryText.slice(0, -1) + ');';
 }
 
-export const sync = () => {
-    const tableList = introspectDb();
+export const sync = async () => {
+    const tableListObj = await introspect();
     // import typescript model of tables
     let modelText = Deno.readTextFileSync('./src/functions/temp_model.ts');
 
-    const modelArray = jsonify(modelText);
+    const modelArray = jsonify(modelText); // parse import
 
     let createTableQueries = ``;
+    let alterTableQueries = ``;
 
-    // convert table list to an object
-    const tableListObj: Record<string, unknown> = {};
-    tableList.rows.forEach(el => {
-        tableListObj[String(el.table_name)] = true;
-    })
+    console.log(tableListObj)
 
-    modelArray.forEach(el => {
+    modelArray.forEach(el => { // el is an object representing a table
+        // SQL statements for tables not currently in the database
         if(!tableListObj[String(el.table_name)]){
             createTableQueries += createTable(String(el.table_name), el.columns);
+        } else {
+            // Table exists - need to confirm all database structure aligns with model structure
+            // iterate over the columns within the modelArray property
+            Object.keys(el.columns).forEach(colMA => { // colMA is a column name
+                // if the column currently doesn't exist in the db
+                if(!tableListObj[el.table_name][colMA]) {
+                    alterTableQueries += `ALTER TABLE ${el.table_name} ADD ${colMA} `
+
+                    // Make column type SERIAL if auto-increment is true
+                    if(el.columns[colMA].autoIncrement){
+                        alterTableQueries += `SERIAL`
+                    } else {
+                        // Otherwise use 
+                        alterTableQueries += `${el.columns[colMA].type}`
+                    }
+
+                    // NEED TO CHECK ON COMPOSITE PRIMARY KEYS
+                    if(el.columns[colMA].primaryKey) alterTableQueries += ` PRIMARY KEY`
+
+                    // NEED TO IMPLEMENT OTHER INFORMATION
+
+                    // add semi-colon at end of alter
+                    alterTableQueries += ';'
+                }
+            })
+
+            // MAYBE PARSE THE ALTERTABLE QUERY FOR MULTIPLE PRIMARY KEY STATEMENTS? REMOVE AND THEN extract column name
         }
     })
 
-    console.log(createTableQueries)
+    console.log(createTableQueries, alterTableQueries)
 }
