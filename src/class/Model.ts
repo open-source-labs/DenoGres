@@ -13,14 +13,14 @@ export class Model {
         checks?: string[],
         defaultVal?: string,
         autoIncrement?: boolean,
-        association?: { rel_type: string, model: typeof Model, mappedCol: string}
+        association?: { rel_type?: string, table: string, mappedCol: string}
     }
   };
   static checks: string[];
   static unique: string[];
   static primaryKey: string[];
   private static sql = '';
-  static foreignKey: { columns: string[], mappedColumns: string[], rel_type: string, model: typeof Model }[];
+  static foreignKey: { columns: string[], mappedColumns: string[], rel_type?: string, table: string }[];
   // CREATE TABLE: create table schema in database
   // input: (table, column datatype)
   // static create(table: string, ...column: string[]) {

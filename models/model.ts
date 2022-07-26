@@ -1,5 +1,7 @@
 import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'
-// user model definition comes here 
+// user model definition comes here
+
+
 export interface Planet {
   surface_water: string
   population: bigint
@@ -16,40 +18,39 @@ export interface Planet {
 export class Planet extends Model {
   static table = 'planets';
   static columns = {
-  surface_water: {
-    type: 'varchar',
-  },
-  population: {
-    type: 'int8',
-  },
-  gravity: {
-    type: 'varchar',
-  },
-  diameter: {
-    type: 'int4',
-  },
-  orbital_period: {
-    type: 'int4',
-  },
-  rotation_period: {
-    type: 'int4',
-  },
-  name: {
-    type: 'varchar',
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'planets__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  terrain: {
-    type: 'varchar',
-  },
-  climate: {
-    type: 'varchar',
-  },
+    surface_water: {
+      type: 'varchar',
+    },
+    population: {
+      type: 'int8',
+    },
+    gravity: {
+      type: 'varchar',
+    },
+    diameter: {
+      type: 'int4',
+    },
+    orbital_period: {
+      type: 'int4',
+    },
+    rotation_period: {
+      type: 'int4',
+    },
+    name: {
+      type: 'varchar',
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    terrain: {
+      type: 'varchar',
+    },
+    climate: {
+      type: 'varchar',
+    },
   }
 }
 
@@ -62,21 +63,28 @@ export interface SpeciesInFilm {
 export class SpeciesInFilm extends Model {
   static table = 'species_in_films';
   static columns = {
-  species_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'species_in_films__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  film_id: {
-    type: 'int8',
-    notNull: true,
-  },
+    species_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'species',
+        mappedCol: '_id',
+      }
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    film_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'films',
+        mappedCol: '_id',
+      }
+    },
   }
 }
 
@@ -89,21 +97,28 @@ export interface PeopleInFilm {
 export class PeopleInFilm extends Model {
   static table = 'people_in_films';
   static columns = {
-  film_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  person_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'people_in_films__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
+    film_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'films',
+        mappedCol: '_id',
+      }
+    },
+    person_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'people',
+        mappedCol: '_id',
+      }
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
   }
 }
 
@@ -120,37 +135,36 @@ export interface Film {
 export class Film extends Model {
   static table = 'films';
   static columns = {
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'films__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  release_date: {
-    type: 'date',
-    notNull: true,
-  },
-  producer: {
-    type: 'varchar',
-    notNull: true,
-  },
-  director: {
-    type: 'varchar',
-    notNull: true,
-  },
-  opening_crawl: {
-    type: 'varchar',
-    notNull: true,
-  },
-  episode_id: {
-    type: 'int4',
-    notNull: true,
-  },
-  title: {
-    type: 'varchar',
-    notNull: true,
-  },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    release_date: {
+      type: 'date',
+      notNull: true,
+    },
+    producer: {
+      type: 'varchar',
+      notNull: true,
+    },
+    director: {
+      type: 'varchar',
+      notNull: true,
+    },
+    opening_crawl: {
+      type: 'varchar',
+      notNull: true,
+    },
+    episode_id: {
+      type: 'int4',
+      notNull: true,
+    },
+    title: {
+      type: 'varchar',
+      notNull: true,
+    },
   }
 }
 
@@ -163,21 +177,28 @@ export interface VesselsInFilm {
 export class VesselsInFilm extends Model {
   static table = 'vessels_in_films';
   static columns = {
-  film_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'vessels_in_films__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  vessel_id: {
-    type: 'int8',
-    notNull: true,
-  },
+    film_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'films',
+        mappedCol: '_id',
+      }
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    vessel_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'vessels',
+        mappedCol: '_id',
+      }
+    },
   }
 }
 
@@ -190,21 +211,28 @@ export interface PlanetsInFilm {
 export class PlanetsInFilm extends Model {
   static table = 'planets_in_films';
   static columns = {
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'planets_in_films__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  planet_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  film_id: {
-    type: 'int8',
-    notNull: true,
-  },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    planet_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'planets',
+        mappedCol: '_id',
+      }
+    },
+    film_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'films',
+        mappedCol: '_id',
+      }
+    },
   }
 }
 
@@ -217,21 +245,28 @@ export interface Pilot {
 export class Pilot extends Model {
   static table = 'pilots';
   static columns = {
-  vessel_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  person_id: {
-    type: 'int8',
-    notNull: true,
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'pilots__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
+    vessel_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'vessels',
+        mappedCol: '_id',
+      }
+    },
+    person_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'people',
+        mappedCol: '_id',
+      }
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
   }
 }
 
@@ -254,52 +289,51 @@ export interface Vessel {
 export class Vessel extends Model {
   static table = 'vessels';
   static columns = {
-  name: {
-    type: 'varchar',
-    notNull: true,
-  },
-  vessel_class: {
-    type: 'varchar',
-    notNull: true,
-  },
-  vessel_type: {
-    type: 'varchar',
-    notNull: true,
-  },
-  model: {
-    type: 'varchar',
-  },
-  manufacturer: {
-    type: 'varchar',
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'vessels__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  passengers: {
-    type: 'int4',
-  },
-  cargo_capacity: {
-    type: 'varchar',
-  },
-  consumables: {
-    type: 'varchar',
-  },
-  cost_in_credits: {
-    type: 'int8',
-  },
-  length: {
-    type: 'varchar',
-  },
-  max_atmosphering_speed: {
-    type: 'varchar',
-  },
-  crew: {
-    type: 'int4',
-  },
+    name: {
+      type: 'varchar',
+      notNull: true,
+    },
+    vessel_class: {
+      type: 'varchar',
+      notNull: true,
+    },
+    vessel_type: {
+      type: 'varchar',
+      notNull: true,
+    },
+    model: {
+      type: 'varchar',
+    },
+    manufacturer: {
+      type: 'varchar',
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    passengers: {
+      type: 'int4',
+    },
+    cargo_capacity: {
+      type: 'varchar',
+    },
+    consumables: {
+      type: 'varchar',
+    },
+    cost_in_credits: {
+      type: 'int8',
+    },
+    length: {
+      type: 'varchar',
+    },
+    max_atmosphering_speed: {
+      type: 'varchar',
+    },
+    crew: {
+      type: 'int4',
+    },
   }
 }
 
@@ -319,41 +353,44 @@ export interface Species {
 export class Species extends Model {
   static table = 'species';
   static columns = {
-  language: {
-    type: 'varchar',
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'species__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  name: {
-    type: 'varchar',
-    notNull: true,
-  },
-  classification: {
-    type: 'varchar',
-  },
-  average_height: {
-    type: 'varchar',
-  },
-  average_lifespan: {
-    type: 'varchar',
-  },
-  hair_colors: {
-    type: 'varchar',
-  },
-  skin_colors: {
-    type: 'varchar',
-  },
-  eye_colors: {
-    type: 'varchar',
-  },
-  homeworld_id: {
-    type: 'int8',
-  },
+    language: {
+      type: 'varchar',
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    name: {
+      type: 'varchar',
+      notNull: true,
+    },
+    classification: {
+      type: 'varchar',
+    },
+    average_height: {
+      type: 'varchar',
+    },
+    average_lifespan: {
+      type: 'varchar',
+    },
+    hair_colors: {
+      type: 'varchar',
+    },
+    skin_colors: {
+      type: 'varchar',
+    },
+    eye_colors: {
+      type: 'varchar',
+    },
+    homeworld_id: {
+      type: 'int8',
+      association: {
+        table: 'planets',
+        mappedCol: '_id',
+      }
+    },
   }
 }
 
@@ -374,44 +411,51 @@ export interface Person {
 export class Person extends Model {
   static table = 'people';
   static columns = {
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'people__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  height: {
-    type: 'int4',
-  },
-  homeworld_id: {
-    type: 'int8',
-  },
-  species_id: {
-    type: 'int8',
-  },
-  gender: {
-    type: 'varchar',
-  },
-  birth_year: {
-    type: 'varchar',
-  },
-  eye_color: {
-    type: 'varchar',
-  },
-  skin_color: {
-    type: 'varchar',
-  },
-  hair_color: {
-    type: 'varchar',
-  },
-  mass: {
-    type: 'varchar',
-  },
-  name: {
-    type: 'varchar',
-    notNull: true,
-  },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    height: {
+      type: 'int4',
+    },
+    homeworld_id: {
+      type: 'int8',
+      association: {
+        table: 'planets',
+        mappedCol: '_id',
+      }
+    },
+    species_id: {
+      type: 'int8',
+      association: {
+        table: 'species',
+        mappedCol: '_id',
+      }
+    },
+    gender: {
+      type: 'varchar',
+    },
+    birth_year: {
+      type: 'varchar',
+    },
+    eye_color: {
+      type: 'varchar',
+    },
+    skin_color: {
+      type: 'varchar',
+    },
+    hair_color: {
+      type: 'varchar',
+    },
+    mass: {
+      type: 'varchar',
+    },
+    name: {
+      type: 'varchar',
+      notNull: true,
+    },
   }
 }
 
@@ -425,22 +469,25 @@ export interface StarshipSpec {
 export class StarshipSpec extends Model {
   static table = 'starship_specs';
   static columns = {
-  MGLT: {
-    type: 'varchar',
-  },
-  hyperdrive_rating: {
-    type: 'varchar',
-  },
-  _id: {
-    type: 'int4',
-    notNull: true,
-    defaultVal: 'starship_specs__id_seq',
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  vessel_id: {
-    type: 'int8',
-    notNull: true,
-  },
+    MGLT: {
+      type: 'varchar',
+    },
+    hyperdrive_rating: {
+      type: 'varchar',
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    vessel_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'vessels',
+        mappedCol: '_id',
+      }
+    },
   }
 }

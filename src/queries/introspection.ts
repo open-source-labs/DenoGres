@@ -10,7 +10,7 @@ SELECT tables.schemaname, class.relname AS table_name,
   FROM pg_class class
   INNER JOIN pg_tables tables on class.relname = tables.tablename
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
-  WHERE tables.schemaname = 'public'
+  WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema')
 ;
 `
 
