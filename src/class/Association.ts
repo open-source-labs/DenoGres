@@ -14,6 +14,7 @@ abstract class Association {
     this.mappingDetails = mappingDetails
   }
   abstract association_name:string; 
+  abstract getAssociatedData(...args:any): void
 
   // Table altering query
   async syncAssociation() {
@@ -29,19 +30,26 @@ abstract class Association {
     }
   }
 }
+/*
+const mappingDetails = {
+      association_type: 'belongsTo',
+      association_name: `${this.name}_belongsTo_${targetModel.name}`,
+      targetModel: targetModel,
+      foreignKey_ColumnName : foreignKey_ColumnName,
+      mappingTarget_ColumnName : mappingTarget_ColumnName,
+    }
+*/
+
 
 export class BelongsTo extends Association {
-  constructor(source:typeof Model, target:typeof Model, query:any, mappingDetails:any) {
-    super(source, target, query, mappingDetails);    
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+    super(source, target, mappingDetails, query);    
     //this.mappingDetails = mappingDetails
     this.attachAssociationMethodsToModel(source)
-    console.log("Source & Target?",source.name, target.name)
   }
-  foreignKey_ColumnName = this.mappingDetails?.foreignKey_ColumnName
-  targetModel_MappindColumnName = this.mappingDetails?.mappingTarget_ColumnName
-
+  foreignKey_ColumnName = this.mappingDetails?.foreignKey_ColumnName  
+  targetModel_MappindColumnName = this.mappingDetails?.mapping_ColumnName
   association_name = `${this.source.name}_belongsTo_${this.target.name}`
-
   getAccesorName = `get${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}`
 
   
@@ -51,33 +59,19 @@ export class BelongsTo extends Association {
     console.log("methodName? ",methodName)
 
     addMethodToModel(this, model, methodName)
-
-    // // this part does NOT work. only works as separate part, don't know why
-    // Object.defineProperty(model.prototype, methodName, {
-    //   //when model's instance method is called, this will be returned
-    //   value: function() {
-    //     return this.getAssociatedData()
-    //   }
-    // }) 
   }
 
    // this is instance method e.g. profile1.getUser(), person.getSpecies()
   async getAssociatedData(instance:any) { // 
     console.log("instance? ", instance)
-    //console.log("instance:", Object.getPrototypeOf(instance).constructor.table)
+    console.log("THIS: ", this)
 
     let query = `
     SELECT * FROM ${this.target.table} 
-    WHERE ${this.target.primaryKey || '_id'} ='${instance[this.foreignKey_ColumnName]}'`
+    WHERE ${this.targetModel_MappindColumnName} ='${instance[this.foreignKey_ColumnName]}'`
 
     console.log(query)
-
-    let wrongQuery = `
-    SELECT * FROM ${this.target.table} 
-    JOIN ${this.source.table} 
-    ON ${this.targetModel_MappindColumnName} = ${this.source.table}.${this.foreignKey_ColumnName}
-    WHERE ${this.target.primaryKey || 'id'} ='${instance[this.foreignKey_ColumnName]}'`
-
+    console.log('targetModel_MappindColumnName: ', this.targetModel_MappindColumnName)
 
     const db = await ConnectDb()
     const queryResult = await db.queryObject(query);
@@ -85,12 +79,52 @@ export class BelongsTo extends Association {
   }
 }
 
+
+// e.g. Species.hasMany(Person)
+export class HasMany extends Association {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+    super(source, target, mappingDetails, query);
+    this.attachAssociationMethodsToModel(source)
+    //console.log("mapping Details",mappingDetails)
+  }//end of constructor
+
+  foreignKey_ColumnName = this.mappingDetails?.foreignKey_ColumnName
+  mapping_ColumnName = this.mappingDetails?.mapping_ColumnName
+  association_name = `${this.source.name}_hasMany_${this.target.name}`
+  getAccesorName = `get${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}s`
+
+  // add instance methods for create, get, update, delete
+  // but currently only has get
+  private attachAssociationMethodsToModel(model:typeof Model) {
+    const methodName = this.getAccesorName
+    console.log("methodName? ",methodName)
+    
+    addMethodToModel(this, model, methodName)
+  }
+
+  // this is instance method e.g. species1.getPeople()
+  async getAssociatedData(instance:any) {
+    console.log("instance? ", instance)
+
+    let query = `
+    SELECT * FROM ${this.target.table} 
+    WHERE ${this.foreignKey_ColumnName} ='${instance[this.mapping_ColumnName]}'`
+
+    console.log("association query:", query)
+
+    const db = await ConnectDb()
+    const queryResult = await db.queryObject(query);
+    console.log(queryResult.rows)
+  }
+  
+}//end of hasMany
+
 // e.g.
   // Profile.belongsTo(User) // 
   // created foreign key on Profile(source) model
   // profile1.getUser(); 
 
-function addMethodToModel<T extends BelongsTo>(association:T, targetModel:typeof Model, ModelMethod:string) {
+function addMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
   //const methodName = this.getAccesorName
   //console.log(methodName)
   Object.defineProperty(targetModel.prototype, ModelMethod, {
