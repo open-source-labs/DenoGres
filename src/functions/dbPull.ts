@@ -1,83 +1,67 @@
-import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/introspection.ts'
 import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
 
 import { createClassName } from '../functions/StringFormat.ts'
-import { ConnectDb, DisconnectDb } from '../functions/Db.ts'
 
 import { introspect } from './introspect.ts'
 
 
 export async function dbPull() {
-    const tLO = await introspect();
+    const tableListObj = await introspect();
 
-    // QUERY DATABASE
-    const db = await ConnectDb();
-  
-    interface TableListObj {
-      table: string;
-    }
-  
-    const tableList = await db.queryObject(tableListQuery);
-    const columnList = await db.queryObject(columnInfoQuery);
-    const tableConstraints = await db.queryObject(tableConstQuery);
-  
-    //console.log('Table List', tableList.rows, 'Column Info', columnList.rows, 
-    //'Constraint', tableConstraints.rows);
-  
-    let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here `
-  
-    // Add Each Table as a property to an Object
-    const interfaceObj: Record<string, unknown> = {};
-    const columnsObj: Record<string, unknown> = {};
-  
-    // Add property to each object for each table in the database
-    tableList.rows.forEach(el => {
-      interfaceObj[el.table_name] = ``;
-      columnsObj[el.table_name] = ``
+    let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
+
+    // iterate over the properties of tableListObj
+    Object.keys(tableListObj).forEach(el => {
+        // reference to table object
+        const tableObj = tableListObj[el];
+        // create the class name
+        const className = createClassName(el);
+        // initialize interface code holder
+        let interfaceCode = `\nexport interface ${className} {\n`;
+        // initialize class code holder
+        let classCode =`export class ${className} extends Model {\n` +
+        `  static table = '${el}';\n` +
+        `  static columns = {\n`;
+
+        // iterate over each property within the columns object
+        Object.keys(tableListObj[el].columns).forEach(colName => {
+            const columnObj = tableListObj[el].columns[colName];
+            // add the column as a property to the interface
+            interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`
+            // add the column as a property to the class
+            classCode += `    ${colName}: {\n` +
+            `      type: '${columnObj.type}',\n`
+            // for each 'property' of the column add it to the object
+            if (columnObj.notNull) classCode += `      notNull: true,\n`;
+            if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
+            if (columnObj.unique) classCode += `      unique: true,\n`;
+            if (columnObj.checks) classCode += `      check: [${columnObj.checks}]`
+            if (columnObj.defaultVal) classCode += `      defaultVal: ${columnObj.defaultVal}`;
+            if (columnObj.autoIncrement) classCode += `      autoIncrement: true,\n`;
+            if (columnObj.association) {
+                classCode += `      association: {\n` +
+                `        table: '${columnObj.association.table}',\n` +
+                `        mappedCol: '${columnObj.association.mappedCol}',\n      }\n`;
+            }
+            
+            // close the column obj
+            classCode += `    },\n`
+        })
+        
+        // close the interface and class code
+        interfaceCode += `}\n\n`;
+        classCode += `  }\n`
+        // add the interface and class code to the autoCreatedModels string
+        autoCreatedModels += interfaceCode + classCode;
+        // for each table constraint add as properties onto the autoCreatedModels query
+        if(tableObj.checks.length > 0) autoCreatedModels += `  static checks: ${JSON.stringify(tableObj.checks)}\n`
+        if(tableObj.unique) autoCreatedModels += `  static unique: ${JSON.stringify(tableObj.unique)}\n`
+        if(tableObj.primaryKey) {
+          autoCreatedModels += `  static primaryKey: ${JSON.stringify(tableObj.primaryKey)}\n`
+        }
+        // close the query for this table
+        autoCreatedModels += `}\n`
     })
-  
-    // Add each table column to the corresponding object in intefaceObj and
-    // column details in columnsObj for the columns property
-    columnList.rows.forEach(el => {
-      // Add column and type to interface
-      interfaceObj[el.table_name] += `  ${el.column_name}: ${sqlDataTypes[el.column_type]}\n`;
-  
-      // Create the static columns property for the class
-      columnsObj[el.table_name] += `  ${el.column_name}: {\n` +
-      `    type: '${el.column_type}',\n`
-      if (el.not_null) columnsObj[el.table_name] += `    notNull: true,\n`;
-      // column constraints go here (default value and primary key)
-      // Create defaultVal and/or auto increment property
-      if (el.col_default && el.col_default.includes('nextval(')) {
-        columnsObj[el.table_name] += `    defaultVal: ${el.col_default.replaceAll("nextval(", "")
-          .replaceAll("::regclass)", "")},\n`;
-        columnsObj[el.table_name] += `    autoIncrement: true,\n`;
-      }
-      else if (el.col_default) columnsObj[el.table_name] += `    defaultVal: ${el.col_default},\n`;
-      if (tLO[el.table_name][el.column_name]['primaryKey']) 
-        columnsObj[el.table_name] += `    primaryKey: true,\n`;
-
-        //{people: ``, films: ``}
-
-      columnsObj[el.table_name] += `  },\n` // closing out the column object
-    })
-  
-      // Add the information for each table to the final output string
-    for(let i = 0; i < tableList.rows.length; i++){
-      const tableName = tableList.rows[i].table_name;
-      const className = createClassName(tableName);
-  
-      autoCreatedModels += `\nexport interface ${className} {\n` +
-      `${interfaceObj[tableName]}}\n\n`
-  
-      autoCreatedModels += `export class ${className} extends Model {\n` + 
-      `  static table = '${tableName}';\n` +
-      `  static columns = {\n` +
-      `${columnsObj[tableName]}` +
-      `  }\n` +
-      // Add any table constraint information below here
-      `}\n`
-    }
     // Create the model.ts file
     Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
-  }
+}

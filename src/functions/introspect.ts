@@ -1,5 +1,7 @@
 import { ConnectDb, DisconnectDb } from './Db.ts'
 import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/introspection.ts'
+import { sqlDataTypesKeys, sqlDataTypes } from '../constants/sqlDataTypes.ts';
+// import { sqlDataTypesKeys2 } from '../constants/sqlDataTypes.ts'
 
 // INTERFACES
 interface ITableQueryRecords {
@@ -22,24 +24,35 @@ interface IConstraint {
   contype: string
 }
 
+// orders5: {
+//     columns: {
+//       order_id: { type: "int4", notNull: true, defaultVal: null, primaryKey: true },
+//       shipping_address: { type: "text", notNull: false, defaultVal: null }
+//     },
+
+// interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`
+
+// Research "keyof" a type
+
+
 interface ITableListObj {
     [key: string]: {
         columns: {
             [key: string]: {
-                type: string,
+                type: ( 'int' | 'int2' | 'int4' | 'int8' | 'smallint' | 'integer' | 'bigint' | 'decimal' | 'numeric' | 'real' | 'float' | 'float4' | 'float8' | 'money' | 'varchar' | 'char' | 'text' | 'bit' | 'bitVar' | 'time' | 'timetz' | 'timestamp' | 'timestamptz' | 'interval' | 'boolean' | 'json' | 'jsonb' ), // ( int2 | int4 ) be more specific and only allow the strings which are keys of SQLDataTypes. Object.keys?
                 primaryKey?: boolean,
                 notNull?: boolean,
                 unique?: boolean,
                 checks?: string[],
                 defaultVal?: unknown,
                 autoIncrement?: boolean,
-                association?: { rel_type: string, model: unknown, mappedCol: string}
+                association?: { rel_type: string, table: string, mappedCol: string}
             }
         };
         checks: string[];
         unique?: string[];
         primaryKey?: string[];
-        association?: { rel_type: string, model: unknown, mappedCol: string}
+        association?: { rel_type: string, table: string, mappedCol: string}
     }
 }
 
@@ -104,6 +117,7 @@ export const introspect = async () => {
             }
     }
     })
+    console.log(constraintList)
 
     // PRIMARY & UNIQUE & CHECK CONSTRAINTS
     constraintList.forEach(el => {
@@ -125,11 +139,25 @@ export const introspect = async () => {
                 }
             }
             else if (el.contype === 'c'){
-                const val = el.condef.replaceAll("CHECK (", "").replace(")",""); 
-                    tableListObj[el.table_name].checks.push(val);       
+                const val = el.condef.replaceAll("CHECK (", "").replace(")","");
+                    tableListObj[el.table_name].checks.push(String(val));       
+            } else if (el.contype === 'f') {
+                let condef = el.condef;
+
+                if(condef.includes(',')) {
+                    console.log('composite foreign key')
+                } else {
+                    condef = condef.replace('FOREIGN KEY (', '').replace(') REFERENCES', '')
+                    const condefArray = condef.split(' '); // 0: table column // 1: foreign table and its id
+
+                    const columnObj = tableListObj[el.table_name].columns[condefArray[0]]
+                    columnObj.association = {rel_type: 'belongsTo', 
+                    table: condefArray[1].split('(')[0], 
+                    mappedCol: condefArray[1].replace(/\w+\(/, '').replace(')', '')};
+                }
             }
         }
     })
-    
+    //console.log(tableListObj)
     return tableListObj;
 };
