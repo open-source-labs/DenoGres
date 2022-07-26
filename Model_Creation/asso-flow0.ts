@@ -47,7 +47,7 @@ class Person extends Model {
       type: 'int8',
     },  
   }
-  static foreignKey = []
+  static foreignKey = [];
 }
 
 
@@ -64,14 +64,32 @@ class Person extends Model {
 //const luke = result.rows[0]
 
 
-//const test = await Person.where('name = Luke Skywalker').query()
-//console.log("luke: ",test)
-const luke = new Person();
-luke._id = 1;
-luke.species_id = 1n;
-await Person.belongsTo(Species)
-//console.log("Person Model: ", Person.foreignKey)
+// const lukeRow = await Person.where('name = Luke Skywalker').query()
+// const luke = lukeRow[0]
+// const lukeInstance = Object.assign(new Person(), luke)
 
-luke.getSpecies();
 
+// const luke = new Person();
+// luke._id = 1;
+// luke.species_id = 1n;
+//await Person.belongsTo(Species)
+// console.log("Person Model: ", Person)
+//console.log(lukeInstance)
+//luke.getSpecies();
+
+//lukeInstance.getSpecies()
+
+
+// working flow 1. belongsTo
+// const lukeInstance = await Person.where('name = Luke Skywalker').queryInstance()
+// await Person.belongsTo(Species)
+// lukeInstance.getSpecies()
+
+// chaining will NOT work though
+//await Person.where('name = Luke Skywalker').queryInstance().getSpecies()
+
+//  working flow 2. hasMany
+await Species.hasMany(Person)
+const droid = await Species.where('name = Droid').queryInstance()
+droid.getPersons();
 

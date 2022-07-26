@@ -1,8 +1,9 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
-import { BelongsTo } from './Association.ts'
+import { BelongsTo, HasMany } from './Association.ts'
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
 
 export class Model {
+  [k: string]: any; // index signature
   static table: string;
   static columns: {
     [key: string]: {
@@ -326,56 +327,66 @@ export class Model {
     return queryResult.rows;
   }
 
+  // same method with query but returning one instance
+  // only work with getting
+  static async queryInstance(print?: string) {
+    const db = await ConnectDb();
+    if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
+    const queryResult = await db.queryObject(this.sql);
+    this.sql = '';
+    return Object.assign(new this(), queryResult.rows[0])
+  }
+
+
+
   //BELONGS TO
   // create foreign key on this model (if not exist)
   static async belongsTo(targetModel:typeof Model, options?:any) {
-    // this table name : this.table
-    // target table name : targetModel.table
+
     let foreignKey_ColumnName:string
+    let mappingTarget_ColumnName = ''
     let associationQuery = ''
+    let rel_type = options?.associationName ? options?.associationName : 'belongsTo'
 
-    // foreign key of the this table for target table (string or null)
-    const existingForeignKey = await getForeignKey(this.table, targetModel.table)
-    console.log('EXISTING FOREIGN KEY: ', existingForeignKey)
+    const mappings = await getMappingKeys(this.table, targetModel.table) 
+    // if undefined --> no relationship exist, need to make new
 
-    // primary key of target table
-    const targetTablePrimaryKey = await getprimaryKey(targetModel.table)
-    console.log('TARGET MODEL PRIME KEY: ', targetTablePrimaryKey)
-    // (stretch?) user can have options to choose mapping key other than primary key
-
-    // IF foreign key (constraints already exist in this table)
-    if(!existingForeignKey) {
-      foreignKey_ColumnName = existingForeignKey
+    // IF Existing relationships
+    if(mappings !== undefined) {
+      console.log('========== EXISTING ASSOCIATION ===========')
+      foreignKey_ColumnName = mappings.source_keyname
+      mappingTarget_ColumnName = mappings.target_keyname
       const columnAtt = { 
-        //type: targetModel.columns[targetTablePrimaryKey].type,
-        association: { rel_type: 'belongsTo', model: targetModel, mappedCol: targetTablePrimaryKey } 
+        //type: targetModel.columns[mappingTarget_ColumnName].type,
+        association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
        }
+       //console.log(foreignKey_ColumnName)
       Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
-      //this.columns[foreignKey_ColumnName] = columnAtt 
-      
     } else {
-      // creating new foreign key
-      //foreignKey_ColumnName = options ? options?.foreignKey_ColumnName : `${targetModel.name.toLocaleLowerCase()}_id`
-      // option... later...
+      // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
+      console.log('========== FORMING NEW ASSOCIATION ===========')
       foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
+      mappingTarget_ColumnName = await getprimaryKey(targetModel.table)
       const columnAtt = { 
-        type: targetModel.columns[targetTablePrimaryKey].type,
-        association: { rel_type: 'belongsTo', model: targetModel, mappedCol: targetTablePrimaryKey } 
+        type: targetModel.columns[mappingTarget_ColumnName].type,
+        association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
        }
       this.columns[foreignKey_ColumnName] = columnAtt 
-
+      console.log("columnAtt: ",columnAtt)
       // only if there's NO existing association or existing foreign key
       associationQuery = `
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
       ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
       ;` // and this will NOT executed unless use explictly execute sync() on association instance created below
-      //console.log('associationQuery:', associationQuery)
+      console.log('associationQuery:', associationQuery)
     }
 
+    // ========= COMPOSITE FOREIGN KEYS ONLY ============
     // Add table constraints to static property 'foreignKay'
+    // No need to add if not a composite foreign keys
     this.foreignKey.push({
       columns:[foreignKey_ColumnName],
-      mappedColumns: [targetTablePrimaryKey],
+      mappedColumns: [mappingTarget_ColumnName],
       rel_type: 'belongsTo',
       model: targetModel
     })
@@ -385,16 +396,63 @@ export class Model {
       association_name: `${this.name}_belongsTo_${targetModel.name}`,
       targetModel: targetModel,
       foreignKey_ColumnName : foreignKey_ColumnName,
-      mappingTarget_ColumnName : targetTablePrimaryKey,
+      mapping_ColumnName : mappingTarget_ColumnName,
     }
     // maybe making associations object in Model class? 
     // e.g.
     // { Person_belongsTo_Species:mappingDetails }
 
     //console.log('mappingDetails:', mappingDetails)
-        
-    return new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
+    const newAsso = new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
+    //console.log("new asso instance?: ", newAsso)
+    return newAsso
   }
+
+
+  static async hasOne(targetModel:typeof Model, options?:any) {
+    return await this.belongsTo(targetModel, { associationName:'hasOne'})
+    // (for now): is just flipping and calling belongsTo; 
+    // Later, need to make separate hasOne method for detailed specification
+  }
+
+  // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
+  static async hasMany(targetModel:typeof Model, options?:any) {
+    let mapping_ColumnName = '' // mapping key in this model
+    let targetModel_foreignKey = '' // foreign key in targetModel
+    let associationQuery = ''
+    
+    const mappings = await getMappingKeys(targetModel.table, this.table)
+    //console.log(mappings)
+    if(mappings !== undefined) {
+      console.log('========== EXISTING ASSOCIATION ===========')
+      mapping_ColumnName = mappings.target_keyname;
+      targetModel_foreignKey = mappings.source_keyname;
+      const columnAtt = { 
+        //type: this.columns[mapping_ColumnName].type,
+        association: { rel_type: 'belongsTo', table: this.table, mappedCol: mapping_ColumnName } 
+       }
+       //console.log("columnAtt: ", columnAtt)
+       //Object.assign(targetModel.columns[targetModel_foreignKey], columnAtt)
+       //console.log(targetModel.columns[targetModel_foreignKey])
+    } else {
+      // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
+      console.log('========== FORMING NEW ASSOCIATION ===========')
+      console.log('========== TBD ===========')
+    }
+    // ========= WHEN COMPOSITE FOREIGN KEYS ...============
+
+    // ======== BUILDING FOR ASSOCIATION INSTANCE =======
+    const mappingDetails = {
+      association_type: 'hasMany',
+      association_name: `${this.name}_hasMany_${targetModel.name}`,
+      targetModel: targetModel,
+      foreignKey_ColumnName : targetModel_foreignKey,
+      mapping_ColumnName : mapping_ColumnName,
+    }
+    //console.log(mappingDetails)
+    return new HasMany(this, targetModel, mappingDetails, associationQuery) 
+  }
+
 
   test() {
     console.log(Object.keys(this))
@@ -483,6 +541,39 @@ class Test extends Model {
 // }
 
 
+
+
+//helper function to find mapping keys between two tables
+async function getMappingKeys<T>(sourcTable:string, targetTable:string){
+  const queryText = `SELECT 
+  c.conrelid::regclass AS source_table, 
+  source_attr.attname AS source_keyname,
+  c.confrelid::regclass AS target_table, 
+  target_attr.attname AS target_keyname
+  FROM pg_constraint c 
+  JOIN pg_attribute source_attr ON source_attr.attrelid = c.conrelid 
+  AND source_attr.attnum = ANY (c.conkey)
+  JOIN pg_attribute target_attr ON target_attr.attrelid = c.confrelid 
+  AND target_attr.attnum = ANY (c.confkey)
+  WHERE 
+  c.conrelid = $1::regclass AND 
+  c.contype = 'f' AND c.confrelid = $2::regclass
+  ;
+  `;
+  let result:any
+  const db = await ConnectDb();
+    try {      
+      result = await db.queryObject(queryText, [sourcTable, targetTable])  
+    } catch (error) {
+      console.error(error)
+    } finally {
+      DisconnectDb(db)
+    }
+    //console.log(result.rows[0])
+    return result.rows[0]    
+}
+
+
 //helper function to find existing foreign key related to target table
 async function getForeignKey<T>(thisTable:string, targetTable:string){
   const queryText = `SELECT a.attname
@@ -522,3 +613,4 @@ async function getprimaryKey<T>(tableName:string){
     }
     return result.rows[0].attname
 }
+
