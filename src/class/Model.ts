@@ -1,5 +1,5 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
-import { BelongsTo, HasMany } from './Association.ts'
+import { BelongsTo, HasOne, HasMany, ManyToMany } from './Association.ts'
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
 
 export class Model {
@@ -358,12 +358,12 @@ export class Model {
       console.log('========== EXISTING ASSOCIATION ===========')
       foreignKey_ColumnName = mappings.source_keyname
       mappingTarget_ColumnName = mappings.target_keyname
-      const columnAtt = { 
-        //type: targetModel.columns[mappingTarget_ColumnName].type,
-        association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
-       }
-       //console.log(foreignKey_ColumnName)
-      Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
+      // const columnAtt = { 
+      //   type: targetModel.columns[mappingTarget_ColumnName].type,
+      //   association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
+      //  }
+      // console.log("foreignKey_ColumnName: ", foreignKey_ColumnName)
+      // Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
       console.log('========== FORMING NEW ASSOCIATION ===========')
@@ -386,12 +386,12 @@ export class Model {
     // ========= COMPOSITE FOREIGN KEYS ONLY ============
     // Add table constraints to static property 'foreignKay'
     // No need to add if not a composite foreign keys
-    this.foreignKey.push({
-      columns:[foreignKey_ColumnName],
-      mappedColumns: [mappingTarget_ColumnName],
-      rel_type: 'belongsTo',
-      model: targetModel
-    })
+    // this.foreignKey.push({
+    //   columns:[foreignKey_ColumnName],
+    //   mappedColumns: [mappingTarget_ColumnName],
+    //   rel_type: 'belongsTo',
+    //   model: targetModel
+    // })
 
     const mappingDetails = {
       association_type: 'belongsTo',
@@ -405,16 +405,15 @@ export class Model {
     // { Person_belongsTo_Species:mappingDetails }
 
     //console.log('mappingDetails:', mappingDetails)
-    const newAsso = new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
-    //console.log("new asso instance?: ", newAsso)
-    return newAsso
+    if(options?.associationName === 'hasOne') {
+      return new HasOne(this, targetModel, mappingDetails, associationQuery)
+    } else {
+      return new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
+    }
   }
 
-
   static async hasOne(targetModel:typeof Model, options?:any) {
-    return await this.belongsTo(targetModel, { associationName:'hasOne'})
-    // (for now): is just flipping and calling belongsTo; 
-    // Later, need to make separate hasOne method for detailed specification
+    return await targetModel.belongsTo(this, { associationName:'hasOne'})
   }
 
   // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
@@ -439,7 +438,7 @@ export class Model {
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
       console.log('========== FORMING NEW ASSOCIATION ===========')
-      console.log('========== TBD ===========')
+      console.log('========== need to execute belongsTo first ===========')
     }
     // ========= WHEN COMPOSITE FOREIGN KEYS ...============
 
@@ -616,3 +615,38 @@ async function getprimaryKey<T>(tableName:string){
     return result.rows[0].attname
 }
 
+interface manyToManyOptions {
+  through?: typeof Model;
+  createThrough?:string;
+  createXTable?:string;  
+}
+
+export async function manyToMany(modelA:typeof Model, modelB:typeof Model, options:manyToManyOptions) {
+  let associationQuery = ''
+  // for existing one (x-table also exist) 
+  if(options?.through) {
+    const throughModel = options.through;
+    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table)
+    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table)
+    // console.log("mapKeysA: ",mapKeysA)
+    // console.log("mapKeysB: ",mapKeysB)
+    const mappingDetails = {
+      association_type: 'ManyToMany',
+      association_name: `${modelA.name}_hasMany_${modelB.name}`,
+      modelA,
+      modelB,
+      throughModel,
+      modelA_foreignKey_inThroughModel: mapKeysA.source_keyname,
+      modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
+      modelA_mappingKey: mapKeysA.target_keyname,
+      modelB_mappingKey: mapKeysB.target_keyname,
+    }
+    //console.log("mappingDetails:", mappingDetails)
+    //// return out association instance
+    return new ManyToMany(modelA, modelB, mappingDetails, associationQuery) 
+  } 
+  else if(options?.createThrough) {
+    //// creating new x-table & new x-model
+    const modelA_foreignKey_inThroughModel = modelA.primaryKey
+  } 
+}
