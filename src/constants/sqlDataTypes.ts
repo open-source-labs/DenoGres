@@ -1,3 +1,4 @@
+
 export const sqlDataTypes = {
     int: 'number',
     int2: 'number',
@@ -24,13 +25,12 @@ export const sqlDataTypes = {
     timestamptz: 'string',
     interval: 'string',
     boolean: 'boolean',
+    enum: 'string',
+    uuid: 'string',
     json: 'JSON',
     jsonb: 'JSON'
-}
-
-// export const sqlDataTypesKeys = Object.keys(sqlDataTypes);
-
-
+} 
+// as const
 
 // temp
 export const FIELD_TYPE:{[typename:string]:string} = {
@@ -38,3 +38,4 @@ export const FIELD_TYPE:{[typename:string]:string} = {
     string: 'VARCHAR (50)',
     uuid: 'UUID'
   }
+

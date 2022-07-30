@@ -324,6 +324,7 @@ export class Model {
     const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
     // if (!this.sql.includes('SELECT a.attname') && !this.sql.includes('UPDATE') && !this.sql.includes('INSERT')) console.log(queryResult.rows);
     this.sql = '';
+    DisconnectDb(db);
     return queryResult.rows;
   }
 
@@ -334,6 +335,7 @@ export class Model {
     if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
     this.sql = '';
+    DisconnectDb(db);
     return Object.assign(new this(), queryResult.rows[0])
   }
 
