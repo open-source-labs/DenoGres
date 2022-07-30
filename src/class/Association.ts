@@ -76,27 +76,30 @@ export class HasOne extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
-  async addAssociatedData(instance:any, options:any){
+  async addAssociatedData(instance:any, values:any){
     let query = ''
     let queryResult:any
     console.log("HasOne's addAssociatedData")
-    console.log("addOptions", options)
+    console.log("values", values)
     console.log("source table", this.source.table) // profiles
     console.log("target table", this.target.table) // users
-    // when option is an object
-    // when option is an instance of source table
-    if(options instanceof this.source) {
-      console.log('instance', options)
+    // case1. value is an object (e.g. {id:1})
+    // case2. value is an instance of source table
+    if(values.id) {
+      // <<<<<< instance id hard coded!!!!
+      query = `UPDATE ${this.source.table} SET ${this.foreignKey_ColumnName}='${instance.id || instance._id}' WHERE ${this.targetModel_MappindColumnName}=${values.id}`
+    }
+    else if(values instanceof this.source) {
+      console.log('instance', values)
       // if this instance has no id, assuem it's not yet created in the database and create the record
       // if this instance has id, assume it's in the database and just update the foreign key column
-      const toObj = Object.assign({}, options)
+      const toObj = Object.assign({}, values)
       const objKeys = Object.keys(toObj).join(',')
       const objVals = Object.values(toObj).map(el => `'${el}'`).join(',')
       const instanceId = instance.id || instance._id // <<<<<<<<< HARD CODED!!!
 
       query = `INSERT INTO ${this.source.table} (${objKeys}, ${this.foreignKey_ColumnName}) VALUES (${objVals}, '${instanceId}');`
-      // not considering type... better to save() the instance and then attach foreign key after
-      // saving error await options.save() // getting 'too many database call' error
+      // postres auto converting string to numbers?
     }
     console.log(query)
     const db = await ConnectDb()

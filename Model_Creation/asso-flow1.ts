@@ -38,51 +38,30 @@ class Profile extends Model {
 // belongsTo test...
 
 const userProfileAssociation = await Profile.belongsTo(User)
-//console.log("Profile Model:", Profile)
-userProfileAssociation.syncAssociation();
 
-
-
-// const getuser0 = await p.getUser()
-// console.log("GET USER ",getuser0)
-
+await userProfileAssociation.syncAssociation();
 
 
 await User.hasOne(Profile)
 // console.log(User)
 // console.log(Profile)
-const userxx = new User()
-userxx.id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
-// const ppxx = await userxx.getProfile()
-// console.log("GET PROFILE ", ppxx)
 
-
-//// dfraft of CRUD work flow with association :
-const user0 = new User();
-//user0.addProfile({ id:1 }) // setting with ID
 
 const user1 = await User.where('firstname = user_one').queryInstance()
 console.log("user 1 from db", user1)
 const p = new Profile();
 p.email = '111@111.com'
 p.address = 'abc Main St'
-user1.addProfile(p) // adding instance, this will save record in profiles table if not exist
+// await user1.addProfile(p) // adding instance, this will save record in profiles table 
+// should be able to check "if not exist" though... 
+// const user1Profile = await user1.getProfile()
+// console.log(user1Profile)
 
+//user1.addProfile({ id:1 }) // for existing profile id
+
+// more flow draft (tbd)
 // user0.deleteProfile({ id:1 })
-// user0.updateProfile({ id:1, newId:2 })
 // user0.updateProfile({ id:1 }, { address: 'Main St.' })
-
-
-
-
-// user0.firstName = 'user0-FirstName'
-// await user0.where('id', '001').update({ profile_id: 'xx'})
-// //User.where('id=1').getProfile();
-// User.findInstance('name=user0').getProfile();
-// User.findInstance('name=user0').addProfile({ email:'xxx', address:'yyy' }).save()
-// User.findInstance('name=user0').update({ profile_id:'1' });
-// User.wherexxxx.queryInstance().
-// Model method?
 
 
 
