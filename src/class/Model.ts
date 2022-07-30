@@ -436,7 +436,7 @@ export class Model {
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
       console.log('========== FORMING NEW ASSOCIATION ===========')
-      console.log('========== TBD ===========')
+      console.log('========== need to execute belongsTo first ===========')
     }
     // ========= WHEN COMPOSITE FOREIGN KEYS ...============
 
@@ -645,5 +645,6 @@ export async function manyToMany(modelA:typeof Model, modelB:typeof Model, optio
   } 
   else if(options?.createThrough) {
     //// creating new x-table & new x-model
+    const modelA_foreignKey_inThroughModel = modelA.primaryKey
   } 
 }

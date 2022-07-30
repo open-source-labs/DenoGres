@@ -40,38 +40,37 @@ class Profile extends Model {
 const userProfileAssociation = await Profile.belongsTo(User)
 //console.log("Profile Model:", Profile)
 userProfileAssociation.syncAssociation();
-const p = new Profile();
-p.email = '111@111.com'
-p.user_id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
-
-const getuser0 = await p.getUser()
-console.log("GET USER!!!",getuser0)
-
-// const user11 = new User();
-// user11.id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
-// const ppp = await user11.getProfile();
-// console.log(ppp)
 
 
 
-//await User.hasOne(Profile)
+// const getuser0 = await p.getUser()
+// console.log("GET USER ",getuser0)
+
+
+
+await User.hasOne(Profile)
 // console.log(User)
 // console.log(Profile)
-// const userxx = new User()
-// userxx.id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
+const userxx = new User()
+userxx.id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
 // const ppxx = await userxx.getProfile()
-// console.log(ppxx)
+// console.log("GET PROFILE ", ppxx)
 
 
 //// dfraft of CRUD work flow with association :
-// const user0 = new User();
-// user0.profile_id = '1' // directly. need to save the user instance after this
-// user0.addProfile({ profile_id:1 }) // setting with ID
-// user0.addProfile(p1) // adding instance, this will save p1 record if not exist
+const user0 = new User();
+//user0.addProfile({ id:1 }) // setting with ID
 
-// user0.deleteProfile({ profile_id:1 })
-// user0.updateProfile({ profile_id:1, new:2 })
-// user0.updateProfile({ profile_id:1 }, { address: 'Main St.' })
+const user1 = await User.where('firstname = user_one').queryInstance()
+console.log("user 1 from db", user1)
+const p = new Profile();
+p.email = '111@111.com'
+p.address = 'abc Main St'
+user1.addProfile(p) // adding instance, this will save record in profiles table if not exist
+
+// user0.deleteProfile({ id:1 })
+// user0.updateProfile({ id:1, newId:2 })
+// user0.updateProfile({ id:1 }, { address: 'Main St.' })
 
 
 

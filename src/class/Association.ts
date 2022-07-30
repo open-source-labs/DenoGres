@@ -15,6 +15,7 @@ abstract class Association {
   }
   abstract association_name:string; 
   abstract getAssociatedData(...args:any): void
+  abstract addAssociatedData(...args:any): void
 
   // Table altering query
   async syncAssociation() {
@@ -44,14 +45,18 @@ export class HasOne extends Association {
   targetModel_MappindColumnName = this.mappingDetails?.mapping_ColumnName // "id"
   association_name = `${this.target.name}_hasOne_${this.source.name}`
   getAccesorName = `get${this.source.name[0].toUpperCase()}${this.source.name.slice(1)}`
+  addAccesorName = `add${this.source.name[0].toUpperCase()}${this.source.name.slice(1)}`
   // add instance methods for create, get, update, delete
+
   private attachAssociationMethodsToModel() {
-    console.log("target", this.target.name) // User
-    console.log("source", this.source.name) // Profile
-    console.log("getAccesorName of HasOne: ", this.getAccesorName) //getProfile
+    console.log("target", this.target.name)
+    console.log("source", this.source.name)
+    console.log("getAccesorName of HasOne: ", this.getAccesorName)
     console.log("this.mappingDetails", this.mappingDetails)
     addMethodToModel(this, this.target, this.getAccesorName)
+    addAddMethodToModel(this, this.target, this.addAccesorName)
   }
+
   async getAssociatedData(instance:any, options?:any) {
     console.log("instance? ", instance)
     //console.log("THIS: ", this)
@@ -71,7 +76,39 @@ export class HasOne extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
-}
+  async addAssociatedData(instance:any, options:any){
+    let query = ''
+    let queryResult:any
+    console.log("HasOne's addAssociatedData")
+    console.log("addOptions", options)
+    console.log("source table", this.source.table) // profiles
+    console.log("target table", this.target.table) // users
+    // when option is an object
+    // when option is an instance of source table
+    if(options instanceof this.source) {
+      console.log('instance', options)
+      // if this instance has no id, assuem it's not yet created in the database and create the record
+      // if this instance has id, assume it's in the database and just update the foreign key column
+      const toObj = Object.assign({}, options)
+      const objKeys = Object.keys(toObj).join(',')
+      const objVals = Object.values(toObj).map(el => `'${el}'`).join(',')
+      const instanceId = instance.id || instance._id // <<<<<<<<< HARD CODED!!!
+
+      query = `INSERT INTO ${this.source.table} (${objKeys}, ${this.foreignKey_ColumnName}) VALUES (${objVals}, '${instanceId}');`
+      // not considering type... better to save() the instance and then attach foreign key after
+      // saving error await options.save() // getting 'too many database call' error
+    }
+    console.log(query)
+    const db = await ConnectDb()
+    try {
+      await db.queryObject(query);
+    } catch (error) {
+      console.log(error)
+    } finally {
+      DisconnectDb(db)
+    }
+  }
+} // end of HasOne class
 
 export class BelongsTo extends Association {
   constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
@@ -83,11 +120,13 @@ export class BelongsTo extends Association {
   targetModel_MappindColumnName = this.mappingDetails?.mapping_ColumnName
   association_name = `${this.source.name}_belongsTo_${this.target.name}`
   getAccesorName = `get${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}`
+  addAccesorName = `add${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}`
   
   // add instance methods for create, get, update, delete
   private attachAssociationMethodsToModel() {
     console.log("getAccesorName: ", this.getAccesorName)
     addMethodToModel(this, this.source, this.getAccesorName)
+    addAddMethodToModel(this, this.target, this.addAccesorName)
   }
 
    // this is instance method e.g. profile1.getUser(), person.getSpecies()
@@ -111,6 +150,9 @@ export class BelongsTo extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
+  async addAssociatedData(){
+    console.log("BelongsTo's addAssociatedData")
+  }
 }// end of BelonsTo class
 
 
@@ -126,6 +168,7 @@ export class HasMany extends Association {
   mapping_ColumnName = this.mappingDetails?.mapping_ColumnName
   association_name = `${this.source.name}_hasMany_${this.target.name}`
   getAccesorName = `get${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}s`
+  addAccesorName = `add${this.target.name[0].toUpperCase()}${this.target.name.slice(1)}s`
 
   // add instance methods for create, get, update, delete
   // but currently only has get
@@ -134,6 +177,7 @@ export class HasMany extends Association {
     console.log("methodName? ",methodName)
     
     addMethodToModel(this, model, methodName)
+    addAddMethodToModel(this, this.target, this.addAccesorName)
   }
 
   // this is instance method e.g. species1.getPeople()
@@ -158,6 +202,9 @@ export class HasMany extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
+  async addAssociatedData(){
+    console.log("HasMany's addAssociatedData")
+  }
   
 }//end of hasMany
 
@@ -178,6 +225,8 @@ export class ManyToMany extends Association {
   association_name = `${this.modelA.name}_ManyToMany_${this.modelB.name}`
   getAccesorName_A = `get${this.modelB.name[0].toUpperCase()}${this.modelB.name.slice(1)}s`
   getAccesorName_B = `get${this.modelA.name[0].toUpperCase()}${this.modelA.name.slice(1)}s`
+  addAccesorName_A = `add${this.modelB.name[0].toUpperCase()}${this.modelB.name.slice(1)}s`
+  addAccesorName_B = `add${this.modelA.name[0].toUpperCase()}${this.modelA.name.slice(1)}s`
   // console.log("getAccesorName_A & B: ", getAccesorName_A, getAccesorName_B)
   // add instance methods for create, get, update, delete
   private attachAssociationMethodsToModels() {
@@ -185,6 +234,8 @@ export class ManyToMany extends Association {
 
     addMethodToModel(this, this.modelA, this.getAccesorName_A)
     addMethodToModel(this, this.modelB, this.getAccesorName_B)
+    //addAddMethodToModel(this, this.target, this.addAccesorName_A)
+    //addAddMethodToModel(this, this.target, this.addAccesorName_B)
   }
 
   async getAssociatedData(instance:any, options?:any) {
@@ -218,7 +269,15 @@ export class ManyToMany extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
+  async addAssociatedData(addOptions){
+    console.log("ManyToMany's addAssociatedData")
+    console.log("addOptions", addOptions)
+  }
 } // end of ManyToMany class
+
+
+
+
 
 
 function addMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
@@ -226,12 +285,22 @@ function addMethodToModel<T extends Association>(association:T, targetModel:type
   console.log("targetModel, ModelMethod: ", targetModel.name, ModelMethod)
   Object.defineProperty(targetModel.prototype, ModelMethod, {
     enumerable: false, 
-    //writable: true,
     value(options:any) {
       return association.getAssociatedData(this, options)
     } // 'this' is the instance calling 'ModelMethod' method
   }) 
 }
 
+//called by addAddMethodToModel(this, this.target, this.getAccesorName)
+function addAddMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
+  console.log("association.name: ", association.association_name)
+  console.log("targetModel, ModelMethod: ", targetModel.name, ModelMethod)
+  Object.defineProperty(targetModel.prototype, ModelMethod, {
+    enumerable: false, 
+    value(val:any, options:any) {
+      return association.addAssociatedData(this, val, options)
+    } // 'this' is the instance calling 'ModelMethod' method
+  }) 
+}
 
 
