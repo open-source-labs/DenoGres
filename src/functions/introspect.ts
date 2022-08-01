@@ -15,6 +15,7 @@ interface IColumnQueryRecords {
     col_default: unknown
     not_null: boolean
     enum_value: string
+    character_maximum_length: number
 }
 
 interface IConstraint {
@@ -37,6 +38,7 @@ interface ITableListObj {
                 checks?: string[],
                 defaultVal?: unknown,
                 autoIncrement?: boolean,
+                length?: number,
                 association?: { rel_type: string, table: string, mappedCol: string}
             }
         };
@@ -88,7 +90,6 @@ const getDbData = async () => {
 // When you hit an enum that youre building out in dbpull, you can just query off of that object
 export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     const { tableList, columnList, constraintList } = await getDbData();
-    console.log("columnList", columnList);
     // convert table list to an object
     const tableListObj: ITableListObj = {};
     
@@ -110,12 +111,17 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
                 const enumVals = el.enum_value.replaceAll(',','').split(' ');
                 enumObj[enumName] = enumVals;
             }
-            console.log('enumObject!=>', enumObj)
-
 
             tableListObj[el.table_name].columns[el.column_name] = {type: el.column_type};
             const refObj = tableListObj[el.table_name].columns[el.column_name];
             refObj['notNull'] = el.not_null;
+
+            if (el.character_maximum_length){
+                refObj['length'] = el.character_maximum_length;
+            }
+            // if (tableListObj[el.table_name].columns[el.column_name]) 
+            // refObj['character_maximum_length'] = 
+            // tableListObj[el.table_name].columns[el.column_name] = {limit: el.character_maximum_length}
 
             if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
                 refObj['autoIncrement'] = true;
@@ -166,51 +172,3 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     })
     return [tableListObj, enumObj];
 };
-
-// Will have to return array of objects and then deconstructure both objects in db pull
-
-
-
-
-///// Current Generated Model
-
-// export interface Persa {
-//     current_mood: undefined
-//     name: string
-//   }
-  
-//   export class Persa extends Model {
-//     static table = 'person';
-//     static columns = {
-//       current_mood: {
-//         type: 'enum: mood',
-//       },
-//       name: {
-//         type: 'text',
-//       },
-//     }
-//   }
-
-//////    Example ENUM model
-
-// export interface Person {
-//     current_mood: ('sad' | 'happy' | 'excited')
-//     name: string
-//   }
-  
-//   export class Person extends Model {
-//     static table = 'person';
-//     static columns = {
-//       current_mood: {
-//         type: 'enum',
-//       },
-//       name: {
-//         type: 'text',
-//       },
-//     }
-//   }
-  
-//   enum MyEnum { A, B, C };
-//   keyof typeof MyEnum;  // "A" | "B" | "C"
-
-  /////////

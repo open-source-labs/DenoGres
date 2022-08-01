@@ -33,8 +33,8 @@ WITH enum_table as (
   AS column_type, 
   pg_get_expr(pg_attrdef.adbin, pg_attrdef.adrelid) col_default, --convert from nodeToString rep to SQL expr
   attr.attnotnull AS not_null,
-  enum_value                
-  
+  enum_value,
+character_maximum_length                
   
   FROM pg_attribute attr 
   INNER JOIN pg_class class on attr.attrelid = class.oid
@@ -42,9 +42,11 @@ WITH enum_table as (
   INNER JOIN pg_type ON attr.atttypid = pg_type.oid
   LEFT JOIN pg_attrdef ON attr.attrelid = pg_attrdef.adrelid AND attr.attnum = pg_attrdef.adnum -- Column default vaules
   LEFT JOIN enum_table ON pg_type.typname = enum_name
-  
+  LEFT JOIN information_schema.columns ISC ON tables.schemaname = ISC.table_schema AND tables.tablename = ISC.table_name AND attr.attname = ISC.column_name 
+
   WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema')
   AND attr.attnum > -1
   
   ORDER BY table_name
+
 `
