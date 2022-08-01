@@ -88,27 +88,3 @@ export async function dbPull() {
     Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 }
 
-/*
-enumObject!=> {
-  feeling: [ "weak", "decent", "strong", "superStrong" ],
-  mood: [ "ok", "happy", "sad" ]
-}
-//   enum MyEnum { A, B, C };
-//   keyof typeof MyEnum;  // "A" | "B" | "C"
-
-/*
-
-export enum Mood {
-    sad,
-    happy,
-    excited
-}
-
-export interface Person {
-    current_mood: keyof typeof Mood
-    name: string
-  }
-  /////////
-
-
-*/

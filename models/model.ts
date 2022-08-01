@@ -24,26 +24,26 @@ export class Todo extends Model {
 
 
 export interface Product {
-  price: number
-  discounted_price: number
-  product_no: number
   name: string
+  price: number
+  product_no: number
+  discounted_price: number
 }
 
 export class Product extends Model {
   static table = 'products';
   static columns = {
-    price: {
-      type: 'numeric',
+    name: {
+      type: 'text',
     },
-    discounted_price: {
+    price: {
       type: 'numeric',
     },
     product_no: {
       type: 'int4',
     },
-    name: {
-      type: 'text',
+    discounted_price: {
+      type: 'numeric',
     },
   }
   static checks: ["(price > discounted_price)","(price > discounted_price)","(discounted_price > (0::numeric))","(price > (0::numeric))"]
@@ -51,20 +51,20 @@ export class Product extends Model {
 
 
 export interface Order {
-  shipping_address: string
   order_id: number
+  shipping_address: string
 }
 
 export class Order extends Model {
   static table = 'orders';
   static columns = {
-    shipping_address: {
-      type: 'text',
-    },
     order_id: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
+    },
+    shipping_address: {
+      type: 'text',
     },
   }
 }
@@ -72,8 +72,8 @@ export class Order extends Model {
 
 export interface Products99 {
   name: string
-  product_no: number
   price: number
+  product_no: number
 }
 
 export class Products99 extends Model {
@@ -82,13 +82,13 @@ export class Products99 extends Model {
     name: {
       type: 'text',
     },
+    price: {
+      type: 'numeric',
+    },
     product_no: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
-    },
-    price: {
-      type: 'numeric',
     },
   }
 }
@@ -113,18 +113,14 @@ export class Persa extends Model {
 
 
 export interface Products2 {
-  product_no: number
   name: string
   price: number
+  product_no: number
 }
 
 export class Products2 extends Model {
   static table = 'products2';
   static columns = {
-    product_no: {
-      type: 'int4',
-      notNull: true,
-    },
     name: {
       type: 'text',
       notNull: true,
@@ -133,37 +129,41 @@ export class Products2 extends Model {
       type: 'numeric',
       notNull: true,
     },
+    product_no: {
+      type: 'int4',
+      notNull: true,
+    },
   }
   static checks: ["(price > (0::numeric))"]
 }
 
 
 export interface OrderItem {
-  product_no: number
-  quantity: number
   order_id: number
+  quantity: number
+  product_no: number
 }
 
 export class OrderItem extends Model {
   static table = 'order_items';
   static columns = {
-    product_no: {
-      type: 'int4',
-      notNull: true,
-      association: {
-        table: 'products4',
-        mappedCol: 'product_no',
-      }
-    },
-    quantity: {
-      type: 'int4',
-    },
     order_id: {
       type: 'int4',
       notNull: true,
       association: {
         table: 'orders',
         mappedCol: 'order_id',
+      }
+    },
+    quantity: {
+      type: 'int4',
+    },
+    product_no: {
+      type: 'int4',
+      notNull: true,
+      association: {
+        table: 'products4',
+        mappedCol: 'product_no',
       }
     },
   }
@@ -216,45 +216,81 @@ export class Climber extends Model {
 }
 
 
+export interface CharacterTest {
+  w: undefined
+  id: number
+  z: string
+  x: string
+  y: string
+}
+
+export class CharacterTest extends Model {
+  static table = 'character_tests';
+  static columns = {
+    w: {
+      type: 'bpchar',
+      limit: 1
+    },
+    id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    z: {
+      type: 'text',
+    },
+    x: {
+      type: 'varchar',
+      limit: 10
+    },
+    y: {
+      type: 'varchar',
+      limit: 255
+    },
+  }
+}
+
+
 export interface Products5 {
-  product_no: number
-  name: string
   price: number
+  name: string
+  product_no: number
 }
 
 export class Products5 extends Model {
   static table = 'products5';
   static columns = {
-    product_no: {
-      type: 'int4',
-      notNull: true,
-      primaryKey: true,
+    price: {
+      type: 'numeric',
     },
     name: {
       type: 'text',
     },
-    price: {
-      type: 'numeric',
+    product_no: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
     },
   }
 }
 
 
 export interface Products3 {
-  price: number
   product_no: number
+  price: number
   name: string
 }
 
 export class Products3 extends Model {
   static table = 'products3';
   static columns = {
-    price: {
-      type: 'numeric',
-    },
     product_no: {
       type: 'int4',
       unique: true,
+    },
+    price: {
+      type: 'numeric',
     },
     name: {
       type: 'text',
@@ -264,18 +300,18 @@ export class Products3 extends Model {
 
 
 export interface Example {
-  a: number
   c: number
+  a: number
   b: number
 }
 
 export class Example extends Model {
   static table = 'example';
   static columns = {
-    a: {
+    c: {
       type: 'int4',
     },
-    c: {
+    a: {
       type: 'int4',
     },
     b: {
@@ -301,6 +337,28 @@ export class Orders5 extends Model {
     },
     shipping_address: {
       type: 'text',
+    },
+  }
+}
+
+
+export interface Whatever {
+  col_1: string
+  col_2: string
+  col_3: string
+}
+
+export class Whatever extends Model {
+  static table = 'whatever';
+  static columns = {
+    col_1: {
+      type: 'varchar',
+    },
+    col_2: {
+      type: 'varchar',
+    },
+    col_3: {
+      type: 'varchar',
     },
   }
 }
@@ -340,17 +398,14 @@ export class OrderItems5 extends Model {
 
 
 export interface Products4 {
-  price: number
   name: string
   product_no: number
+  price: number
 }
 
 export class Products4 extends Model {
   static table = 'products4';
   static columns = {
-    price: {
-      type: 'numeric',
-    },
     name: {
       type: 'text',
     },
@@ -358,6 +413,9 @@ export class Products4 extends Model {
       type: 'int4',
       notNull: true,
       primaryKey: true,
+    },
+    price: {
+      type: 'numeric',
     },
   }
 }
