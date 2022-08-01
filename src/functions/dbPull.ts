@@ -6,7 +6,9 @@ import { introspect } from './introspect.ts'
 
 
 export async function dbPull() {
-    const tableListObj = await introspect();
+    const [tableListObj, enumObj] = await introspect();
+    // const tableListObj = await introspect();
+    console.log('Table List Obj', tableListObj)
 
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
 
@@ -26,12 +28,24 @@ export async function dbPull() {
         // iterate over each property within the columns object
         Object.keys(tableListObj[el].columns).forEach(colName => {
             const columnObj = tableListObj[el].columns[colName];
-            // add the column as a property to the interface
-            interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`
-            // add the column as a property to the class
+            // add the column as a property to the interface, checking for enums first
+            if (columnObj.type.includes('enum:')){
+                const enumName = columnObj.type.replaceAll('enum: ', '');
+                const enumCapitalized = enumName[0].toUpperCase() + enumName.substring(1);
+                interfaceCode += `  ${colName}: keyof typeof ${enumCapitalized}\n` 
+            } else {
+            interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`;
+            }
+            // add the column as a property to the class, remove enum column name if enum type is found
+            if (columnObj.type.includes('enum:')){
+                classCode += `    ${colName}: {\n` +
+            `      type: 'enum',\n`
+            } else {    
             classCode += `    ${colName}: {\n` +
             `      type: '${columnObj.type}',\n`
+            }
             // for each 'property' of the column add it to the object
+            if(columnObj.length) classCode += `      length: ${columnObj.length}\n`;
             if (columnObj.notNull) classCode += `      notNull: true,\n`;
             if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
             if (columnObj.unique) classCode += `      unique: true,\n`;
@@ -43,7 +57,6 @@ export async function dbPull() {
                 `        table: '${columnObj.association.table}',\n` +
                 `        mappedCol: '${columnObj.association.mappedCol}',\n      }\n`;
             }
-            
             // close the column obj
             classCode += `    },\n`
         })
@@ -71,8 +84,18 @@ export async function dbPull() {
             autoCreatedModels +=`]\n`
         }
         // close the query for this table
-        autoCreatedModels += `}\n`
+        autoCreatedModels += `}\n\n`
+    })
+    // Add all enums from enum object 
+    Object.keys(enumObj).forEach(el => {
+        const enumCapitalized = el[0].toUpperCase() + el.substring(1);
+        autoCreatedModels += `export enum ${enumCapitalized} {\n`;
+        enumObj[el].forEach(str => {
+            autoCreatedModels += `${str},\n`
+        })
+        autoCreatedModels += `}\n\n`;
     })
     // Create the model.ts file
     Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 }
+

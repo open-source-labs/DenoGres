@@ -1,6 +1,5 @@
 import { Model } from '../src/class/Model.ts'
-
-import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
+//import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 //import { BelongsTo } from '../src/class/Association.ts'
 
 // sample test
@@ -15,9 +14,9 @@ class User extends Model {
     id: { type:'uuid', primaryKey: true },
     firstName: { type:'string', notNull: true },
     lastName: { type:'string', notNull: false },
-    profile_id: { type:'number'}
+    //profile_id: { type:'number'}
   }
-  static foreignKey = []
+  //static foreignKey = []
 }
 
 interface Profile {
@@ -31,44 +30,38 @@ class Profile extends Model {
     id: { type:'number', primaryKey: true, autoIncrement:true },
     email: { type:'string', notNull: true },
     address: { type:'string', notNull: false },
-    user_id: {type:'number'}
+    //user_id: {type:'number'}
   };
-  static foreignKey = []
+  //static foreignKey = []
 }
 
 // belongsTo test...
-// await Profile.belongsTo(User)
-// //console.log("Profile Model:", Profile)
-// const p = new Profile();
-// p.email = '111@111.com'
-// p.user_id = '70b02ed2-c110-40eb-96fe-e0daf8a04132'
-// p.getUser()
+
+const userProfileAssociation = await Profile.belongsTo(User)
+
+await userProfileAssociation.syncAssociation();
 
 
-// hasOne method would go like this:
-
-// foreign key in User Model
-let User_hasOne_Profile = await User.hasOne(Profile) // this doesnt assign value to the constant, for it's await
-//console.log("User_hasOne_Profile", User_hasOne_Profile) 
-
-//await User_hasOne_Profile.syncAssociation() // syncing DB with ALTER TABLE query
-
-// (for now): this is actually calling User.belongsTo(Profile) and making foreign key 'profile_id' in User table
-// (just flipping)  -- need to make separate hasOne method later
+await User.hasOne(Profile)
+// console.log(User)
+// console.log(Profile)
 
 
-const user0 = new User();
-user0.profile_id = '1'
-user0.getProfile();
+const user1 = await User.where('firstname = user_one').queryInstance()
+console.log("user 1 from db", user1)
+const p = new Profile();
+p.email = '111@111.com'
+p.address = 'abc Main St'
+// await user1.addProfile(p) // adding instance, this will save record in profiles table 
+// should be able to check "if not exist" though... 
+// const user1Profile = await user1.getProfile()
+// console.log(user1Profile)
 
-// user0.firstName = 'user0-FirstName'
-// await user0.where('id', '001').update({ profile_id: 'xx'})
-// //User.where('id=1').getProfile();
-// User.findInstance('name=user0').getProfile();
-// User.findInstance('name=user0').addProfile({ email:'xxx', address:'yyy' }).save()
-// User.findInstance('name=user0').update({ profile_id:'1' });
-// User.wherexxxx.queryInstance().
-// Model method?
+//user1.addProfile({ id:1 }) // for existing profile id
+
+// more flow draft (tbd)
+// user0.deleteProfile({ id:1 })
+// user0.updateProfile({ id:1 }, { address: 'Main St.' })
 
 
 
