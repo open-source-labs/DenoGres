@@ -20,8 +20,8 @@ export async function dbPull() {
         let interfaceCode = `\nexport interface ${className} {\n`;
         // initialize class code holder
         let classCode =`export class ${className} extends Model {\n` +
-        `  static table = '${el}';\n` +
-        `  static columns = {\n`;
+        `  static table: '${el}';\n` +
+        `  static columns: {\n`;
 
         // iterate over each property within the columns object
         Object.keys(tableListObj[el].columns).forEach(colName => {
@@ -58,6 +58,17 @@ export async function dbPull() {
         if(tableObj.unique) autoCreatedModels += `  static unique: ${JSON.stringify(tableObj.unique)}\n`
         if(tableObj.primaryKey) {
           autoCreatedModels += `  static primaryKey: ${JSON.stringify(tableObj.primaryKey)}\n`
+        }
+        if(tableObj.foreignKey) {
+            autoCreatedModels += `  static foreignKey: [`
+
+            tableObj.foreignKey.forEach((fkObj, idx) => {
+                const delimiter = idx === 0 ? '' : ', ';
+
+                autoCreatedModels += `${delimiter}\n    {columns: ${JSON.stringify(fkObj.columns)}, mappedColumns: ${JSON.stringify(fkObj.mappedColumns)}, table: '${fkObj.table}'}`;
+            })
+
+            autoCreatedModels +=`]\n`
         }
         // close the query for this table
         autoCreatedModels += `}\n`
