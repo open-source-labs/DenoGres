@@ -15,6 +15,7 @@ interface IColumnQueryRecords {
     col_default: unknown
     not_null: boolean
     enum_value: string
+    character_maximum_length: number
 }
 
 interface IConstraint {
@@ -37,6 +38,7 @@ interface ITableListObj {
                 checks?: string[],
                 defaultVal?: unknown,
                 autoIncrement?: boolean,
+                length?: number,
                 association?: { rel_type: string, table: string, mappedCol: string}
             }
         };
@@ -88,7 +90,6 @@ const getDbData = async () => {
 // When you hit an enum that youre building out in dbpull, you can just query off of that object
 export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     const { tableList, columnList, constraintList } = await getDbData();
-    console.log("columnList", columnList);
     // convert table list to an object
     const tableListObj: ITableListObj = {};
     
@@ -110,12 +111,17 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
                 const enumVals = el.enum_value.replaceAll(',','').split(' ');
                 enumObj[enumName] = enumVals;
             }
-            console.log('enumObject!=>', enumObj)
-
 
             tableListObj[el.table_name].columns[el.column_name] = {type: el.column_type};
             const refObj = tableListObj[el.table_name].columns[el.column_name];
             refObj['notNull'] = el.not_null;
+
+            if (el.character_maximum_length){
+                refObj['length'] = el.character_maximum_length;
+            }
+            // if (tableListObj[el.table_name].columns[el.column_name]) 
+            // refObj['character_maximum_length'] = 
+            // tableListObj[el.table_name].columns[el.column_name] = {limit: el.character_maximum_length}
 
             if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
                 refObj['autoIncrement'] = true;

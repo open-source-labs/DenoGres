@@ -8,7 +8,7 @@ import { introspect } from './introspect.ts'
 export async function dbPull() {
     const [tableListObj, enumObj] = await introspect();
     // const tableListObj = await introspect();
-    // console.log('Table List Obj', tableListObj)
+    console.log('Table List Obj', tableListObj)
 
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
 
