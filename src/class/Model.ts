@@ -1,66 +1,66 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
-import { BelongsTo, HasOne, HasMany, ManyToMany } from './Association.ts'
-import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
-
+import { BelongsTo, HasOne, HasMany, ManyToMany } from './Association.ts';
+import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 
 interface IrecordPk {
-  attname: string
+  attname: string;
 }
+interface IpkObj {
+  [key: string]: unknown;
+}
+
 // TYPE GUARD FUNCTIONS
 const recordPk = (record: object): record is IrecordPk => {
   return 'attname' in record;
-}
+};
 
 export class Model {
   [k: string]: any; // index signature
   static table: string;
   static columns: {
     [key: string]: {
-        type: string,
-        primaryKey?: boolean,
-        notNull?: boolean,
-        unique?: boolean,
-        checks?: string[],
-        defaultVal?: string | number | boolean | Date,
-        autoIncrement?: boolean,
-        association?: { rel_type?: string, table: string, mappedCol: string},
-        length?: number
-    }
+      type: string;
+      primaryKey?: boolean;
+      notNull?: boolean;
+      unique?: boolean;
+      checks?: string[];
+      defaultVal?: string | number | boolean | Date;
+      autoIncrement?: boolean;
+      association?: { rel_type?: string; table: string; mappedCol: string };
+      length?: number;
+    };
   };
   static checks: string[];
   static unique: Array<string[]>;
   static primaryKey: string[];
   private static sql = '';
-  static foreignKey: { columns: string[], mappedColumns: string[], rel_type?: string, table: string }[];
-  // CREATE TABLE: create table schema in database
-  // input: (table, column datatype)
-  // static create(table: string, ...column: string[]) {
-  //   this.sql += `CREATE TABLE ${table} (`;
-  //   for (let i = 0; i < column.length; i++) {
-  //     const words = column[i].toString().split(' ');
-  //     this.sql += ` ${words[0]} ${words[1]}`;
-  //     if (i !== column.length - 1) this.sql += ', ';
-  //   }
-  //   return this;
-  // }
+  static foreignKey: {
+    columns: string[];
+    mappedColumns: string[];
+    rel_type?: string;
+    table: string;
+  }[];
+
   // static id: string;
   // static finalID: string;
 
   private async primaryKey() {
-    Model.sql =
-      `SELECT a.attname
+    Model.sql = `SELECT a.attname
       FROM pg_index i
       JOIN pg_attribute a ON a.attrelid = i.indrelid
       AND a.attnum = ANY(i.indkey)
-      WHERE i.indrelid = '${Object.getPrototypeOf(this).constructor.table}'::regclass
+      WHERE i.indrelid = '${
+        Object.getPrototypeOf(this).constructor.table
+      }'::regclass
       AND i.indisprimary`;
     const pk = await Model.query();
-    if(typeof pk[0]==='object' && pk[0] !== null && recordPk(pk[0])) return pk[0].attname;
+    if (typeof pk[0] === 'object' && pk[0] !== null && recordPk(pk[0]))
+      return pk[0].attname;
   }
 
   async save() {
-    const table = Object.getPrototypeOf(this).constructor.table
-    const keys = Object.keys(this)
+    const table = Object.getPrototypeOf(this).constructor.table;
+    const keys = Object.keys(this);
     const values = Object.values(this);
 
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
@@ -73,29 +73,25 @@ export class Model {
 
     const pk = await this.primaryKey();
 
-    Model.sql += `SELECT ${pk} FROM ${table} WHERE`
+    Model.sql += `SELECT ${pk} FROM ${table} WHERE`;
     for (let i = 0; i < values.length; i++) {
       Model.sql += ` ${keys[i]} = '${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ' AND';
     }
     const pkObj = await Model.query();
-    if(pk !== undefined && typeof pkObj[0]==='object' && pkObj[0]!==null) {
-      this[pk] = pkObj[0][pk]
+    // pkObj = [{ _id: 123 }]
+    // pk = _id
+    // console.log('pk', pkObj[0][pk]);
+    if (
+      typeof pk === 'string' &&
+      typeof pkObj[0] === 'object' &&
+      pkObj[0] !== null
+    ) {
+      // if (pk !== undefined && typeof pkObj[0] === 'object')
+      const obj = pkObj[0] as IpkObj;
+      this[pk] = obj[pk];
+      return this;
     }
-
-    // Model.sql += `INSERT INTO ${Object.getPrototypeOf(this).constructor.table} (${Object.keys(this).toString()}) VALUES (`;
-    // const values = Object.values(this);
-    // for (let i = 0; i < values.length; i++) {
-    //   Model.sql += ` '${values[i]}'`
-    //   if (i !== values.length - 1) Model.sql += ' ,';
-    //   else Model.sql += ')';
-    // }
-    // Model.query();
-    // Model.sql = '';
-    // Model.id = `SELECT id FROM ${Object.getPrototypeOf(this).constructor.table} WHERE ${Object.keys(this)[0]} = ${Object.values(this)[0]}`
-    // Model.query();
-
-    return this;
   }
 
   async update() {
@@ -106,7 +102,9 @@ export class Model {
     Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
     const keys = Object.keys(this);
     // console.log(keys)
-    const values = Object.values(this).filter(value => value !== this[pk]);
+    const values = Object.values(this).filter(
+      (value) => value !== this[pk as keyof Model]
+    );
     // console.log(values)
     for (let i = 0; i < values.length; i++) {
       Model.sql += ` ${keys[i]} = '${values[i]}'`;
@@ -114,29 +112,9 @@ export class Model {
     }
     // console.log(this)
     // console.log(this[pk])
-    Model.sql += ` WHERE ${pk} = ${this[pk]}`
+    Model.sql += ` WHERE ${pk} = ${this[pk as keyof Model]}`;
     return await Model.query();
-
-    // console.log(Model.id);
-    // Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
-    // //this {name: 'kristen', hair_color: 'black'}
-    // // 
-    // const keys = Object.keys(this);
-    // const values = Object.values(this);
-    // for (let i = 0; i < values.length; i++) {
-    //   Model.sql += ` ${keys[i]} = '${values[i]}'`
-    //   if (i !== values.length - 1) Model.sql += ' ,';
-    }
-
-    // const primaryKey = `SELECT a.attname
-    // FROM   pg_index i
-    // JOIN   pg_attribute a ON a.attrelid = i.indrelid
-    //                      AND a.attnum = ANY(i.indkey)
-    // WHERE  i.indrelid = '${Object.getPrototypeOf(this).constructor.table}'::regclass
-    // AND    i.indisprimary`;
-
-    // return Model;
-  
+  }
 
   // INSERT INTO VALUES: add value(s) to column(s) in this table
   // input: (column = value, ...)
@@ -175,7 +153,7 @@ export class Model {
   // DELETE FROM: delete table
   // input: delete()
   static delete() {
-    console.log(this.table)
+    console.log(this.table);
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -227,16 +205,7 @@ export class Model {
     return this;
   }
 
-  //having('COUNT(column) > 5')
-  //table.having('count', column > 5)
-  //AVG(columnName) BETWEEN 50 AND 100
-  //table.having(type: string, columnName: string, sign: string)
-  // sign = '> 5'
-  //table.having('count', '_id', ' > 50')
-  // this.sql += " HAVING ${type} (${columnName}) ${sign} "
-  // having('count(column > 5','sum(column = 2')
-  // having('COUNT(column) > 5', 'OR SUM(column) = 2')
-  // HAVING COUNT (columnName) > 6
+  // HAVING: add condition(s) involving aggregate functions
   static having(...condition: string[]) {
     // if (type === 'count') {
     //   for (let i = 0; i < condition.length; i++) {
@@ -244,10 +213,10 @@ export class Model {
     //   }
     // }
     this.sql += ` HAVING ${condition[0]}`;
-    for (let i = 1; i < condition.length; i ++) {
-      this.sql += ` ${condition[i]}`
+    for (let i = 1; i < condition.length; i++) {
+      this.sql += ` ${condition[i]}`;
     }
-    console.log(this.query)
+    console.log(this.query);
     return this;
   }
 
@@ -260,11 +229,11 @@ export class Model {
 
   // LEFT JOIN: selects records from this table and matching values on table2
   // input: (column1, column2, table2)
-  static leftJoin(column1: string, column2: string, table2: string){
+  static leftJoin(column1: string, column2: string, table2: string) {
     this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
-  
+
   // RIGHT JOIN: selects records from table2 and matching values on this table
   // input: (column1, column2, table2)
   static rightJoin(column1: string, column2: string, table2: string) {
@@ -274,7 +243,7 @@ export class Model {
 
   // FULL JOIN: selects all records when a match exists in either table
   // input: (column1, column2, table2)
-  static fullJoin(column1: string, column2: string, table2: string){
+  static fullJoin(column1: string, column2: string, table2: string) {
     this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
@@ -287,8 +256,8 @@ export class Model {
 
   // ORDER BY: sort column(s) by ascending or descending order
   static order(order: string, ...column: string[]) {
-      this.sql += ` ORDER BY ${column.toString()}`;
-      
+    this.sql += ` ORDER BY ${column.toString()}`;
+
     if (order !== 'ASC' && order !== 'DESC')
       console.log(
         `Error in sort method: order argument should be 'ASC' or 'DESC'`
@@ -301,23 +270,23 @@ export class Model {
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   // input: (column)
-  
+
   static count(column: string) {
-   this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
-   return this;
+    this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
+    return this;
   }
 
-  static sum(column: string){
+  static sum(column: string) {
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
-  
+
   static avg(column: string) {
-    this.sql += `SELECT AVG(${column}) FROM ${this.table}`
+    this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
 
-  static min(column: string){
+  static min(column: string) {
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
@@ -326,15 +295,20 @@ export class Model {
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
-  
+
   // execute query in database
-  static async query(print?: string):Promise<unknown[]> {
+  static async query(): Promise<unknown[]> {
     const db = await ConnectDb();
     // const pk = await this.primaryKey();
-    if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
+    if (!this.sql.includes('SELECT a.attname')) console.log(this.sql);
     // const sqlResult = await db.sqlObject(`SELECT species.name FROM people INNER JOIN species ON people.species_id = species._id WHERE people.name = 'Luke Skywalker'`)
     const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
-    // if (!this.sql.includes('SELECT a.attname') && !this.sql.includes('UPDATE') && !this.sql.includes('INSERT')) console.log(queryResult.rows);
+    if (
+      !this.sql.includes('SELECT a.attname') &&
+      !this.sql.includes('UPDATE') &&
+      !this.sql.includes('INSERT')
+    )
+      console.log(queryResult.rows);
     this.sql = '';
     DisconnectDb(db);
     return queryResult.rows;
@@ -348,54 +322,63 @@ export class Model {
     const queryResult = await db.queryObject(this.sql);
     this.sql = '';
     DisconnectDb(db);
-    return Object.assign(new this(), queryResult.rows[0])
+    return Object.assign(new this(), queryResult.rows[0]);
   }
-
-
 
   //BELONGS TO
   // create foreign key on this model (if not exist)
-  static async belongsTo(targetModel:typeof Model, options?:any) {
+  static async belongsTo(targetModel: typeof Model, options?: any) {
+    let foreignKey_ColumnName: string;
+    let mappingTarget_ColumnName: string;
+    let associationQuery = '';
+    let rel_type = options?.associationName
+      ? options?.associationName
+      : 'belongsTo';
 
-    let foreignKey_ColumnName:string
-    let mappingTarget_ColumnName:string
-    let associationQuery = ''
-    let rel_type = options?.associationName ? options?.associationName : 'belongsTo'
-
-    const mappings = await getMappingKeys(this.table, targetModel.table) 
+    const mappings = await getMappingKeys(this.table, targetModel.table);
     // if undefined --> no relationship exist, need to make new
 
     // IF Existing relationships
-    if(mappings !== undefined && mappings !== null) {
-      console.log('========== EXISTING ASSOCIATION ===========')
-      foreignKey_ColumnName = mappings.source_keyname
-      mappingTarget_ColumnName = mappings.target_keyname
-      // const columnAtt = { 
+    if (mappings !== undefined && mappings !== null) {
+      console.log('========== EXISTING ASSOCIATION ===========');
+      foreignKey_ColumnName = mappings.source_keyname;
+      mappingTarget_ColumnName = mappings.target_keyname;
+      // const columnAtt = {
       //   type: targetModel.columns[mappingTarget_ColumnName].type,
-      //   association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
+      //   association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName }
       //  }
       // console.log("foreignKey_ColumnName: ", foreignKey_ColumnName)
       // Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      console.log('========== FORMING NEW ASSOCIATION ===========')
-      foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
-      const tempPrime = await getprimaryKey(targetModel.table)
-      mappingTarget_ColumnName = tempPrime ? tempPrime : 'id' || '_id' // << hard coded
+      console.log('========== FORMING NEW ASSOCIATION ===========');
+      foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`;
+      const tempPrime = await getprimaryKey(targetModel.table);
+      mappingTarget_ColumnName = tempPrime ? tempPrime : 'id' || '_id'; // << hard coded
 
-      const columnAtt = { 
+      const columnAtt = {
         type: targetModel.columns[mappingTarget_ColumnName].type,
-        association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
-       }
+        association: {
+          rel_type: rel_type,
+          table: targetModel.table,
+          mappedCol: mappingTarget_ColumnName,
+        },
+      };
 
-      this.columns[foreignKey_ColumnName] = columnAtt 
-      console.log("columnAtt: ",columnAtt)
+      this.columns[foreignKey_ColumnName] = columnAtt;
+      console.log('columnAtt: ', columnAtt);
       // only if there's NO existing association or existing foreign key
       associationQuery = `
-      ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${FIELD_TYPE[columnAtt.type]};
-      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
-      ;` // and this will NOT executed unless use explictly execute sync() on association instance created below
-      console.log('associationQuery:', associationQuery)
+      ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
+        FIELD_TYPE[columnAtt.type]
+      };
+      ALTER TABLE ${
+        this.table
+      } ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${
+        targetModel.table
+      } ON DELETE SET NULL ON UPDATE CASCADE
+      ;`; // and this will NOT executed unless use explictly execute sync() on association instance created below
+      console.log('associationQuery:', associationQuery);
     }
 
     // ========= COMPOSITE FOREIGN KEYS ONLY ============
@@ -412,50 +395,52 @@ export class Model {
       association_type: 'belongsTo',
       association_name: `${this.name}_belongsTo_${targetModel.name}`,
       targetModel: targetModel,
-      foreignKey_ColumnName : foreignKey_ColumnName,
-      mapping_ColumnName : mappingTarget_ColumnName,
-    }
-    // maybe making associations object in Model class? 
+      foreignKey_ColumnName: foreignKey_ColumnName,
+      mapping_ColumnName: mappingTarget_ColumnName,
+    };
+    // maybe making associations object in Model class?
     // e.g.
     // { Person_belongsTo_Species:mappingDetails }
 
     //console.log('mappingDetails:', mappingDetails)
-    if(options?.associationName === 'hasOne') {
-      return new HasOne(this, targetModel, mappingDetails, associationQuery)
+    if (options?.associationName === 'hasOne') {
+      return new HasOne(this, targetModel, mappingDetails, associationQuery);
     } else {
-      return new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
+      return new BelongsTo(this, targetModel, mappingDetails, associationQuery);
     }
   } // end of belongsTo
 
-
-
-  static async hasOne(targetModel:typeof Model, options?:any) {
-    return await targetModel.belongsTo(this, { associationName:'hasOne'})
+  static async hasOne(targetModel: typeof Model, options?: any) {
+    return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
   // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
-  static async hasMany(targetModel:typeof Model, options?:any) {
-    let mapping_ColumnName = '' // mapping key in this model
-    let targetModel_foreignKey = '' // foreign key in targetModel
-    let associationQuery = ''
-    
-    const mappings = await getMappingKeys(targetModel.table, this.table)
+  static async hasMany(targetModel: typeof Model, options?: any) {
+    let mapping_ColumnName = ''; // mapping key in this model
+    let targetModel_foreignKey = ''; // foreign key in targetModel
+    let associationQuery = '';
+
+    const mappings = await getMappingKeys(targetModel.table, this.table);
     //console.log(mappings)
-    if(mappings !== undefined && mappings !== null) {
-      console.log('========== EXISTING ASSOCIATION ===========')
+    if (mappings !== undefined && mappings !== null) {
+      console.log('========== EXISTING ASSOCIATION ===========');
       mapping_ColumnName = mappings.target_keyname;
       targetModel_foreignKey = mappings.source_keyname;
-      const columnAtt = { 
+      const columnAtt = {
         //type: this.columns[mapping_ColumnName].type,
-        association: { rel_type: 'belongsTo', table: this.table, mappedCol: mapping_ColumnName } 
-       }
-       //console.log("columnAtt: ", columnAtt)
-       //Object.assign(targetModel.columns[targetModel_foreignKey], columnAtt)
-       //console.log(targetModel.columns[targetModel_foreignKey])
+        association: {
+          rel_type: 'belongsTo',
+          table: this.table,
+          mappedCol: mapping_ColumnName,
+        },
+      };
+      //console.log("columnAtt: ", columnAtt)
+      //Object.assign(targetModel.columns[targetModel_foreignKey], columnAtt)
+      //console.log(targetModel.columns[targetModel_foreignKey])
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      console.log('========== FORMING NEW ASSOCIATION ===========')
-      console.log('========== need to execute belongsTo first ===========')
+      console.log('========== FORMING NEW ASSOCIATION ===========');
+      console.log('========== need to execute belongsTo first ===========');
     }
     // ========= WHEN COMPOSITE FOREIGN KEYS ...============
 
@@ -464,25 +449,23 @@ export class Model {
       association_type: 'hasMany',
       association_name: `${this.name}_hasMany_${targetModel.name}`,
       targetModel: targetModel,
-      foreignKey_ColumnName : targetModel_foreignKey,
-      mapping_ColumnName : mapping_ColumnName,
-    }
+      foreignKey_ColumnName: targetModel_foreignKey,
+      mapping_ColumnName: mapping_ColumnName,
+    };
     //console.log(mappingDetails)
-    return new HasMany(this, targetModel, mappingDetails, associationQuery) 
+    return new HasMany(this, targetModel, mappingDetails, associationQuery);
   }
-
 
   test() {
-    console.log(Object.keys(this))
-    console.log(Object.getPrototypeOf(this).constructor.table)
+    console.log(Object.keys(this));
+    console.log(Object.getPrototypeOf(this).constructor.table);
   }
-
 } //end of Model class
 
 interface Test {
   _id: number;
   name: string;
-  hair_color: string
+  hair_color: string;
 }
 
 class Test extends Model {
@@ -492,8 +475,8 @@ class Test extends Model {
       type: 'number',
     },
     name: {
-      type: 'string'
-    }
+      type: 'string',
+    },
   };
 }
 
@@ -501,10 +484,10 @@ class Test extends Model {
 // testInstance.name = 'tesia';
 // testInstance.hair_color = 'black' ;
 // await testInstance.save();
-// // Test {name = 'kristen', hair_color = 'black'}
-// // testInstance.hair_color = 'brown'
+// Test {name = 'kristen', hair_color = 'black'}
+// testInstance.hair_color = 'brown'
 // testInstance.name = 'kristen';
-// // Test {name = 'tesia', hair_color: 'brown'}
+// Test {name = 'tesia', hair_color: 'brown'}
 // await testInstance.update();
 
 // Test.select('*').where('_id = 143').query();
@@ -513,7 +496,7 @@ class Test extends Model {
 //   id: 1
 //   name: 'kristen'
 //   save: () =>{
- //  `INSERT ${this.Object.keys} 
+//  `INSERT ${this.Object.keys}
 //}
 // }
 
@@ -531,7 +514,7 @@ class Test extends Model {
 // Test.filter('name').group('people.name').having('SUM(height) > 100').query();
 // running other file prints out this query...?
 
-//SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 // 
+//SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 //
 // Test.filter('height').query();
 // Test.add('name = Tesia', 'hair_color = purple', 'gender = female').query();
 // Test.filter('name', 'hair_color', 'height')
@@ -558,14 +541,15 @@ class Test extends Model {
 //   }
 // }
 
-
 interface IgetMappingKeysResult {
-  [key:string]:string
+  [key: string]: string;
 }
 
-
 //helper function to find mapping keys between two tables
-export async function getMappingKeys<T>(sourcTable:string, targetTable:string):Promise<IgetMappingKeysResult | undefined | null> {
+export async function getMappingKeys<T>(
+  sourcTable: string,
+  targetTable: string
+): Promise<IgetMappingKeysResult | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
   source_attr.attname AS source_keyname,
@@ -583,44 +567,51 @@ export async function getMappingKeys<T>(sourcTable:string, targetTable:string):P
   `;
   let result;
   const db = await ConnectDb();
-  try {      
-    result = await db.queryObject(queryText, [sourcTable, targetTable])  
+  try {
+    result = await db.queryObject(queryText, [sourcTable, targetTable]);
   } catch (error) {
-    console.error(error)
+    console.error(error);
   } finally {
-    DisconnectDb(db)
+    DisconnectDb(db);
   }
-  console.log("getMappingKeys RESULT", result)
-  //if('rows' in result) 
-  if(typeof result === 'object' && 'rows' in result) {
+  console.log('getMappingKeys RESULT', result);
+  //if('rows' in result)
+  if (typeof result === 'object' && 'rows' in result) {
     return result.rows[0] as IgetMappingKeysResult;
   }
 } // end of getMappingKeys
 
-
 //helper function to find existing foreign key related to target table
-async function getForeignKey<T>(thisTable:string, targetTable:string){
+async function getForeignKey<T>(thisTable: string, targetTable: string) {
   const queryText = `SELECT a.attname
   FROM pg_constraint c 
   JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
-  WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`
+  WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`;
   let result;
   const db = await ConnectDb();
-    try {      
-      result = await db.queryObject(queryText, [thisTable, targetTable])  
-      //console.log("RESULT: ",result.rows[0].attname)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      DisconnectDb(db)
-    }
-  if(typeof result === 'object' && 'rows' in result && result.rows[0]!==null && typeof result.rows[0]==='object' && recordPk(result.rows[0])) {
-    return result.rows[0].attname
-  }  
+  try {
+    result = await db.queryObject(queryText, [thisTable, targetTable]);
+    //console.log("RESULT: ",result.rows[0].attname)
+  } catch (error) {
+    console.error(error);
+  } finally {
+    DisconnectDb(db);
+  }
+  if (
+    typeof result === 'object' &&
+    'rows' in result &&
+    result.rows[0] !== null &&
+    typeof result.rows[0] === 'object' &&
+    recordPk(result.rows[0])
+  ) {
+    return result.rows[0].attname;
+  }
 }
 
 //helper function to find primary key of target table
-async function getprimaryKey<T>(tableName:string):Promise<string | undefined | null> {
+async function getprimaryKey<T>(
+  tableName: string
+): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
   JOIN pg_attribute a ON a.attrelid = i.indrelid
@@ -629,35 +620,45 @@ async function getprimaryKey<T>(tableName:string):Promise<string | undefined | n
   AND i.indisprimary`;
   let result;
   const db = await ConnectDb();
-    try {      
-      result = await db.queryObject(queryText, [tableName])  
-      //console.log("RESULT: ",result.rows[0].attname)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      DisconnectDb(db)
-    } 
-  if(typeof result === 'object' && 'rows' in result && result.rows[0]!==null && typeof result.rows[0]==='object' && recordPk(result.rows[0])) {
-    return result.rows[0].attname
-  } 
+  try {
+    result = await db.queryObject(queryText, [tableName]);
+    //console.log("RESULT: ",result.rows[0].attname)
+  } catch (error) {
+    console.error(error);
+  } finally {
+    DisconnectDb(db);
+  }
+  if (
+    typeof result === 'object' &&
+    'rows' in result &&
+    result.rows[0] !== null &&
+    typeof result.rows[0] === 'object' &&
+    recordPk(result.rows[0])
+  ) {
+    return result.rows[0].attname;
+  }
 }
 
 interface manyToManyOptions {
   through?: typeof Model;
-  createThrough?:string;
-  createXTable?:string;  
+  createThrough?: string;
+  createXTable?: string;
 }
 
-export async function manyToMany(modelA:typeof Model, modelB:typeof Model, options:manyToManyOptions) {
-  let associationQuery = ''
-  // for existing one (x-table also exist) 
-  if(options?.through) {
+export async function manyToMany(
+  modelA: typeof Model,
+  modelB: typeof Model,
+  options: manyToManyOptions
+) {
+  let associationQuery = '';
+  // for existing one (x-table also exist)
+  if (options?.through) {
     const throughModel = options.through;
-    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table)
-    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table)
+    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table);
+    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table);
     // console.log("mapKeysA: ",mapKeysA)
     // console.log("mapKeysB: ",mapKeysB)
-    if(mapKeysA && mapKeysB) {
+    if (mapKeysA && mapKeysB) {
       const mappingDetails = {
         association_type: 'ManyToMany',
         association_name: `${modelA.name}_hasMany_${modelB.name}`,
@@ -668,16 +669,15 @@ export async function manyToMany(modelA:typeof Model, modelB:typeof Model, optio
         modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
         modelA_mappingKey: mapKeysA.target_keyname,
         modelB_mappingKey: mapKeysB.target_keyname,
-      }
+      };
       //console.log("mappingDetails:", mappingDetails)
       //// return out association instance
-      return new ManyToMany(modelA, modelB, mappingDetails, associationQuery) 
+      return new ManyToMany(modelA, modelB, mappingDetails, associationQuery);
     } else {
-      throw new Error('This association does not exist')
-    }    
-  } 
-  else if(options?.createThrough) {
+      throw new Error('This association does not exist');
+    }
+  } else if (options?.createThrough) {
     //// creating new x-table & new x-model
-    const modelA_foreignKey_inThroughModel = modelA.primaryKey
+    const modelA_foreignKey_inThroughModel = modelA.primaryKey;
   }
 }
