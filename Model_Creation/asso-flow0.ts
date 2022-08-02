@@ -1,4 +1,4 @@
-import { Model } from '../src/class/Model.ts'
+import { Model, getMappingKeys } from '../src/class/Model.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 
 // ===== STARWARS sample classes, 
@@ -52,17 +52,6 @@ class Person extends Model {
 
 
 
-// const db = await ConnectDb();
-// let result:any;
-// try {
-//   result = await db.queryObject('select * from people where name = \'Luke Skywalker\'')
-// } catch (error) {
-//   console.error(error)
-// } finally {
-//   DisconnectDb(db);
-// }
-//const luke = result.rows[0]
-
 
 // const lukeRow = await Person.where('name = Luke Skywalker').query()
 // const luke = lukeRow[0]
@@ -83,7 +72,6 @@ class Person extends Model {
 // working flow 1. belongsTo
 // await Person.belongsTo(Species)
 // const luke = await Person.where('name = Luke Skywalker').queryInstance()
-
 // const lukeSpecies = await luke.getSpecies()
 // console.log(lukeSpecies)
 
@@ -91,8 +79,10 @@ class Person extends Model {
 // await Person.where('name = Luke Skywalker').queryInstance().getSpecies()
 
 //  working flow 2. hasMany
-await Species.hasMany(Person)
-const droid = await Species.where('name = Droid').queryInstance()
-const droidCharacters = await droid.getPersons();
-console.log(droidCharacters)
+// await Species.hasMany(Person)
+// const droid = await Species.where('name = Droid').queryInstance()
+// const droidCharacters = await droid.getPersons();
+// console.log(droidCharacters)
 
+//await getMappingKeys(Person.table, Species.table)
+//await getMappingKeys('pilots', 'films')
