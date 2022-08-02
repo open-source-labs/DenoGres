@@ -2,6 +2,15 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasOne, HasMany, ManyToMany } from './Association.ts'
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts'
 
+
+interface IrecordPk {
+  attname: string
+}
+// TYPE GUARD FUNCTIONS
+const recordPk = (record: object): record is IrecordPk => {
+  return 'attname' in record;
+}
+
 export class Model {
   [k: string]: any; // index signature
   static table: string;
@@ -46,7 +55,7 @@ export class Model {
       WHERE i.indrelid = '${Object.getPrototypeOf(this).constructor.table}'::regclass
       AND i.indisprimary`;
     const pk = await Model.query();
-    return pk[0].attname;
+    if(typeof pk[0]==='object' && pk[0] !== null && recordPk(pk[0])) return pk[0].attname;
   }
 
   async save() {
@@ -70,7 +79,9 @@ export class Model {
       if (i !== values.length - 1) Model.sql += ' AND';
     }
     const pkObj = await Model.query();
-    this[pk] = pkObj[0][pk]
+    if(pk !== undefined && typeof pkObj[0]==='object' && pkObj[0]!==null) {
+      this[pk] = pkObj[0][pk]
+    }
 
     // Model.sql += `INSERT INTO ${Object.getPrototypeOf(this).constructor.table} (${Object.keys(this).toString()}) VALUES (`;
     // const values = Object.values(this);
@@ -317,7 +328,7 @@ export class Model {
   }
   
   // execute query in database
-  static async query(print?: string) {
+  static async query(print?: string):Promise<unknown[]> {
     const db = await ConnectDb();
     // const pk = await this.primaryKey();
     if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
@@ -347,7 +358,7 @@ export class Model {
   static async belongsTo(targetModel:typeof Model, options?:any) {
 
     let foreignKey_ColumnName:string
-    let mappingTarget_ColumnName = ''
+    let mappingTarget_ColumnName:string
     let associationQuery = ''
     let rel_type = options?.associationName ? options?.associationName : 'belongsTo'
 
@@ -355,7 +366,7 @@ export class Model {
     // if undefined --> no relationship exist, need to make new
 
     // IF Existing relationships
-    if(mappings !== undefined) {
+    if(mappings !== undefined && mappings !== null) {
       console.log('========== EXISTING ASSOCIATION ===========')
       foreignKey_ColumnName = mappings.source_keyname
       mappingTarget_ColumnName = mappings.target_keyname
@@ -369,11 +380,14 @@ export class Model {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
       console.log('========== FORMING NEW ASSOCIATION ===========')
       foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`
-      mappingTarget_ColumnName = await getprimaryKey(targetModel.table)
+      const tempPrime = await getprimaryKey(targetModel.table)
+      mappingTarget_ColumnName = tempPrime ? tempPrime : 'id' || '_id' // << hard coded
+
       const columnAtt = { 
         type: targetModel.columns[mappingTarget_ColumnName].type,
         association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName } 
        }
+
       this.columns[foreignKey_ColumnName] = columnAtt 
       console.log("columnAtt: ",columnAtt)
       // only if there's NO existing association or existing foreign key
@@ -411,7 +425,9 @@ export class Model {
     } else {
       return new BelongsTo(this, targetModel, mappingDetails, associationQuery) 
     }
-  }
+  } // end of belongsTo
+
+
 
   static async hasOne(targetModel:typeof Model, options?:any) {
     return await targetModel.belongsTo(this, { associationName:'hasOne'})
@@ -425,7 +441,7 @@ export class Model {
     
     const mappings = await getMappingKeys(targetModel.table, this.table)
     //console.log(mappings)
-    if(mappings !== undefined) {
+    if(mappings !== undefined && mappings !== null) {
       console.log('========== EXISTING ASSOCIATION ===========')
       mapping_ColumnName = mappings.target_keyname;
       targetModel_foreignKey = mappings.source_keyname;
@@ -543,10 +559,13 @@ class Test extends Model {
 // }
 
 
+interface IgetMappingKeysResult {
+  [key:string]:string
+}
 
 
 //helper function to find mapping keys between two tables
-async function getMappingKeys<T>(sourcTable:string, targetTable:string){
+export async function getMappingKeys<T>(sourcTable:string, targetTable:string):Promise<IgetMappingKeysResult | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
   source_attr.attname AS source_keyname,
@@ -562,18 +581,21 @@ async function getMappingKeys<T>(sourcTable:string, targetTable:string){
   c.contype = 'f' AND c.confrelid = $2::regclass
   ;
   `;
-  let result:any
+  let result;
   const db = await ConnectDb();
-    try {      
-      result = await db.queryObject(queryText, [sourcTable, targetTable])  
-    } catch (error) {
-      console.error(error)
-    } finally {
-      DisconnectDb(db)
-    }
-    //console.log(result.rows[0])
-    return result.rows[0]    
-}
+  try {      
+    result = await db.queryObject(queryText, [sourcTable, targetTable])  
+  } catch (error) {
+    console.error(error)
+  } finally {
+    DisconnectDb(db)
+  }
+  console.log("getMappingKeys RESULT", result)
+  //if('rows' in result) 
+  if(typeof result === 'object' && 'rows' in result) {
+    return result.rows[0] as IgetMappingKeysResult;
+  }
+} // end of getMappingKeys
 
 
 //helper function to find existing foreign key related to target table
@@ -582,7 +604,7 @@ async function getForeignKey<T>(thisTable:string, targetTable:string){
   FROM pg_constraint c 
   JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
   WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`
-  let result:any
+  let result;
   const db = await ConnectDb();
     try {      
       result = await db.queryObject(queryText, [thisTable, targetTable])  
@@ -592,18 +614,20 @@ async function getForeignKey<T>(thisTable:string, targetTable:string){
     } finally {
       DisconnectDb(db)
     }
+  if(typeof result === 'object' && 'rows' in result && result.rows[0]!==null && typeof result.rows[0]==='object' && recordPk(result.rows[0])) {
     return result.rows[0].attname
+  }  
 }
 
 //helper function to find primary key of target table
-async function getprimaryKey<T>(tableName:string){
+async function getprimaryKey<T>(tableName:string):Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
   JOIN pg_attribute a ON a.attrelid = i.indrelid
   AND a.attnum = ANY(i.indkey)
   WHERE i.indrelid = $1::regclass
   AND i.indisprimary`;
-  let result:any
+  let result;
   const db = await ConnectDb();
     try {      
       result = await db.queryObject(queryText, [tableName])  
@@ -612,8 +636,10 @@ async function getprimaryKey<T>(tableName:string){
       console.error(error)
     } finally {
       DisconnectDb(db)
-    }
+    } 
+  if(typeof result === 'object' && 'rows' in result && result.rows[0]!==null && typeof result.rows[0]==='object' && recordPk(result.rows[0])) {
     return result.rows[0].attname
+  } 
 }
 
 interface manyToManyOptions {
@@ -631,23 +657,27 @@ export async function manyToMany(modelA:typeof Model, modelB:typeof Model, optio
     const mapKeysB = await getMappingKeys(throughModel.table, modelB.table)
     // console.log("mapKeysA: ",mapKeysA)
     // console.log("mapKeysB: ",mapKeysB)
-    const mappingDetails = {
-      association_type: 'ManyToMany',
-      association_name: `${modelA.name}_hasMany_${modelB.name}`,
-      modelA,
-      modelB,
-      throughModel,
-      modelA_foreignKey_inThroughModel: mapKeysA.source_keyname,
-      modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
-      modelA_mappingKey: mapKeysA.target_keyname,
-      modelB_mappingKey: mapKeysB.target_keyname,
-    }
-    //console.log("mappingDetails:", mappingDetails)
-    //// return out association instance
-    return new ManyToMany(modelA, modelB, mappingDetails, associationQuery) 
+    if(mapKeysA && mapKeysB) {
+      const mappingDetails = {
+        association_type: 'ManyToMany',
+        association_name: `${modelA.name}_hasMany_${modelB.name}`,
+        modelA,
+        modelB,
+        throughModel,
+        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname,
+        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
+        modelA_mappingKey: mapKeysA.target_keyname,
+        modelB_mappingKey: mapKeysB.target_keyname,
+      }
+      //console.log("mappingDetails:", mappingDetails)
+      //// return out association instance
+      return new ManyToMany(modelA, modelB, mappingDetails, associationQuery) 
+    } else {
+      throw new Error('This association does not exist')
+    }    
   } 
   else if(options?.createThrough) {
     //// creating new x-table & new x-model
     const modelA_foreignKey_inThroughModel = modelA.primaryKey
-  } 
+  }
 }

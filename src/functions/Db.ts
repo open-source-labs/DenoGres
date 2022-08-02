@@ -7,11 +7,16 @@ import { Pool, PoolClient } from '../../deps.ts'
 const POOL_CONNECTIONS = 3;
 
 export const ConnectDb = async () => {
-    const pool = new Pool(Deno.env.get('DATABASE_URI'), POOL_CONNECTIONS, true);
-    const connection = await pool.connect();
-    return connection;
+  const dbUri = Deno.env.get('ENVIRONMENT')==='test' ? Deno.env.get('TEST_DB_URI') : Deno.env.get('DATABASE_URI')
+
+  const pool = new Pool(dbUri, POOL_CONNECTIONS, true);
+  const connection = await pool.connect();
+  return connection;
 }
 
-export const DisconnectDb = (connection: PoolClient) => {
-   connection.release();
+export const DisconnectDb = async (connection: PoolClient) => {
+  
+  connection.release();
+  await connection.end();
+
 }
