@@ -21,13 +21,14 @@ export class Model {
         notNull?: boolean,
         unique?: boolean,
         checks?: string[],
-        defaultVal?: string,
+        defaultVal?: string | number | boolean | Date,
         autoIncrement?: boolean,
-        association?: { rel_type?: string, table: string, mappedCol: string}
+        association?: { rel_type?: string, table: string, mappedCol: string},
+        length?: number
     }
   };
   static checks: string[];
-  static unique: string[];
+  static unique: Array<string[]>;
   static primaryKey: string[];
   private static sql = '';
   static foreignKey: { columns: string[], mappedColumns: string[], rel_type?: string, table: string }[];

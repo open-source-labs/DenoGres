@@ -8,7 +8,7 @@ import { introspect } from './introspect.ts'
 export async function dbPull() {
     const [tableListObj, enumObj] = await introspect();
     // const tableListObj = await introspect();
-    // console.log('Table List Obj', tableListObj)
+    console.log('Table List Obj', tableListObj)
 
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
 
@@ -16,15 +16,14 @@ export async function dbPull() {
     Object.keys(tableListObj).forEach(el => {
         // reference to table object
         const tableObj = tableListObj[el];
-        console.log(tableObj);
         // create the class name
         const className = createClassName(el);
         // initialize interface code holder
         let interfaceCode = `\nexport interface ${className} {\n`;
         // initialize class code holder
         let classCode =`export class ${className} extends Model {\n` +
-        `  static table = '${el}';\n` +
-        `  static columns = {\n`;
+        `  static table: '${el}';\n` +
+        `  static columns: {\n`;
 
         // iterate over each property within the columns object
         Object.keys(tableListObj[el].columns).forEach(colName => {
@@ -46,6 +45,7 @@ export async function dbPull() {
             `      type: '${columnObj.type}',\n`
             }
             // for each 'property' of the column add it to the object
+            if(columnObj.length) classCode += `      length: ${columnObj.length}\n`;
             if (columnObj.notNull) classCode += `      notNull: true,\n`;
             if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
             if (columnObj.unique) classCode += `      unique: true,\n`;
@@ -72,6 +72,17 @@ export async function dbPull() {
         if(tableObj.primaryKey) {
           autoCreatedModels += `  static primaryKey: ${JSON.stringify(tableObj.primaryKey)}\n`
         }
+        if(tableObj.foreignKey) {
+            autoCreatedModels += `  static foreignKey: [`
+
+            tableObj.foreignKey.forEach((fkObj, idx) => {
+                const delimiter = idx === 0 ? '' : ', ';
+
+                autoCreatedModels += `${delimiter}\n    {columns: ${JSON.stringify(fkObj.columns)}, mappedColumns: ${JSON.stringify(fkObj.mappedColumns)}, table: '${fkObj.table}'}`;
+            })
+
+            autoCreatedModels +=`]\n`
+        }
         // close the query for this table
         autoCreatedModels += `}\n\n`
     })
@@ -88,27 +99,3 @@ export async function dbPull() {
     Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 }
 
-/*
-enumObject!=> {
-  feeling: [ "weak", "decent", "strong", "superStrong" ],
-  mood: [ "ok", "happy", "sad" ]
-}
-//   enum MyEnum { A, B, C };
-//   keyof typeof MyEnum;  // "A" | "B" | "C"
-
-/*
-
-export enum Mood {
-    sad,
-    happy,
-    excited
-}
-
-export interface Person {
-    current_mood: keyof typeof Mood
-    name: string
-  }
-  /////////
-
-
-*/

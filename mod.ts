@@ -26,7 +26,7 @@ switch(Deno.args[0]) {
         break;
     }
     case '--db-sync': {
-      sync();
+      Deno.args[1] === '-x' ? sync(true) : sync();
       break;
     }
     default:
