@@ -249,5 +249,3 @@ export const modelParser = (): ModelInfo[] => {
 
     return parsedArray;
 }
-
-modelParser()

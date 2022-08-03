@@ -115,5 +115,4 @@ WITH enum_table as (
   )
 
 select *
-from enum_table;
-`
+from enum_table;`
