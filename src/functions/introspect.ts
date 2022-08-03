@@ -121,14 +121,14 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
             if (el.character_maximum_length){
                 refObj['length'] = el.character_maximum_length;
             }
-            // if (tableListObj[el.table_name].columns[el.column_name]) 
-            // refObj['character_maximum_length'] = 
-            // tableListObj[el.table_name].columns[el.column_name] = {limit: el.character_maximum_length}
 
             if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
                 refObj['autoIncrement'] = true;
             } else {
-                refObj['defaultVal'] = el.col_default;
+                if (typeof el.col_default === 'string'){
+                const defaultVal = el.col_default.replace(/\:\:[\w\W]*/,'');
+                refObj['defaultVal'] = defaultVal;
+                }
             }
         }
     });
