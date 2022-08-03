@@ -28,7 +28,6 @@ export const enumSync = async () => {
 
     const dbEnumObj: Record<string, IEnumObj> = {};
 
-    console.log('model', modelEnum, 'db', dbEnum)
     dbEnum.forEach(el => {
         if(typeof el === 'object' && el !== null && enumRowGuard(el)){
             dbEnumObj[el.enum_name] = {enum_schema: el.enum_schema, enum_value: el.enum_value.split(/, */)};
@@ -44,8 +43,6 @@ export const enumSync = async () => {
             }
         }
     })
-
-    console.log(dbEnumObj)
 
     Object.keys(modelEnum).forEach(key => {
         // check if key is currently in db, if not add

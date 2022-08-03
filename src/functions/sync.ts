@@ -29,7 +29,10 @@ const newColAttr = (column: ModelColumn): string => {
     // Make column type SERIAL if auto-increment is true
     if(column.autoIncrement){
         str += ` SERIAL`
-    } else {
+    } else if(column.type === 'enum') {
+        str += ` ${column.enumName}`
+        if(column.notNull && !column.primaryKey) str += ` NOT NULL`;
+    }else {
         // Otherwise use 
         str += `${column.type}`
         // Not Null for non-serial columns
@@ -97,6 +100,8 @@ export const sync = async (overwrite = false) => {
     let createTableQueries = ``;
     let alterTableQueries = ``;
 
+    await enumSync();
+
     const db = await ConnectDb(); // db connection to send off alter and create queries
     for (const el of modelArray){
         // SQL statements for tables not currently in the database
@@ -118,6 +123,7 @@ export const sync = async (overwrite = false) => {
                     // Check column constraints for updates
                     const dbColObj = tableListObj[el.table].columns[colMA];
                     // NOT NULL updated
+                    
                     if(Boolean(colObj.notNull) !== dbColObj.notNull) { //TESTED
                         alterTableQueries += `ALTER TABLE ${el.table} ALTER COLUMN ${colMA} `;
                         alterTableQueries += colObj.notNull ? `SET ` : `DROP `;
@@ -289,7 +295,6 @@ export const sync = async (overwrite = false) => {
         }
     }
     console.log(createTableQueries, alterTableQueries)
-    await enumSync();
     //console.log(tableListObj)
     DisconnectDb(db);
 }
