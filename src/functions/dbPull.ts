@@ -51,8 +51,8 @@ export async function dbPull() {
             if (columnObj.notNull) classCode += `      notNull: true,\n`;
             if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
             if (columnObj.unique) classCode += `      unique: true,\n`;
-            if (columnObj.checks) classCode += `      check: [${columnObj.checks}]`
-            if (columnObj.defaultVal) classCode += `      defaultVal: ${columnObj.defaultVal}`;
+            if (columnObj.checks) classCode += `      check: [${columnObj.checks}],\n`
+            if (columnObj.defaultVal) classCode += `      defaultVal: ${columnObj.defaultVal},\n`;
             if (columnObj.autoIncrement) classCode += `      autoIncrement: true,\n`;
             if (columnObj.association) {
                 classCode += `      association: {\n` +
