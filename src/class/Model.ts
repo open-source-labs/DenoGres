@@ -28,6 +28,7 @@ export class Model {
       autoIncrement?: boolean;
       association?: { rel_type?: string; table: string; mappedCol: string };
       length?: number;
+      enumName?: string;
     };
   };
   static checks: string[];

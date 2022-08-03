@@ -11,7 +11,8 @@ const singularize = (noun: string): string => {
         noun === 'mice' ? 'mouse' :
         noun === 'people' ? 'person' :
         noun === 'fez' ? 'fezzes' :
-        noun == 'oxen' ? 'ox' :
+        noun === 'oxen' ? 'ox' :
+        noun === 'person' ? noun :
         noun.slice(-4) === 'ches' || noun.slice(-4) === 'shes' || 
             noun.slice(-3) === 'xes' || noun.slice(-3) === 'ses' || noun.slice(-3) === 'zes' ? 
             noun.slice(0, -2) :

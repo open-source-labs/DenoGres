@@ -1,80 +1,29 @@
 # DenoGres
-Import Path: https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts
+Welcome to DenoGres! A new comprehensive ORM for PostgreSQL and Deno.
 
-To install CLI: deno install --allow-read --allow-write --allow-net --allow-env --name denogres https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts
-Ensure deno is added to PATH
+## Getting Started
+To begin, let's download DenoGres! Execute the below in the terminal - this will give you access to DenoGres's CLI functionality.
+>`deno install --allow-read --allow-write --allow-net --allow-env --name denogres https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts`
 
-**How to use DenoGres methods**
- 
-Note: x represents a comparison operator (=, >, <, >=, <=, <>, LIKE)
-NOT can be added before any arguments in the WHERE method
+After installation is complete, ensure deno is added to PATH.
 
 
-**SAVE: insert created properties on instance object into database
-instance.save();
+## Using DenoGres
+Before using DenoGres in a project, run the below.
+In your project's root directory, a .env file, for your database connection URI, and a models folder, for your model.ts file, will be created.
+>`denogres --init`
 
-**UPDATE: update the properties on instance object and the database
-instance.update(); 
+After running the init command, update the .env file to contain your database's connection URI.
+>`DATABASE_URI=driver://user:password@host:port/database_name`
 
-**INSERT INTO VALUES: add value(s) to column(s) in this table
-input: (column = value, ...)
-Model.prototype.insert(...rows: string[])
+With all the set-up steps complete, you're ready to introspect your database! Database introspection will automatically create TypeScript models of your database tables in the .models/model.ts file.
+>`denogres --db-pull`
 
-**UPDATE: update existing records in database
-input: (column = value, ...)
-Model.prototype.edit(...rows: string[])
+### Under Development
+DenoGres includes some functionality that is still in development - including database sync functionality. The sync functionality:
+ * Identifies instances within the models/model.ts file where user updates have caused the database and TypeScript models to be out-of-sync
+ * Creates and executes queries to update the database so all points of reference once again align
+>`denogres --db-sync`
 
-**DELETE FROM: delete table
-input: none
-Model.prototype.delete()
-
-**SELECT FROM: select column(s) from this table
-input: (column, ...)
-Model.prototype.filter(...columns: string[])
-
-**WHERE: add condition(s) to query
-input: (column x value, AND/OR column x value, ...)
-Model.prototype.where(...condition: string[])
-
-**LIMIT: limit number of output rows
-input: (limitNumber)
-Model.prototype.limit(limit: number)
-
-**HAVING: add condition(s) involving aggregate functions to query
-input: (aggregateFn(column) x number); example: (COUNT(column) > 5)
-Model.prototype.having(...conditions: string[])
-
-** INNER JOIN: selects records with matching values on both table
-input: (column1, column2, table2)
-Model.prototype.innerJoin(column1: string, column2: string, table2: string)
-
-**LEFT JOIN: selects records from this table and matching values on table2
-input: (column1, column2, table2)
-Model.prototype.leftJoin(column1: string, column2: string, table2: string)
-
-**RIGHT JOIN: selects records from table2 and matching values on this table
-input: (column1, column2, table2)
-Model.prototype.innerJoin(column1: string, column2: string, table2: string)
-
-**FULL Join: selects all records when a match exists in either table
-input: (column1, column2, table2)
-Model.prototype.fullJoin(column1: string, column2: string, table2: string)
-
-**GROUP BY: group rows with same values into summary rows
-input: (column, ...)
-Model.prototype.group(...columns: string[])
-
-**ORDER BY: sort column(s) by ascending/descending order
-input: for (order: string), order should be either ASC or DESC
-Model.prototype.order(order: string, ...column: string[])
-
-**AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
-input: (column)
-Model.prototype.avg(column: string)
-Model.prototype.count(column: string)
-Model.prototype.sum(column: string)
-Model.prototype.min(column: string)
-Model.prototype.max(column: string)
-
-**Execute query in database
-Model.prototype.query()
+## Documents
+More information on how to use DenoGres and leverage all its wonderful abstraction functionality can be found here: https://denogres.deno.dev/
