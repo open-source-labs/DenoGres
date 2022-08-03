@@ -21,14 +21,22 @@ export const enumSync = async () => {
     const results = await db.queryObject(enumQuery);
     const dbEnum = results.rows;
 
-    console.log('model', modelEnum, 'db', dbEnum)
+    interface IEnumObj {
+        enum_schema: string,
+        enum_value: string[]
+    }
+
+    const dbEnumObj: Record<string, IEnumObj> = {};
+
     dbEnum.forEach(el => {
         if(typeof el === 'object' && el !== null && enumRowGuard(el)){
+            dbEnumObj[el.enum_name] = {enum_schema: el.enum_schema, enum_value: el.enum_value.split(/, */)};
+
             if(!modelEnum[el.enum_name]) { // TESTED
+                // database enum doesn't exist in model - remove database enum
                 enumCreateAlter += `DROP type ${el.enum_name}; `
             } else {
-                // compare the enums structure to determine if updates are needed
-                const dbEnumArray = el.enum_value.split(/, */);
+
                 if(JSON.stringify(el) !== JSON.stringify(modelEnum[el.enum_name])) {
                     // if the db and model do not align determine what needs to change
                 }
@@ -38,16 +46,60 @@ export const enumSync = async () => {
 
     Object.keys(modelEnum).forEach(key => {
         // check if key is currently in db, if not add
-        const contains = false;
-        dbEnum.forEach(elDB => {
-            if(typeof elDB === 'object' && elDB !== null && 
-                enumRowGuard(elDB) && elDB.enum_name === key) {
+        if(!Object.keys(dbEnumObj).includes(key)){
+            // model enum not currently in database - add enum to database
+            const enumList = "'" + modelEnum[key].join("','") + "'"
+            enumCreateAlter += `CREATE type ${key} as enum (${enumList}); `
+        } else {
+            // both model and database contain the enum
+            // if the database and model enum do not align
+            if(JSON.stringify(modelEnum[key]) !== JSON.stringify(dbEnumObj[key].enum_value)){
+                const tempDBEnumVal = dbEnumObj[key].enum_value;
+
+                let deleteEnum = false;
+                for(let i = 0; i < tempDBEnumVal.length; i++){
+                    if(!modelEnum[key].includes(tempDBEnumVal[i])){
+                        i = tempDBEnumVal.length;
+                        deleteEnum = true;
+                    }
                 }
-        })
+
+                const testModelArray: string[] = [];
+
+                modelEnum[key].forEach(el => {
+                    if(tempDBEnumVal.includes(String(el))){
+                        testModelArray.push(String(el));
+                    }
+                })
+
+                if(JSON.stringify(testModelArray) !== JSON.stringify(tempDBEnumVal)) {
+                    deleteEnum = true;
+                }
+
+                if(deleteEnum){ // TESTED
+                    const enumList = "'" + tempDBEnumVal.join("','") + "'";
+                    enumCreateAlter += `DROP type ${key}; CREATE type ${key} as enum (${enumList})`;
+                } else { // TESTED
+                    const rev = modelEnum[key].reverse();
+                    rev.forEach((val, idx) => {
+                        // if not currently in the enum add it
+                        if(!tempDBEnumVal.includes(String(val))) {
+                            if(idx === 0) {
+                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}; '`
+                            } else {
+                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}' BEFORE '${rev[idx - 1]}; '`
+                            }
+                        }
+                    })
+                }
+            }
+        }
     })
 
     DisconnectDb(db);
     console.log(enumCreateAlter)
 }
 
-enumSync()
+// DROPPING AN ENUM TYPE OR RE_SORTING EXISISTING VALUESRESULTS IN THE DROPPING AND
+// RE_ADDING OF THE TABLE. DO NOT USE THE ORM TO COMPLETE THIS STYLE OF UPDATES
+// IF IMPLICATION IS NOT COMPLETELY UNDERSTOOD

@@ -1,4 +1,4 @@
-export const enumParser = () => {
+export const enumParser = (): Record<string, unknown[]> => {
     const modelText = Deno.readTextFileSync('./models/model.ts');
 
     const enumText = modelText.replaceAll(/export interface \w+ {[\n +\w+: \w+]+}/g, '').
@@ -8,7 +8,7 @@ export const enumParser = () => {
             matchAll(/export enum \w+ {[\n *\w+\,*]+}/g) // remove enums for now, will need different logic to parse these
 
     const enumModel = [...enumText];
-    const enumObject: Record<string, unknown> = {};
+    const enumObject: Record<string, unknown[]> = {};
 
     enumModel.forEach(el => {
         let str = el[0];
@@ -18,7 +18,6 @@ export const enumParser = () => {
         const enumValues = str.replace(enumName, '').replaceAll(/ *\{ *| *\} */g, '').split(',')
 
         enumName = enumName.toLowerCase();
-        console.log('enumName', enumName)
         if(enumValues[enumValues.length - 1] === '') enumValues.pop();
 
         enumObject[enumName] = enumValues;

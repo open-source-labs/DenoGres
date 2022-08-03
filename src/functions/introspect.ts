@@ -134,7 +134,6 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     });
 
     enumList.forEach(el => {
-        console.log('el', el)
         if (typeof el === 'object' && el !== null && enumElType(el)){
             const enumVals = el.enum_value.split(/ *, */);
             enumObj[el.enum_name] = enumVals;
