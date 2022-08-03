@@ -70,19 +70,19 @@ class Person extends Model {
 
 
 // working flow 1. belongsTo
-// await Person.belongsTo(Species)
-// const luke = await Person.where('name = Luke Skywalker').queryInstance()
-// const lukeSpecies = await luke.getSpecies()
-// console.log(lukeSpecies)
+await Person.belongsTo(Species)
+const luke = await Person.where('name = Luke Skywalker').queryInstance()
+const lukeSpecies = await luke.getSpecies()
+console.log(lukeSpecies)
 
 // chaining will NOT work though
 // await Person.where('name = Luke Skywalker').queryInstance().getSpecies()
 
 //  working flow 2. hasMany
-// await Species.hasMany(Person)
-// const droid = await Species.where('name = Droid').queryInstance()
-// const droidCharacters = await droid.getPersons();
-// console.log(droidCharacters)
+await Species.hasMany(Person)
+const droid = await Species.where('name = Droid').queryInstance()
+const droidCharacters = await droid.getPersons();
+console.log(droidCharacters)
 
 //await getMappingKeys(Person.table, Species.table)
 //await getMappingKeys('pilots', 'films')
