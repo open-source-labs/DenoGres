@@ -4,7 +4,7 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 abstract class Association {
   source: typeof Model;
   target: typeof Model;
-  associationQuery:any;
+  associationQuery:string;
   mappingDetails:any;
 
   constructor(source:typeof Model, target:typeof Model, mappingDetails:any, associationQuery:string) {
@@ -272,9 +272,8 @@ export class ManyToMany extends Association {
     //console.log(queryResult.rows)
     return queryResult.rows
   }
-  async addAssociatedData(addOptions){
+  async addAssociatedData(){
     console.log("ManyToMany's addAssociatedData")
-    console.log("addOptions", addOptions)
   }
 } // end of ManyToMany class
 

@@ -5,8 +5,14 @@ export function init() {
     const envFilePath = "./";
     const envFileContent = `
 # See the documentation for more detail: // detail here!
-# Please enter your database uri below : 
-DATABASE_URI=" "`
+# Set your environment either 'development' or 'test'
+ENVIRONMENT=development
+# Please enter your database uri below :
+# (for development mode)
+DATABASE_URI=" "
+# (for test mode)
+TEST_DB_URI=" "
+`
     ensureDir(envFilePath).then(() => {
     Deno.writeTextFile(envFilePath + ".env", envFileContent);
     // + add .env in gitignor file (if no gitignore file, make one)

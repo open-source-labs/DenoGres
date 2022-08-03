@@ -1,43 +1,32 @@
-import { assert, assertEquals } from './deps.ts'
-import { Pool, PoolClient } from '../deps.ts'
+
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
-
-// Deno.test("Test Assert", () => {
-//   assert(1);
-//   assert("Hello");
-//   assert(true);
-// });
+import { Model } from '../src/class/Model.ts'
 
 
-async function ping (db:PoolClient) {
-  try {
-    //const db = await ConnectDb();
-    const output = (await db.queryObject('SELECT 1 + 1 as result')).rows as [{result:any}]
-    const result = output[0].result
-    console.log('result: ', result)
-    //DisconnectDb(db)
-    return result === 2;
-  } catch (error) {
-    console.error(error)
-    return false
+
+interface User {
+  id:string;
+  firstName:string;
+  lastName?:string;
+  points?: number;
+}
+class User extends Model {
+  static table = 'users';
+  static columns = {
+    id: { type:'uuid', primaryKey: true },
+    firstName: { type:'string', notNull: true },
+    lastName: { type:'string', notNull: false },
+    points: { type:'number', notNull: false }
   }
 }
 
-Deno.test("Postgres Connection", async () => {
 
-  const db = await ConnectDb();
 
-  const pingResult = await ping(db);
-  console.log('pingResult: ', pingResult)
-  DisconnectDb(db)
-  assertEquals(pingResult, true);  
+const db = await ConnectDb(); 
 
-  //console.log("Deno.resources(): ", Deno.resources())
-  Deno.close(4) // workaround for tlsStream error
-
-})
-
-// error :  AssertionError: Test case is leaking 1 resource. A TLS connection (rid 4) was opened/accepted during the test, but not closed during the test. Close the TLS connection by calling `tlsConn.close()`.
-// Deno.resources():  { "0": "stdin", "1": "stdout", "2": "stderr", "4": "tlsStream" }
-
-// https://deno.land/manual/testing/sanitizers
+const user0 = new User();
+user0.firstName = 'Test'
+const saved = await user0.save()
+//assertThrows(async () => await user0.save())
+console.log("saved?:", saved)
+DisconnectDb(db)
