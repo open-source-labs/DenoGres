@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
+import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
 import { Pool, PoolClient } from '../deps.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 import { Model } from '../src/class/Model.ts'
@@ -32,8 +32,8 @@ INSERT INTO users (firstName) VALUES('user_three');
 
 interface User {
   id:string;
-  firstName:string;
-  lastName?:string;
+  firstname:string;
+  lastname?:string;
   points?: number;
 }
 class User extends Model {
@@ -48,29 +48,20 @@ class User extends Model {
 
 
 
-const db = await ConnectDb(); 
-// Needed to take out this line out of the describe block
-// Having this line inside the describe block and making the top describe async : makes all tests inside the describe not executing at all. 
-
 describe('New Record Creation and Save Test', () => {
-  
- 
+
   beforeAll(async () => {
+    const db = await ConnectDb(); 
     console.log('reset the DB and creating a new table')
     await db.queryObject(before_all)
+    await DisconnectDb(db)
   })
 
   afterAll(async () => {
     console.log('Deleting the table in DB')
+    const db = await ConnectDb(); 
     await db.queryObject(after_all)
-    DisconnectDb(db)
-
-    console.log("Deno.resources(): ", Deno.resources())
-    // Object.keys(Deno.resources()).forEach(el => {
-    //   Deno.close(Number(el))
-    // })
-    //console.log("Deno.resources() after close: ", Deno.resources())
-    
+    await DisconnectDb(db)
   })
 
   it('save the record', async () => {
@@ -79,7 +70,7 @@ describe('New Record Creation and Save Test', () => {
     const saved = await user0.save()
     //assertThrows(async () => await user0.save())
     console.log("saved?:", saved)
-    assertEquals(saved.firstName, user0.firstName)
+    assertStrictEquals(saved!.firstname, user0.firstname)
   })
 
 })
