@@ -1,5 +1,5 @@
 import { ConnectDb, DisconnectDb } from './Db.ts'
-import { tableListQuery, tableConstQuery, columnInfoQuery } from '../queries/introspection.ts'
+import { tableListQuery, tableConstQuery, columnInfoQuery, enumQuery } from '../queries/introspection.ts'
 import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
 
 // INTERFACES
@@ -51,8 +51,13 @@ interface ITableListObj {
 
 interface IEnumObj {
     [key: string]: string[];
-    }
+}
 
+interface IEnumEl {
+    enum_schema: string,
+    enum_name: string,
+    enum_value: string
+}
 
 // TYPE GUARD FUNCTIONS
 const recordObjectType = (record: object): record is ITableQueryRecords => {
@@ -68,6 +73,9 @@ const constraintObjectType = (record: object): record is IConstraint => {
     return 'schemaname' in record && 'table_name' in record && 'condef' in record;
 }
 
+const enumElType = (record: object): record is IEnumEl => {
+    return 'enum_name' in record && 'enum_name' in record && 'enum_value' in record;
+}
 
 // Introspection Function
 const getDbData = async () => {
@@ -76,19 +84,21 @@ const getDbData = async () => {
     const tableList = await db.queryObject(tableListQuery);
     const columnList = await db.queryObject(columnInfoQuery);
     const constraintList = await db.queryObject(tableConstQuery);
+    const enumList = await db.queryObject(enumQuery);
 
     DisconnectDb(db);
 
     return {
         tableList: tableList.rows,
         columnList: columnList.rows,
-        constraintList: constraintList.rows
+        constraintList: constraintList.rows,
+        enumList: enumList.rows
     }
 }
 // Add enums to tablelist obj, OR Create a new seperate object for all the enums that THAT database has in it. 
 // When you hit an enum that youre building out in dbpull, you can just query off of that object
 export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
-    const { tableList, columnList, constraintList } = await getDbData();
+    const { tableList, columnList, constraintList, enumList } = await getDbData();
     // convert table list to an object
     const tableListObj: ITableListObj = {};
     
@@ -103,14 +113,7 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     });
 
     columnList.forEach(el => {
-        if (typeof el === 'object' && el !== null && colRecordObjectType(el)){
-            // Parse for enums, add to enumObj if found
-            if (el.column_type.includes('enum:')){
-                const enumName = el.column_type.replaceAll('enum: ', '');
-                const enumVals = el.enum_value.replaceAll(',','').split(' ');
-                enumObj[enumName] = enumVals;
-            }
-
+        if (typeof el === 'object' && el !== null && colRecordObjectType(el)){   
             tableListObj[el.table_name].columns[el.column_name] = {type: el.column_type};
             const refObj = tableListObj[el.table_name].columns[el.column_name];
             refObj['notNull'] = el.not_null;
@@ -118,17 +121,24 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
             if (el.character_maximum_length){
                 refObj['length'] = el.character_maximum_length;
             }
-            // if (tableListObj[el.table_name].columns[el.column_name]) 
-            // refObj['character_maximum_length'] = 
-            // tableListObj[el.table_name].columns[el.column_name] = {limit: el.character_maximum_length}
 
             if(/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
                 refObj['autoIncrement'] = true;
             } else {
-                refObj['defaultVal'] = el.col_default;
+                if (typeof el.col_default === 'string'){
+                const defaultVal = el.col_default.replace(/\:\:[\w\W]*/,'');
+                refObj['defaultVal'] = defaultVal;
+                }
             }
         }
     });
+
+    enumList.forEach(el => {
+        if (typeof el === 'object' && el !== null && enumElType(el)){
+            const enumVals = el.enum_value.split(/ *, */);
+            enumObj[el.enum_name] = enumVals;
+        }
+    })
 
     // PRIMARY & UNIQUE & CHECK CONSTRAINTS
     constraintList.forEach(el => {
