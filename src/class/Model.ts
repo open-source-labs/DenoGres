@@ -310,7 +310,7 @@ export class Model {
     )
       console.log(queryResult.rows);
     this.sql = '';
-    DisconnectDb(db);
+    await DisconnectDb(db);
     return queryResult.rows;
   }
 
@@ -327,7 +327,7 @@ export class Model {
 
   //BELONGS TO
   // create foreign key on this model (if not exist)
-  static async belongsTo(targetModel: typeof Model, options?: any) {
+  static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = '';
@@ -410,12 +410,12 @@ export class Model {
     }
   } // end of belongsTo
 
-  static async hasOne(targetModel: typeof Model, options?: any) {
+  static async hasOne(targetModel: typeof Model, options?: hasOneOptions) {
     return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
   // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
-  static async hasMany(targetModel: typeof Model, options?: any) {
+  static async hasMany(targetModel: typeof Model, options?: hasManyOptions) {
     let mapping_ColumnName = ''; // mapping key in this model
     let targetModel_foreignKey = ''; // foreign key in targetModel
     let associationQuery = '';
@@ -609,7 +609,7 @@ async function getForeignKey<T>(thisTable: string, targetTable: string) {
 }
 
 //helper function to find primary key of target table
-async function getprimaryKey<T>(
+export async function getprimaryKey<T>(
   tableName: string
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
@@ -639,6 +639,15 @@ async function getprimaryKey<T>(
   }
 }
 
+interface belongToOptions {
+  associationName?:string;
+}
+interface hasOneOptions {
+  associationName?:string;
+}
+interface hasManyOptions {
+  associationName?:string;
+}
 interface manyToManyOptions {
   through?: typeof Model;
   createThrough?: string;
