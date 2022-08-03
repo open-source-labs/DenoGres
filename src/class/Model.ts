@@ -15,7 +15,8 @@ export class Model {
         defaultVal?: string | number | boolean | Date,
         autoIncrement?: boolean,
         association?: { rel_type?: string, table: string, mappedCol: string},
-        length?: number
+        length?: number,
+        enumName?: string
     }
   };
   static checks: string[];

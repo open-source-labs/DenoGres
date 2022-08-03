@@ -8,7 +8,7 @@ import { introspect } from './introspect.ts'
 export async function dbPull() {
     const [tableListObj, enumObj] = await introspect();
     // const tableListObj = await introspect();
-    console.log('Table List Obj', tableListObj)
+    // console.log('Table List Obj', tableListObj)
 
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
 
@@ -32,14 +32,16 @@ export async function dbPull() {
             if (columnObj.type.includes('enum:')){
                 const enumName = columnObj.type.replaceAll('enum: ', '');
                 const enumCapitalized = enumName[0].toUpperCase() + enumName.substring(1);
-                interfaceCode += `  ${colName}: keyof typeof ${enumCapitalized}\n` 
+                interfaceCode += `  ${colName}: keyof typeof ${enumCapitalized}\n`; 
             } else {
-            interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`;
+                interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`;
             }
             // add the column as a property to the class, remove enum column name if enum type is found
             if (columnObj.type.includes('enum:')){
+                const enumName = columnObj.type.replaceAll('enum: ', '');
                 classCode += `    ${colName}: {\n` +
-            `      type: 'enum',\n`
+            `      type: 'enum',\n`;
+                classCode += `      enumName: '${enumName}'\n`;
             } else {    
             classCode += `    ${colName}: {\n` +
             `      type: '${columnObj.type}',\n`
