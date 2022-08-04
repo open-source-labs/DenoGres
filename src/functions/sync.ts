@@ -2,6 +2,7 @@ import { introspect } from './introspect.ts';
 import { ConnectDb, DisconnectDb } from './Db.ts'
 import { primaryKeyQuery, tableUniqueQuery } from '../queries/introspection.ts'
 import { modelParser, ModelColumn, ModelInfo } from './modelParser.ts';
+import { enumSync } from './enumSync.ts';
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
@@ -9,6 +10,13 @@ import { modelParser, ModelColumn, ModelInfo } from './modelParser.ts';
 interface IConQuery {
     conname: string,
     table_name: string,
+}
+
+interface IForeignKey {
+    columns: string[];
+    mappedColumns: string[];
+    rel_type?: string;
+    table: string;
 }
 
 const conQueryGuard = (record: object): record is IConQuery => {
@@ -21,7 +29,10 @@ const newColAttr = (column: ModelColumn): string => {
     // Make column type SERIAL if auto-increment is true
     if(column.autoIncrement){
         str += ` SERIAL`
-    } else {
+    } else if(column.type === 'enum') {
+        str += ` ${column.enumName}`
+        if(column.notNull && !column.primaryKey) str += ` NOT NULL`;
+    }else {
         // Otherwise use 
         str += `${column.type}`
         // Not Null for non-serial columns
@@ -38,7 +49,7 @@ const newColAttr = (column: ModelColumn): string => {
 }
 
 const createTable = (table_name: string, columns: Record<string, ModelColumn>, checks: string[] | undefined, 
-    unique: string[][] | undefined, primaryKey: string[] | undefined): string => {
+    unique: string[][] | undefined, primaryKey: string[] | undefined, foreignKey: IForeignKey[] | undefined): string => {
     let queryText = `CREATE TABLE ${table_name}(`;
 
     // Add columns to query
@@ -66,6 +77,13 @@ const createTable = (table_name: string, columns: Record<string, ModelColumn>, c
     }
 
     // COMPOSITE FOREIGN KEYS
+    if(foreignKey) {
+        foreignKey.forEach(el => {
+            const colStr = "'" + el.columns.join("','") + "'";
+            const mappedColStr = "'" + el.mappedColumns.join("','") + "'";
+            queryText += `FOREIGN KEY (${colStr}) REFERENCES ${el.table} (${mappedColStr}),`
+        })
+    }
     
     return queryText.slice(0, -1) + ');'; // remove the last comma
 }
@@ -82,12 +100,14 @@ export const sync = async (overwrite = false) => {
     let createTableQueries = ``;
     let alterTableQueries = ``;
 
+    await enumSync();
+
     const db = await ConnectDb(); // db connection to send off alter and create queries
     for (const el of modelArray){
         // SQL statements for tables not currently in the database
         if(!tableListObj[String(el.table)]){
             // New Table Added in Model by User
-            createTableQueries += createTable(String(el.table), el.columns, el.checks, el.unique, el.primaryKey);
+            createTableQueries += createTable(String(el.table), el.columns, el.checks, el.unique, el.primaryKey, el.foreignKey);
         } else {
             const dbTableObj = tableListObj[String(el.table)];
 
@@ -103,6 +123,7 @@ export const sync = async (overwrite = false) => {
                     // Check column constraints for updates
                     const dbColObj = tableListObj[el.table].columns[colMA];
                     // NOT NULL updated
+                    
                     if(Boolean(colObj.notNull) !== dbColObj.notNull) { //TESTED
                         alterTableQueries += `ALTER TABLE ${el.table} ALTER COLUMN ${colMA} `;
                         alterTableQueries += colObj.notNull ? `SET ` : `DROP `;
@@ -184,7 +205,7 @@ export const sync = async (overwrite = false) => {
                     }
 
                     if(alterTableQueries !== ``){
-                        //await db.queryObject(alterTableQueries);
+                        await db.queryObject(alterTableQueries);
                         console.log(alterTableQueries)
                         alterTableQueries = ``;
                     }
@@ -193,7 +214,7 @@ export const sync = async (overwrite = false) => {
         // ADD TABLE CONSTRAINT LOGIC
 
         // CHECKS
-        if(String(dbTableObj.checks) !== String(el.checks)){
+        if(JSON.stringify(dbTableObj.checks) !== JSON.stringify(el.checks)){
             //console.log(String(dbTableObj.checks),  String(el.checks))
         }
 
@@ -274,6 +295,7 @@ export const sync = async (overwrite = false) => {
         }
     }
     console.log(createTableQueries, alterTableQueries)
+    await db.queryObject(createTableQueries)
     //console.log(tableListObj)
     DisconnectDb(db);
 }
@@ -283,4 +305,5 @@ export const sync = async (overwrite = false) => {
 
 // Following changes will not be implemented via sync: changing column types, the deletes of individual UNIQUE table constraints all would need to be
 // deleted, the deltes of individual CHECKS all would need to be deleted
-// Do no support tables with more than one composite foreign key
+// Do no support tables with more than one composite foreign key for ALTER
+// Sync will not handle composite keys, this should be done exclusively via association methods and introspection

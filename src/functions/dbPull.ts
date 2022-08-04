@@ -47,7 +47,7 @@ export async function dbPull() {
             `      type: '${columnObj.type}',\n`
             }
             // for each 'property' of the column add it to the object
-            if(columnObj.length) classCode += `      length: ${columnObj.length}\n`;
+            if(columnObj.length) classCode += `      length: ${columnObj.length},\n`;
             if (columnObj.notNull) classCode += `      notNull: true,\n`;
             if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
             if (columnObj.unique) classCode += `      unique: true,\n`;

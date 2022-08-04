@@ -8,7 +8,8 @@ export interface ModelColumn {
     defaultVal?: unknown,
     autoIncrement?: boolean,
     association?: { rel_type?: string, table: string, mappedCol: string},
-    length?: number
+    length?: number,
+    enumName?: string,
 }
 
 export interface ModelInfo {
@@ -76,7 +77,6 @@ export const modelParser = (): ModelInfo[] => {
                     colInfo = colInfo.replace(/^ *\{ */, '');
 
                     let entered = true ;
-
                     while(colInfo.length && entered) {
                         entered = false;
 
@@ -109,7 +109,6 @@ export const modelParser = (): ModelInfo[] => {
                             if(!entered) entered = true;
 
                             colInfo = colInfo.replace(/notNull: */, '');
-
                             columnsObj.notNull = colInfo.slice(0, 4) === 'true';
                             colInfo = colInfo.slice(5).replace(/\,* *\}* */, '');
                         }
@@ -130,6 +129,15 @@ export const modelParser = (): ModelInfo[] => {
 
                             columnsObj.length = Number(colInfo.split(',')[0])
                             colInfo = colInfo.replace(String(columnsObj.length), '').replace(/\,* */, '')
+                        }
+
+                        if(colInfo.slice(0, 9) === 'enumName:') {
+                            if(!entered) entered = true;
+
+                            colInfo = colInfo.replace(/enumName: */, '');
+
+                            columnsObj.enumName = colInfo.split(',')[0].replaceAll(/^\'|^\"|\'$|\"$/g, '');
+                            colInfo = colInfo.replace(String(columnsObj.length), '').replace(/\,* */, '');
                         }
 
                         if(colInfo.slice(0, 7) === 'checks:') {
@@ -198,7 +206,7 @@ export const modelParser = (): ModelInfo[] => {
             }
             
             if(prop.slice(0, 6) === 'checks') {
-                const checksArray = prop.replace(/checks: */, '').replaceAll(/^\[|\]}$|\]\$/g, '').split(/\' *, *\'|\" *, *\"/);
+                const checksArray = prop.replace(/checks: */, '').replaceAll(/^\[|\]\}$|\]$/g, '').split(/\' *, *\'|\" *, *\"/);
                 tableObj.checks = checksArray.map(element => element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')'));
             } else if(prop.slice(0, 10) === 'primaryKey') {
                 const pkArray = prop.replace(/ *primaryKey: *\[/, '').replace(/\]$|\]\}$/, '').split(",");
@@ -241,5 +249,3 @@ export const modelParser = (): ModelInfo[] => {
 
     return parsedArray;
 }
-
-modelParser()

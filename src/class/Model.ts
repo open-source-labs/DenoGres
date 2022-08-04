@@ -42,10 +42,7 @@ export class Model {
     table: string;
   }[];
 
-  // static id: string;
-  // static finalID: string;
-
-  private async primaryKey() {
+  async primaryKey() {
     Model.sql = `SELECT a.attname
       FROM pg_index i
       JOIN pg_attribute a ON a.attrelid = i.indrelid
@@ -53,10 +50,16 @@ export class Model {
       WHERE i.indrelid = '${
         Object.getPrototypeOf(this).constructor.table
       }'::regclass
-      AND i.indisprimary`;
+      AND i.indisprimary;`
     const pk = await Model.query();
-    if (typeof pk[0] === 'object' && pk[0] !== null && recordPk(pk[0]))
-      return pk[0].attname;
+    let primaryKey = '';
+
+    for (let i = 0; i < pk.length; i++) {
+      const a = pk[i] as IpkObj;
+      primaryKey += a.attname;
+      if (i < pk.length - 1) primaryKey += ', ';
+    }
+    return primaryKey;
   }
 
   async save() {
@@ -66,61 +69,51 @@ export class Model {
 
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
-      Model.sql += ` '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ' ,';
+      Model.sql += `'${values[i]}'`;
+      if (i !== values.length - 1) Model.sql += ', ';
       else Model.sql += ')';
     }
     await Model.query();
 
-    const pk = await this.primaryKey();
+    const primaryKey = await this.primaryKey();
 
-    Model.sql += `SELECT ${pk} FROM ${table} WHERE`;
+    Model.sql += `SELECT ${primaryKey} FROM ${table} WHERE`;
     for (let i = 0; i < values.length; i++) {
       Model.sql += ` ${keys[i]} = '${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ' AND';
     }
     const pkObj = await Model.query();
-    // pkObj = [{ _id: 123 }]
-    // pk = _id
-    // console.log('pk', pkObj[0][pk]);
-    if (
-      typeof pk === 'string' &&
-      typeof pkObj[0] === 'object' &&
-      pkObj[0] !== null
-    ) {
-      // if (pk !== undefined && typeof pkObj[0] === 'object')
+    const pk = primaryKey.split(', ');    
+    for (let i = 0; i < pk.length; i++) {
       const obj = pkObj[0] as IpkObj;
-      this[pk] = obj[pk];
-      return this;
+      this[pk[i]] = obj[pk[i]];
     }
+    return this;
   }
 
   async update() {
-    const pk = await this.primaryKey();
-
-    // console.log(pk[0])
+    const primaryKey = await this.primaryKey(); 
+    const pk = primaryKey.split(', '); 
     Model.sql = '';
     Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
-    const keys = Object.keys(this);
-    // console.log(keys)
-    const values = Object.values(this).filter(
-      (value) => value !== this[pk as keyof Model]
-    );
-    // console.log(values)
+    const keys = Object.keys(this); 
+    const values = Object.values(this);
+
     for (let i = 0; i < values.length; i++) {
+      if (pk.includes(keys[i])) continue;
       Model.sql += ` ${keys[i]} = '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ' ,';
+      if (i !== values.length - 1) Model.sql += ',';
     }
-    // console.log(this)
-    // console.log(this[pk])
-    Model.sql += ` WHERE ${pk} = ${this[pk as keyof Model]}`;
+    Model.sql += ` WHERE`;
+    for (let i = 0; i < pk.length; i++) {
+      Model.sql += ` ${pk[i]} = '${this[pk[i]]}'`;
+      if (i !== pk.length - 1) Model.sql += ' AND';
+    }
     return await Model.query();
   }
 
   // INSERT INTO VALUES: add value(s) to column(s) in this table
-  // input: (column = value, ...)
   static insert(...value: string[]) {
-    //['name = Tesia', 'hair_color = purple', 'gender = female']
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
       const words = value[i].toString().split(' = ');
@@ -134,13 +127,12 @@ export class Model {
       console.log(words);
       this.sql += ` '${words[1]}'`;
       if (i !== value.length - 1) this.sql += ' ,';
-      else this.sql += ')';
+      else this.sql += ')';      
     }
     return this;
   }
 
   // UPDATE SET: update existing records
-  // input: (column = value, ...)
   static edit(...condition: string[]) {
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
@@ -152,7 +144,6 @@ export class Model {
   }
 
   // DELETE FROM: delete table
-  // input: delete()
   static delete() {
     console.log(this.table);
     this.sql += `DELETE FROM ${this.table}`;
@@ -160,21 +151,17 @@ export class Model {
   }
 
   // SELECT FROM: select column(s) from this table
-  // input: (column)
   static select(...column: string[]) {
     this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
     return this;
   }
 
   // WHERE: add condition(s) to query
-  // input: (NOT column x value, AND/OR NOT column x value, ...)
-  // input: (column LIKE value, OR column NOT LIKE value)
   static where(...condition: string[]) {
-    //this.sql = '';
     if (this.sql === '') this.sql += `SELECT * FROM ${this.table}`;
-    //this.sql += `SELECT * FROM ${this.table} WHERE`;
     this.sql += ' WHERE';
     let words: string[];
+
     for (let i = 0; i < condition.length; i++) {
       if (condition[i].includes(' = ')) {
         words = condition[i].toString().split(' = ');
@@ -200,7 +187,6 @@ export class Model {
   }
 
   // LIMIT: limit number of output rows
-  // input: (limitNumber)
   static limit(limit: number) {
     this.sql += ` LIMIT ${limit}`;
     return this;
@@ -208,11 +194,6 @@ export class Model {
 
   // HAVING: add condition(s) involving aggregate functions
   static having(...condition: string[]) {
-    // if (type === 'count') {
-    //   for (let i = 0; i < condition.length; i++) {
-    //     const words = condition[i].toString().split(' = ');
-    //   }
-    // }
     this.sql += ` HAVING ${condition[0]}`;
     for (let i = 1; i < condition.length; i++) {
       this.sql += ` ${condition[i]}`;
@@ -222,28 +203,24 @@ export class Model {
   }
 
   // INNER JOIN: selects records with matching values on both tables
-  // input: (column1, column2, table2)
   static innerJoin(column1: string, column2: string, table2: string) {
     this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // LEFT JOIN: selects records from this table and matching values on table2
-  // input: (column1, column2, table2)
   static leftJoin(column1: string, column2: string, table2: string) {
     this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
-  // input: (column1, column2, table2)
   static rightJoin(column1: string, column2: string, table2: string) {
     this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // FULL JOIN: selects all records when a match exists in either table
-  // input: (column1, column2, table2)
   static fullJoin(column1: string, column2: string, table2: string) {
     this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -270,8 +247,6 @@ export class Model {
   }
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
-  // input: (column)
-
   static count(column: string) {
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
@@ -300,18 +275,10 @@ export class Model {
   // execute query in database
   static async query(): Promise<unknown[]> {
     const db = await ConnectDb();
-    // const pk = await this.primaryKey();
     if (!this.sql.includes('SELECT a.attname')) console.log(this.sql);
-    // const sqlResult = await db.sqlObject(`SELECT species.name FROM people INNER JOIN species ON people.species_id = species._id WHERE people.name = 'Luke Skywalker'`)
-    const queryResult = await db.queryObject(this.sql); //db.sqlObject(Model)
-    if (
-      !this.sql.includes('SELECT a.attname') &&
-      !this.sql.includes('UPDATE') &&
-      !this.sql.includes('INSERT')
-    )
-      console.log(queryResult.rows);
+    const queryResult = await db.queryObject(this.sql);
     this.sql = '';
-    DisconnectDb(db);
+    await DisconnectDb(db);
     return queryResult.rows;
   }
 
@@ -328,7 +295,7 @@ export class Model {
 
   //BELONGS TO
   // create foreign key on this model (if not exist)
-  static async belongsTo(targetModel: typeof Model, options?: any) {
+  static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = '';
@@ -411,12 +378,12 @@ export class Model {
     }
   } // end of belongsTo
 
-  static async hasOne(targetModel: typeof Model, options?: any) {
+  static async hasOne(targetModel: typeof Model, options?: hasOneOptions) {
     return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
   // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
-  static async hasMany(targetModel: typeof Model, options?: any) {
+  static async hasMany(targetModel: typeof Model, options?: hasManyOptions) {
     let mapping_ColumnName = ''; // mapping key in this model
     let targetModel_foreignKey = ''; // foreign key in targetModel
     let associationQuery = '';
@@ -461,86 +428,8 @@ export class Model {
     console.log(Object.keys(this));
     console.log(Object.getPrototypeOf(this).constructor.table);
   }
-} //end of Model class
-
-interface Test {
-  _id: number;
-  name: string;
-  hair_color: string;
 }
-
-class Test extends Model {
-  static table = 'people';
-  static columns = {
-    _id: {
-      type: 'number',
-    },
-    name: {
-      type: 'string',
-    },
-  };
-}
-
-// const testInstance = new Test();
-// testInstance.name = 'tesia';
-// testInstance.hair_color = 'black' ;
-// await testInstance.save();
-// Test {name = 'kristen', hair_color = 'black'}
-// testInstance.hair_color = 'brown'
-// testInstance.name = 'kristen';
-// Test {name = 'tesia', hair_color: 'brown'}
-// await testInstance.update();
-
-// Test.select('*').where('_id = 143').query();
-
-// testInstance = {
-//   id: 1
-//   name: 'kristen'
-//   save: () =>{
-//  `INSERT ${this.Object.keys}
-//}
-// }
-
-//test.table = 'people';
-// test.filter('name').limit(5); // sql.limit
-// test.filter('name').where('gender','male');
-// Test
-//   .filter('species.name')
-//   .join('outer', 'species_id', '_id', 'species')
-//   .where('people.name = Luke Skywalker');
-// Test
-//   .filter('name', 'gender', 'hair_color')
-//   .where('gender = male', 'hair_color = black');
-// Test.filter('name', 'gender', 'height').group('people.name', 'people.gender', 'people.height').having('AVG(height) > 100').query();
-// Test.filter('name').group('people.name').having('SUM(height) > 100').query();
-// running other file prints out this query...?
-
-//SELECT height FROM people GROUP BY people.height HAVING COUNT(_id) > 7 //
-// Test.filter('height').query();
-// Test.add('name = Tesia', 'hair_color = purple', 'gender = female').query();
-// Test.filter('name', 'hair_color', 'height')
-//   .where('hair_color = purple')
-//   .query();
-// Test.update('gender = male').query();
-// Test.delete().where('hair_color = purple').query();
-// Test.calculate('count', 'name');
-// Test.calculate('average', 'height').query()
-// Test.sql = `SELECT UPPER(name) FROM people;`
-// Test.query()
-// Test.calculate('max', 'height');
-
-// class Person extends Model {
-//   static fields = {
-//     name: String,
-//     mass: String,
-//     hair_color: String,
-//     skin_color: String,
-//     eye_color: String,
-//     birth_year: String,
-//     gender: String,
-//     species: String
-//   }
-// }
+//end of Model class
 
 interface IgetMappingKeysResult {
   [key: string]: string;
@@ -610,7 +499,7 @@ async function getForeignKey<T>(thisTable: string, targetTable: string) {
 }
 
 //helper function to find primary key of target table
-async function getprimaryKey<T>(
+export async function getprimaryKey<T>(
   tableName: string
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
@@ -640,6 +529,15 @@ async function getprimaryKey<T>(
   }
 }
 
+interface belongToOptions {
+  associationName?:string;
+}
+interface hasOneOptions {
+  associationName?:string;
+}
+interface hasManyOptions {
+  associationName?:string;
+}
 interface manyToManyOptions {
   through?: typeof Model;
   createThrough?: string;

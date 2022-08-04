@@ -1,19 +1,39 @@
 import { Model } from './Model.ts'
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 
+
+interface mappingDetails {
+  association_type?: string;
+  association_name?: string;
+  targetModel?: typeof Model;
+  foreignKey_ColumnName?:string;
+  mapping_ColumnName?: string;
+
+  // for ManyToMany
+  modelA?: typeof Model;
+  modelB?: typeof Model;
+  throughModel?: typeof Model;
+  modelA_foreignKey_inThroughModel?: string;
+  modelB_foreignKey_inThroughModel?: string;
+  modelA_mappingKey?: string;
+  modelB_mappingKey?: string;
+}
+
 abstract class Association {
   source: typeof Model;
   target: typeof Model;
   associationQuery:string;
-  mappingDetails:any;
+  mappingDetails:mappingDetails;
 
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, associationQuery:string) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, associationQuery:string) {
     this.source = source;
     this.target = target;
     this.associationQuery = associationQuery
     this.mappingDetails = mappingDetails
   }
   abstract association_name:string; 
+
+  // args not decided yet, type 'any' for placeholder
   abstract getAssociatedData(...args:any): void
   abstract addAssociatedData(...args:any): void
 
@@ -37,7 +57,7 @@ abstract class Association {
 }//end of abstract class Association
 
 export class HasOne extends Association {
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query);    
     this.attachAssociationMethodsToModel()
   } // end of constructor
@@ -62,8 +82,10 @@ export class HasOne extends Association {
     //console.log("THIS: ", this)
     let query = ''
     let queryResult:any
-    query = `SELECT * FROM ${this.source.table} 
+    if(this.targetModel_MappindColumnName) { // type checking 
+      query = `SELECT * FROM ${this.source.table} 
         WHERE ${this.foreignKey_ColumnName} ='${instance[this.targetModel_MappindColumnName]}'`
+    }    
     console.log(query)
     const db = await ConnectDb()
     try {
@@ -114,7 +136,7 @@ export class HasOne extends Association {
 } // end of HasOne class
 
 export class BelongsTo extends Association {
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query);    
     //this.mappingDetails = mappingDetails
     this.attachAssociationMethodsToModel()
@@ -138,9 +160,10 @@ export class BelongsTo extends Association {
     //console.log("THIS: ", this)
     let query = ''
     let queryResult:any
-    query = `SELECT * FROM ${this.target.table} 
+    if(this.foreignKey_ColumnName) { // type checking
+      query = `SELECT * FROM ${this.target.table} 
       WHERE ${this.targetModel_MappindColumnName} ='${instance[this.foreignKey_ColumnName]}'`
-
+    }
     console.log(query)
     const db = await ConnectDb()
     try {
@@ -161,7 +184,7 @@ export class BelongsTo extends Association {
 
 // e.g. Species.hasMany(Person)
 export class HasMany extends Association {
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query);
     this.attachAssociationMethodsToModel(source)
     //console.log("mapping Details",mappingDetails)
@@ -186,11 +209,12 @@ export class HasMany extends Association {
   // this is instance method e.g. species1.getPeople()
   async getAssociatedData(instance:any, options?:any) {
     console.log("instance? ", instance)
-
-    let query = `
-    SELECT * FROM ${this.target.table} 
-    WHERE ${this.foreignKey_ColumnName} ='${instance[this.mapping_ColumnName]}'`
-
+    let query = ''
+    if(this.mapping_ColumnName) {
+      query = `
+        SELECT * FROM ${this.target.table} 
+        WHERE ${this.foreignKey_ColumnName} ='${instance[this.mapping_ColumnName]}'`
+    }
     console.log("association query:", query)
 
     const db = await ConnectDb()
@@ -214,7 +238,7 @@ export class HasMany extends Association {
 
 
 export class ManyToMany extends Association {
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:any, query:any) {
+  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query);    
     this.attachAssociationMethodsToModels()
   } // end of constructor
@@ -241,24 +265,28 @@ export class ManyToMany extends Association {
     //addAddMethodToModel(this, this.target, this.addAccesorName_B)
   }
 
-  async getAssociatedData(instance:any, options?:any) {
+  async getAssociatedData<T extends {}>(instance:T, options?:any) {
     //console.log("instance? ", instance)
     //console.log("OPTIONS: ", options)
     //console.log("THIS: ", this)
     let query = ''
     let queryResult:any
     if(instance.constructor === this.modelA) {
-      query = `SELECT ${this.modelB.table}.* FROM ${this.modelB.table}
+      if(this.throughModel && this.modelA_mappingKey) {
+        query = `SELECT ${this.modelB.table}.* FROM ${this.modelB.table}
         INNER JOIN ${this.throughModel.table} 
         ON ${this.modelB.table}.${this.modelB_mappingKey} = ${this.throughModel.table}.${this.modelB_foreignKey_inThroughModel}
-        INNER JOIN ${this.modelA.table} ON ${this.throughModel.table}.${this.modelA_foreignKey_inThroughModel} = people._id
-        WHERE ${this.modelA.table}.${this.modelA_mappingKey} = ${instance[this.modelA_mappingKey]} ORDER BY ${this.modelB.table}.${this.modelB_mappingKey}`
+        INNER JOIN ${this.modelA.table} ON ${this.throughModel.table}.${this.modelA_foreignKey_inThroughModel} = ${this.modelA.table}.${this.modelA_mappingKey} 
+        WHERE ${this.modelA.table}.${this.modelA_mappingKey} = '${instance[this.modelA_mappingKey]}' ORDER BY ${this.modelB.table}.${this.modelB_mappingKey}`
+      }      
     } else if(instance.constructor === this.modelB) {
-      query = `SELECT ${this.modelA.table}.* FROM ${this.modelA.table}
+      if(this.throughModel && this.modelB_mappingKey) {
+        query = `SELECT ${this.modelA.table}.* FROM ${this.modelA.table}
         INNER JOIN ${this.throughModel.table} 
         ON ${this.modelA.table}.${this.modelA_mappingKey} = ${this.throughModel.table}.${this.modelA_foreignKey_inThroughModel}
-        INNER JOIN ${this.modelB.table} ON ${this.throughModel.table}.${this.modelB_foreignKey_inThroughModel} = people._id
-        WHERE ${this.modelB.table}.${this.modelB_mappingKey} = ${instance[this.modelB_mappingKey]} ORDER BY ${this.modelA.table}.${this.modelA_mappingKey}`
+        INNER JOIN ${this.modelB.table} ON ${this.throughModel.table}.${this.modelB_foreignKey_inThroughModel} = ${this.modelB.table}.${this.modelB_mappingKey}
+        WHERE ${this.modelB.table}.${this.modelB_mappingKey} = '${instance[this.modelB_mappingKey]}' ORDER BY ${this.modelA.table}.${this.modelA_mappingKey}`
+      }
     }  
     console.log(query)
       const db = await ConnectDb()      
@@ -281,6 +309,7 @@ export class ManyToMany extends Association {
 
 
 
+// options are not decided yet, thus type 'any' for placeholder
 
 function addMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
   console.log("association.name: ", association.association_name)
