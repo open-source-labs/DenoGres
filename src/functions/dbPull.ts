@@ -18,8 +18,8 @@ export async function dbPull() {
         let interfaceCode = `\nexport interface ${className} {\n`;
         // initialize class code holder
         let classCode =`export class ${className} extends Model {\n` +
-        `  static table: '${el}';\n` +
-        `  static columns: {\n`;
+        `  static table = '${el}';\n` +
+        `  static columns = {\n`;
 
         // iterate over each property within the columns object
         Object.keys(tableListObj[el].columns).forEach(colName => {
@@ -65,13 +65,13 @@ export async function dbPull() {
         // add the interface and class code to the autoCreatedModels string
         autoCreatedModels += interfaceCode + classCode;
         // for each table constraint add as properties onto the autoCreatedModels query
-        if (tableObj.checks.length > 0) autoCreatedModels += `  static checks: ${JSON.stringify(tableObj.checks)}\n`
-        if (tableObj.unique) autoCreatedModels += `  static unique: ${JSON.stringify(tableObj.unique)}\n`
+        if (tableObj.checks.length > 0) autoCreatedModels += `  static checks = ${JSON.stringify(tableObj.checks)}\n`
+        if (tableObj.unique) autoCreatedModels += `  static unique = ${JSON.stringify(tableObj.unique)}\n`
         if (tableObj.primaryKey) {
-          autoCreatedModels += `  static primaryKey: ${JSON.stringify(tableObj.primaryKey)}\n`
+          autoCreatedModels += `  static primaryKey = ${JSON.stringify(tableObj.primaryKey)}\n`
         }
         if (tableObj.foreignKey) {
-            autoCreatedModels += `  static foreignKey: [`
+            autoCreatedModels += `  static foreignKey = [`
 
             tableObj.foreignKey.forEach((fkObj, idx) => {
                 const delimiter = idx === 0 ? '' : ', ';

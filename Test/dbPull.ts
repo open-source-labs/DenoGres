@@ -13,8 +13,8 @@ export interface Customer {
 }
 
 export class Customer extends Model {
-  static table: 'customers';
-  static columns: {
+  static table = 'customers';
+  static columns = {
     customer_name: {
       type: 'varchar',
       length: 255,
@@ -44,8 +44,8 @@ export interface Product {
 }
 
 export class Product extends Model {
-  static table: 'products';
-  static columns: {
+  static table = 'products';
+  static columns = {
     sale_item: {
       type: 'varchar',
     },
@@ -62,8 +62,8 @@ export class Product extends Model {
       type: 'numeric',
     },
   }
-  static checks: ["(price > (0::numeric))","(discounted_price > (0::numeric))","(price > discounted_price)"]
-  static unique: [["product_no","name"]]
+  static checks = ["(price > (0::numeric))","(discounted_price > (0::numeric))","(price > discounted_price)"]
+  static unique = [["product_no","name"]]
 }
 
 
@@ -77,8 +77,8 @@ export interface Contact {
 }
 
 export class Contact extends Model {
-  static table: 'contacts';
-  static columns: {
+  static table = 'contacts';
+  static columns = {
     password: {
       type: 'varchar',
       length: 30,
@@ -122,8 +122,8 @@ export interface Person {
 }
 
 export class Person extends Model {
-  static table: 'person';
-  static columns: {
+  static table = 'person';
+  static columns = {
     name: {
       type: 'text',
     },

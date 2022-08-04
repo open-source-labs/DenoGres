@@ -129,6 +129,7 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
                 let defaultVal:unknown = el.col_default.replace(/\:\:[\w\W]*/,'');
                 if (defaultVal === "'false'"){defaultVal = false}
                 if (defaultVal === "'true'"){defaultVal = true}
+                if (String(defaultVal).slice(-2) === '()') defaultVal = "'" + defaultVal + "'"
                 refObj['defaultVal'] = defaultVal;
                 }
             }

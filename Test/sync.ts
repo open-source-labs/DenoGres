@@ -29,7 +29,7 @@ Deno.test('Sync/Enum/New', async () => {
     assert(dbEnum.rows[0].enum_name === 'weather', 'Weather enum');
     assert(dbEnum.rows[0].enum_value === 'sunny, cloudy, rainy', 'Enum Values' + dbEnum.rows[0].enum_value);
 
-    DisconnectDb(db);
+    await DisconnectDb(db);
 })
 
 const newTableStr = 
@@ -38,8 +38,8 @@ const newTableStr =
     username: string
 }
 export class TestTable extends Model {
-    static table: 'testtable';
-    static columns: {
+    static table = 'testtable';
+    static columns = {
         _id: {
             type: 'integer',
             autoIncrement: true,
@@ -59,8 +59,8 @@ export interface Invoice {
     customer_id: number
 }
 export class Invoice extends Model {
-    static table: 'invoice';
-    static columns: {
+    static table = 'invoice';
+    static columns = {
         invoice_id: {
             type: 'integer';
             autoIncrement: true,
@@ -74,7 +74,7 @@ export class Invoice extends Model {
             autoIncrement: true
         }
     }
-    static primaryKey: ['invoice_id', 'store_id']
+    static primaryKey = ['invoice_id', 'store_id']
 }
 export interface PayMe {
     invoice_id: number,
@@ -82,8 +82,8 @@ export interface PayMe {
     customer_id: number
 }
 export class PayMe extends Model {
-    static table: 'PayMe';
-    static columns: {
+    static table = 'PayMe';
+    static columns = {
         payment_id: {
             type: 'integer',
             autoIncrement: true,
@@ -105,7 +105,7 @@ export class PayMe extends Model {
             type: 'integer',
         }
     }
-    static foreignKey: [{columns: ['invoice_id', 'store_id'], mappedColumns: ['invoice_id', 'store_id'], table: 'invoice'}]
+    static foreignKey = [{columns: ['invoice_id', 'store_id'], mappedColumns: ['invoice_id', 'store_id'], table: 'invoice'}]
 }`;
 
 Deno.test('Sync/Table/Create', async () => {
@@ -131,10 +131,10 @@ Deno.test('Sync/Table/Create', async () => {
     assert(username.unique);
     assert(username.length === 16);
     assertEquals(invoice.primaryKey, ['invoice_id', 'store_id'], String(invoice.primaryKey));
-    assert(payment.columns.payment_date.defaultVal === 'now()', `defaultVal: ${payment.columns.payment_date.defaultVal}`)
+    assert(payment.columns.payment_date.defaultVal === "'now()'", `defaultVal: ${payment.columns.payment_date.defaultVal}`)
     assertEquals(payment.foreignKey, [{columns: ['invoice_id', 'store_id'], mappedColumns: ['invoice_id', 'store_id'], table: 'invoice'}])
 
-    DisconnectDb(db);
+    await DisconnectDb(db);
 })
 
 const checksTableStr = 
@@ -143,8 +143,8 @@ const checksTableStr =
     state: string
 }
 export class Zipcodetable extends Model {
-    static table: 'zipcode_table';
-    static columns: {
+    static table = 'zipcode_table';
+    static columns = {
         zipcode: {
             type: 'integer'
             primaryKey: true
@@ -153,15 +153,15 @@ export class Zipcodetable extends Model {
             type: 'varchar'
         }
     }
-    static checks: ['zipcode >= 0', 'zipcode <= 99999']
+    static checks = ['zipcode >= 0', 'zipcode <= 99999']
 }
 export interface RandomPerson {
     avg_mood: keyof typeof Mood
     person_id: number
 }
 export class RandomPerson extends Model {
-    static table: 'randompeople';
-    static columns: {
+    static table = 'randompeople';
+    static columns = {
         avg_mood: {
             type: 'enum',
             enumName: 'mood'
@@ -201,7 +201,7 @@ Deno.test('Sync/Table/Create - Checks, Association, Enum Type', async () => {
     assert(zip.checks.includes('(zipcode >= 0)'));
     assert(zip.checks.includes('(zipcode <= 99999)'));
 
-    DisconnectDb(db);
+    await DisconnectDb(db);
 })
 
 const uniqueTableStr = 
@@ -210,8 +210,8 @@ const uniqueTableStr =
     person_id: number
 }
 export class RandomPerson extends Model {
-    static table: 'randompeople';
-    static columns: {
+    static table = 'randompeople';
+    static columns = {
         avg_mood: {
             type: 'enum',
             enumName: 'mood'
@@ -221,11 +221,11 @@ export class RandomPerson extends Model {
             autoIncrement: true
         },
     }
-    static unique: [['avg_mood', 'person_id']]
+    static unique = [['avg_mood', 'person_id']]
 }
 `;
 
-Deno.test('Sync/Table/Create - Checks, Association, Enum Type', async () => {
+Deno.test('Sync/Table/Create - Unique', async () => {
     const db = await ConnectDb();
     await dbPull();
 
@@ -240,5 +240,5 @@ Deno.test('Sync/Table/Create - Checks, Association, Enum Type', async () => {
     assert(rando.unique.length === 1);
     assertEquals(rando.unique[0], ['avg_mood', 'person_id']);
 
-    DisconnectDb(db);
+    await DisconnectDb(db);
 })
