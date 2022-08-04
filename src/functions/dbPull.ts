@@ -1,14 +1,10 @@
 import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
-
 import { createClassName } from '../functions/StringFormat.ts'
-
 import { introspect } from './introspect.ts'
 
 
 export async function dbPull() {
     const [tableListObj, enumObj] = await introspect();
-    // const tableListObj = await introspect();
-    // console.log('Table List Obj', tableListObj)
 
     let autoCreatedModels = `import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n// user model definition comes here\n\n`;
 
@@ -47,7 +43,7 @@ export async function dbPull() {
             `      type: '${columnObj.type}',\n`
             }
             // for each 'property' of the column add it to the object
-            if(columnObj.length) classCode += `      length: ${columnObj.length},\n`;
+            if (columnObj.length) classCode += `      length: ${columnObj.length},\n`;
             if (columnObj.notNull) classCode += `      notNull: true,\n`;
             if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
             if (columnObj.unique) classCode += `      unique: true,\n`;
@@ -69,18 +65,19 @@ export async function dbPull() {
         // add the interface and class code to the autoCreatedModels string
         autoCreatedModels += interfaceCode + classCode;
         // for each table constraint add as properties onto the autoCreatedModels query
-        if(tableObj.checks.length > 0) autoCreatedModels += `  static checks: ${JSON.stringify(tableObj.checks)}\n`
-        if(tableObj.unique) autoCreatedModels += `  static unique: ${JSON.stringify(tableObj.unique)}\n`
-        if(tableObj.primaryKey) {
+        if (tableObj.checks.length > 0) autoCreatedModels += `  static checks: ${JSON.stringify(tableObj.checks)}\n`
+        if (tableObj.unique) autoCreatedModels += `  static unique: ${JSON.stringify(tableObj.unique)}\n`
+        if (tableObj.primaryKey) {
           autoCreatedModels += `  static primaryKey: ${JSON.stringify(tableObj.primaryKey)}\n`
         }
-        if(tableObj.foreignKey) {
+        if (tableObj.foreignKey) {
             autoCreatedModels += `  static foreignKey: [`
 
             tableObj.foreignKey.forEach((fkObj, idx) => {
                 const delimiter = idx === 0 ? '' : ', ';
 
-                autoCreatedModels += `${delimiter}\n    {columns: ${JSON.stringify(fkObj.columns)}, mappedColumns: ${JSON.stringify(fkObj.mappedColumns)}, table: '${fkObj.table}'}`;
+                autoCreatedModels += `${delimiter}\n    {columns: ${JSON.stringify(fkObj.columns)}, 
+                mappedColumns: ${JSON.stringify(fkObj.mappedColumns)}, table: '${fkObj.table}'}`;
             })
 
             autoCreatedModels +=`]\n`
