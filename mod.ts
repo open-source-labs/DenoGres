@@ -24,9 +24,14 @@ switch(Deno.args[0]) {
     case '--db-sync': {
       Deno.args[1] === '-x' ? sync(true) : sync();
       break;
+    } case '-h': {
+      console.log(displayHelpMsg());
+      break;
+    } case '--help': {
+      console.log(displayHelpMsg());
+      break;
     }
     default:
-        console.log(displayHelpMsg());
 }
 
 function displayHelpMsg() {
