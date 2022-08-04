@@ -24,8 +24,7 @@ export interface ModelInfo {
 
 export const modelParser = (): ModelInfo[] => {
     const modelText = Deno.readTextFileSync('./models/model.ts');
-
-    const cleanedText = modelText.replaceAll(/export interface \w+ {[\n +\w+: \w+]+}/g, '').
+const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,*]+\}/g, '').
             replaceAll("import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts'\n", ''). // initial wording
             replaceAll(/\/\/ user model definition comes here\n+/g, '').
             replaceAll(/\n */g, '').
@@ -127,7 +126,7 @@ export const modelParser = (): ModelInfo[] => {
 
                             colInfo = colInfo.replace(/length: */, '');
 
-                            columnsObj.length = Number(colInfo.split(',')[0])
+                            columnsObj.length = Number(colInfo.split(',')[0].replaceAll(/\}/g, ''));
                             colInfo = colInfo.replace(String(columnsObj.length), '').replace(/\,* */, '')
                         }
 
@@ -165,9 +164,11 @@ export const modelParser = (): ModelInfo[] => {
 
                             if(columnsObj.type === 'boolean'){
                                 transformValue = Boolean(value);
-                            } else if(typeof columnsObj.type === 'string' && 
+                            } else if(typeof columnsObj.type === 'number' && 
                                 ['int', 'int2', 'int4', 'int8', 'numeric', 'smallint', 'integer', 'bigint', 'float', 'float4', 'float8'].includes(columnsObj.type)) {
                                 transformValue = Number(value);
+                            } else {
+                                transformValue = value;
                             }
 
                             columnsObj.defaultVal = transformValue;
@@ -209,7 +210,7 @@ export const modelParser = (): ModelInfo[] => {
                 const checksArray = prop.replace(/checks: */, '').replaceAll(/^\[|\]\}$|\]$/g, '').split(/\' *, *\'|\" *, *\"/);
                 tableObj.checks = checksArray.map(element => element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')'));
             } else if(prop.slice(0, 10) === 'primaryKey') {
-                const pkArray = prop.replace(/ *primaryKey: *\[/, '').replace(/\]$|\]\}$/, '').split(",");
+                const pkArray = prop.replace(/ *primaryKey: *\[/, '').replaceAll(/\]$|\]\}$/g, '').split(",");
                 tableObj.primaryKey = pkArray.map(element => element.replaceAll(/^\"|^\'/g, '').replaceAll(/\"|\'/g, ''));
             } else if(prop.slice(0, 6) === 'unique') {
                 const uArray = prop.replace(/ *unique: *\[/, '').replace(/\]$|\]\}$/, '').split(/\] *, *\[/);

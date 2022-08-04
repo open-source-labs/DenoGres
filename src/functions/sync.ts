@@ -35,12 +35,21 @@ const newColAttr = (column: ModelColumn): string => {
     }else {
         // Otherwise use 
         str += `${column.type}`
+        if(column.length) str += `(${column.length})`;
         // Not Null for non-serial columns
         if(column.notNull && !column.primaryKey) str += ` NOT NULL`
     }
     if(column.primaryKey) str += ` PRIMARY KEY`
     if(column.unique && !column.primaryKey && !column.autoIncrement) str += ` UNIQUE`
-    if(column.defaultVal) str += ` DEFAULT ${column.defaultVal}`
+    if(column.defaultVal) {
+        let dV;
+        if(column.type === 'timestamp' && typeof column.defaultVal === 'string'){
+            dV = column.defaultVal.replaceAll(/\'|\"/g, '')
+        } else {
+            dV = column.defaultVal;
+        }
+        str += ` DEFAULT ${dV}`
+    }
     if(column.association) {
         str += ` REFERENCES ${column.association.table}(${column.association.mappedCol})`}
     
@@ -79,13 +88,11 @@ const createTable = (table_name: string, columns: Record<string, ModelColumn>, c
     // COMPOSITE FOREIGN KEYS
     if(foreignKey) {
         foreignKey.forEach(el => {
-            const colStr = "'" + el.columns.join("','") + "'";
-            const mappedColStr = "'" + el.mappedColumns.join("','") + "'";
-            queryText += `FOREIGN KEY (${colStr}) REFERENCES ${el.table} (${mappedColStr}),`
+            queryText += `FOREIGN KEY (${el.columns}) REFERENCES ${el.table} (${el.mappedColumns}),`
         })
     }
     
-    return queryText.slice(0, -1) + ');'; // remove the last comma
+    return queryText.slice(0, -1) + '); '; // remove the last comma
 }
 
 const alterTableError = (err: Error) => {
@@ -137,9 +144,16 @@ export const sync = async (overwrite = false) => {
                     }
                     // DEFAULT updated
                     if((colObj.defaultVal === undefined ? null : colObj.defaultVal) !== dbColObj.defaultVal && (colObj.defaultVal !== undefined  && dbColObj !== undefined)){ // TESTED
+                        let dV;
+                        if(colObj.type === 'timestamp' && typeof colObj.defaultVal === 'string'){
+                            dV = colObj.defaultVal.replaceAll(/\'|\"/g, '')
+                            console.log(dV, 'dV')
+                        } else {
+                            dV = colObj.defaultVal;
+                        }
                         alterTableQueries += `ALTER TABLE ${el.table} ALTER COLUMN ${colMA} `
                         alterTableQueries += colObj.defaultVal === null || 
-                                                colObj.defaultVal === '' ? `DROP DEFAULT; ` : `SET DEFAULT ${colObj.defaultVal}; `
+                                                colObj.defaultVal === '' ? `DROP DEFAULT; ` : `SET DEFAULT ${dV}; `
                     }
                     // PRIMARY KEY updated
                     if(colObj.primaryKey !== dbColObj.primaryKey){
@@ -205,8 +219,8 @@ export const sync = async (overwrite = false) => {
                     }
 
                     if(alterTableQueries !== ``){
-                        await db.queryObject(alterTableQueries);
                         console.log(alterTableQueries)
+                        await db.queryObject(alterTableQueries);
                         alterTableQueries = ``;
                     }
                 }
