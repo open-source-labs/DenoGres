@@ -42,7 +42,7 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
 
         props.forEach(prop => {
             if(prop.slice(0, 5) === 'table') {
-                let updatedString = prop.replace(/table *: */, '') // remove known property
+                let updatedString = prop.replace(/table *= */, '') // remove known property
                 
                 // table property: add table property to obj
                 const quote = updatedString[0];
@@ -62,7 +62,7 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
                 tableObj.table = propertyValue;
 
             } else if(prop.slice(0, 7) === 'columns'){
-                const colText = prop.replace(/columns: *{ */, '').replace(/\}$/, '')
+                const colText = prop.replace(/columns *= *{ */, '').replace(/\}$/, '')
 
                 const columnsArray = colText.split(/\}\,(?!association)/)
                 if(columnsArray.slice(-1)[0] === '}') columnsArray.pop();
@@ -176,8 +176,10 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
                             } else if(typeof columnsObj.type === 'number' && 
                                 ['int', 'int2', 'int4', 'int8', 'numeric', 'smallint', 'integer', 'bigint', 'float', 'float4', 'float8'].includes(columnsObj.type)) {
                                 transformValue = Number(value);
+                            } else if(value.replace(/,$/, '').slice(-3) === '()\'' || value.replace(/,$/, '').slice(-3) === '()"') {
+                                transformValue = value.replace(/,$/, '').replaceAll(/^\'|^\"|\'$|\"$/g, '');
                             } else {
-                                transformValue = value;
+                                transformValue = value.replace(/,$/, '');
                             }
 
                             columnsObj.defaultVal = transformValue;
@@ -216,7 +218,7 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
             }
             
             if(prop.slice(0, 6) === 'checks') {
-                const checksArray = prop.replace(/checks: */, '').replaceAll(/^\[|\]\}$|\]$/g, '').split(/\' *, *\'|\" *, *\"/);
+                const checksArray = prop.replace(/checks *= */, '').replaceAll(/^\[|\]\}$|\]$/g, '').split(/\' *, *\'|\" *, *\"/);
                 tableObj.checks = checksArray.map(element => {
                     element = element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')').replaceAll(/^\'|\'$|^\"|\"$/g, '');
                     if(element[0] !== '(') element = '(' + element;
@@ -225,13 +227,13 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
                     return element;
                 });
             } else if(prop.slice(0, 10) === 'primaryKey') {
-                const pkArray = prop.replace(/ *primaryKey: *\[/, '').replaceAll(/\]$|\]\}$/g, '').split(",");
+                const pkArray = prop.replace(/ *primaryKey *= *\[/, '').replaceAll(/\]$|\]\}$/g, '').split(",");
                 tableObj.primaryKey = pkArray.map(element => element.replaceAll(/^\"|^\'/g, '').replaceAll(/\"|\'/g, ''));
             } else if(prop.slice(0, 6) === 'unique') {
-                const uArray = prop.replace(/ *unique: *\[/, '').replace(/\]$|\]\}$/, '').split(/\] *, *\[/);
+                const uArray = prop.replace(/ *unique *= *\[/, '').replace(/\]$|\]\}$/, '').split(/\] *, *\[/);
                 tableObj.unique = uArray.map(element => element.replaceAll(/^\[|\]$/g, '').replaceAll(/\"|\'/g, '').split(','));
             } else if (prop.slice(0, 10) === 'foreignKey') {
-                const fkObj = prop.replaceAll(/ *foreignKey: *\[ *\{|\}\]\}*$/g, '');
+                const fkObj = prop.replaceAll(/ *foreignKey *= *\[ *\{|\}\]\}*$/g, '');
                 const fkArray = fkObj.split(/\} *\, *\{/);
 
                 tableObj.foreignKey = [];

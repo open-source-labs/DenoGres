@@ -85,9 +85,9 @@ export const enumSync = async () => {
                         // if not currently in the enum add it
                         if(!tempDBEnumVal.includes(String(val))) {
                             if(idx === 0) {
-                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}; '`
+                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}';`
                             } else {
-                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}' BEFORE '${rev[idx - 1]}; '`
+                                enumCreateAlter += `ALTER TYPE ${key} ADD VALUE '${val}' BEFORE '${rev[idx - 1]}';`
                             }
                         }
                     })
@@ -97,7 +97,6 @@ export const enumSync = async () => {
     })
     await db.queryArray(enumCreateAlter);
     DisconnectDb(db);
-    console.log(enumCreateAlter)
 }
 
 // DROPPING AN ENUM TYPE OR RE_SORTING EXISISTING VALUESRESULTS IN THE DROPPING AND
