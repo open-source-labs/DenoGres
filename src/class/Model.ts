@@ -42,7 +42,7 @@ export class Model {
     table: string;
   }[];
 
-  async primaryKey() {
+  private async primaryKey() {
     Model.sql = `SELECT a.attname
       FROM pg_index i
       JOIN pg_attribute a ON a.attrelid = i.indrelid
