@@ -32,84 +32,34 @@ export class Customer extends Model {
 
 
 export interface Product {
+  product_no: number
+  discounted_price: number
   sale_item: string
   price: number
-  product_no: number
   name: string
-  discounted_price: number
 }
 
 export class Product extends Model {
   static table: 'products';
   static columns: {
-    sale_item: {
-      type: 'varchar',
-      defaultVal: 'false',
-    },
-    price: {
-      type: 'numeric',
-    },
     product_no: {
       type: 'int4',
-    },
-    name: {
-      type: 'text',
     },
     discounted_price: {
       type: 'numeric',
     },
+    sale_item: {
+      type: 'varchar',
+    },
+    price: {
+      type: 'numeric',
+    },
+    name: {
+      type: 'text',
+    },
   }
   static checks: ["(price > (0::numeric))","(discounted_price > (0::numeric))","(price > discounted_price)"]
   static unique: [["product_no","name"]]
-}
-
-
-export interface Contact {
-  password: string
-  contact_name: string
-  contact_id: number
-  phone: string
-  customer_id: number
-  email: string
-}
-
-export class Contact extends Model {
-  static table: 'contacts';
-  static columns: {
-    password: {
-      type: 'varchar',
-      length: 30
-      notNull: true,
-    },
-    contact_name: {
-      type: 'varchar',
-      length: 255
-      notNull: true,
-    },
-    contact_id: {
-      type: 'int4',
-      notNull: true,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    phone: {
-      type: 'varchar',
-      length: 15
-    },
-    customer_id: {
-      type: 'int4',
-      association: {
-        table: 'customers',
-        mappedCol: 'customer_id',
-      }
-    },
-    email: {
-      type: 'varchar',
-      length: 100
-      notNull: true,
-      unique: true,
-    },
-  }
 }
 
 
@@ -131,6 +81,51 @@ export class Person extends Model {
   }
 }
 
+
+export interface Contact {
+  phone: string
+  contact_name: string
+  password: string
+  contact_id: number
+  email: string
+  customer_id: number
+}
+
+export class Contact extends Model {
+  static table: 'contacts';
+  static columns: {
+    phone: {
+      type: 'varchar',
+    },
+    contact_name: {
+      type: 'varchar',
+      notNull: true,
+    },
+    password: {
+      type: 'varchar',
+      notNull: true,
+    },
+    contact_id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    email: {
+      type: 'varchar',
+      notNull: true,
+      unique: true,
+    },
+    customer_id: {
+      type: 'int4',
+      association: {
+        table: 'customers',
+        mappedCol: 'customer_id',
+      }
+    },
+  }
+}
+
 export enum Color {
 violet,
 green,
@@ -147,3 +142,77 @@ happy,
 sad,
 }
 
+export interface TestTable {
+    _id: number,
+    username: string
+}
+export class TestTable extends Model {
+    static table: 'testtable';
+    static columns: {
+        _id: {
+            type: 'integer',
+            autoIncrement: true,
+            primaryKey: true
+        },
+        username: {
+            type: 'varchar',
+            notNull: true,
+            unique: true,
+            length: 16
+        }
+    }
+}
+export interface Invoice {
+    invoice_id: number,
+    store_id: number,
+    customer_id: number
+}
+export class Invoice extends Model {
+    static table: 'invoice';
+    static columns: {
+        invoice_id: {
+            type: 'integer';
+            autoIncrement: true,
+        },
+        store_id: {
+            type: 'integer',
+            autoIncrement: true
+        },
+        customer_id: {
+            type: 'integer',
+            autoIncrement: true
+        }
+    }
+    static primaryKey: ['invoice_id', 'store_id']
+}
+export interface PayMe {
+    invoice_id: number,
+    store_id: number,
+    customer_id: number
+}
+export class PayMe extends Model {
+    static table: 'PayMe';
+    static columns: {
+        payment_id: {
+            type: 'integer',
+            autoIncrement: true,
+            primaryKey: true
+        },
+        invoice_id: {
+            type: 'integer',
+            autoIncrement: true
+        },
+        store_id: {
+            type: 'integer',
+            autoincrement: true
+        },
+        payment_date: {
+            type: 'timestamp',
+            defaultVal: 'NOW()'
+        },
+        payment_amount: {
+            type: 'integer',
+        }
+    }
+    static foreignKey: [{columns: ['invoice_id', 'store_id'], mappedColumns: ['invoice_id', 'store_id'], table: 'invoice'}]
+}
