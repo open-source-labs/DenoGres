@@ -52,6 +52,12 @@ const newColAttr = (column: ModelColumn): string => {
     }
     if(column.association) {
         str += ` REFERENCES ${column.association.table}(${column.association.mappedCol})`}
+
+    if(column.checks) {
+        column.checks.forEach(check => {
+            str += ` CHECK ${check}`; 
+        })
+    }
     
     return str;
 

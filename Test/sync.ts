@@ -137,50 +137,108 @@ Deno.test('Sync/Table/Create', async () => {
     DisconnectDb(db);
 })
 
-// const checksTableStr = 
-// `export interface RandomPerson {
+const checksTableStr = 
+`export interface Zipcode {
+    zipcode: number
+    state: string
+}
+export class Zipcodetable extends Model {
+    static table: 'zipcode_table';
+    static columns: {
+        zipcode: {
+            type: 'integer'
+            primaryKey: true
+        },
+        state: {
+            type: 'varchar'
+        }
+    }
+    static checks: ['zipcode >= 0', 'zipcode <= 99999']
+}
+export interface RandomPerson {
+    avg_mood: keyof typeof Mood
+    person_id: number
+}
+export class RandomPerson extends Model {
+    static table: 'randompeople';
+    static columns: {
+        avg_mood: {
+            type: 'enum',
+            enumName: 'mood'
+        },
+        person_id: {
+            type: 'integer',
+            primaryKey: true,
+            autoIncrement: true
+        },
+        zipcode: {
+            type: 'integer',
+            checks: ['zipcode >= 0', 'zipcode <= 99999'],
+            association: { table: 'zipcode_table', mappedCol: 'zipcode'}
+        }
+    }
+}
+`;
 
-// }
-// export class RandomPerson extends Model {
-//     static table: 'randompeople';
-//     static columns: {
-//         avg_mood: {
-//             type: 'enum',
-//             enumName: 'mood'
-//         },
-//         person_id: {
-//             type: 'integer',
-//             primaryKey: true,
-//             autoIncrement: true
-//         }
-//     }
-// }`;
+Deno.test('Sync/Table/Create - Checks, Association, Enum Type', async () => {
+    const db = await ConnectDb();
+    await dbPull();
 
-// Deno.test('Sync/Table/Create', async () => {
-//     const db = await ConnectDb();
-//     await dbPull();
+    Deno.writeTextFileSync('./models/model.ts', checksTableStr, { append: true})
+    await sync();
+    const [tableObj] = await introspect();
+    await db.queryObject('DROP TABLE randompeople; DROP table zipcode_table;'); // remove new enum from database
 
-//     Deno.writeTextFileSync('./models/model.ts', checksTableStr, { append: true})
-//     await sync();
-//     const [tableObj] = await introspect();
-//     await db.queryObject('DROP TABLE testtable; DROP table payme; DROP table invoice'); // remove new enum from database
+    const zip = tableObj.zipcode_table;
+    const rando = tableObj.randompeople;
+    //await DisconnectDb(db);
+    assert(zip);
+    assert(rando);
+    assertEquals(rando.columns.zipcode.association, { table: 'zipcode_table', mappedCol: 'zipcode'});
+    //assert(rando.columns.avg_mood.type === 'enum: mood');
+    assert(rando.checks.includes('(zipcode >= 0)'), String(rando.columns.zipcode.checks));
+    assert(rando.checks.includes('(zipcode <= 99999)'));
+    assert(zip.checks.includes('(zipcode >= 0)'));
+    assert(zip.checks.includes('(zipcode <= 99999)'));
 
-//     const id = tableObj.testtable.columns._id;
-//     const username = tableObj.testtable.columns.username;
-//     const payment = tableObj.payme;
-//     const invoice = tableObj.invoice;
-//     //await DisconnectDb(db);
-//     assert(Object.keys(tableObj.testtable.columns).length === 2);
-//     assert(id);
-//     assert(username);
-//     assert(id.primaryKey);
-//     assert(id.autoIncrement);
-//     assert(username.notNull);
-//     assert(username.unique);
-//     assert(username.length === 16);
-//     assertEquals(invoice.primaryKey, ['invoice_id', 'store_id'], String(invoice.primaryKey));
-//     assert(payment.columns.payment_date.defaultVal === 'now()', `defaultVal: ${payment.columns.payment_date.defaultVal}`)
-//     assertEquals(payment.foreignKey, [{columns: ['invoice_id', 'store_id'], mappedColumns: ['invoice_id', 'store_id'], table: 'invoice'}])
+    DisconnectDb(db);
+})
 
-//     DisconnectDb(db);
-// })
+const uniqueTableStr = 
+`export interface RandomPerson {
+    avg_mood: keyof typeof Mood
+    person_id: number
+}
+export class RandomPerson extends Model {
+    static table: 'randompeople';
+    static columns: {
+        avg_mood: {
+            type: 'enum',
+            enumName: 'mood'
+        },
+        person_id: {
+            type: 'integer',
+            autoIncrement: true
+        },
+    }
+    static unique: [['avg_mood', 'person_id']]
+}
+`;
+
+Deno.test('Sync/Table/Create - Checks, Association, Enum Type', async () => {
+    const db = await ConnectDb();
+    await dbPull();
+
+    Deno.writeTextFileSync('./models/model.ts', uniqueTableStr, { append: true})
+    await sync();
+    const [tableObj] = await introspect();
+    await db.queryObject('DROP TABLE randompeople; '); // remove new enum from database
+
+    const rando = tableObj.randompeople;
+    //await DisconnectDb(db);
+    assert(rando.unique);
+    assert(rando.unique.length === 1);
+    assertEquals(rando.unique[0], ['avg_mood', 'person_id']);
+
+    DisconnectDb(db);
+})
