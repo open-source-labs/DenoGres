@@ -19,7 +19,6 @@ switch(Deno.args[0]) {
         } else {
           dbPull();
         }
-        console.log(Deno.env.get('DATABASE_URI'))
         break;
     }
     case '--db-sync': {
