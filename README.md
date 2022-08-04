@@ -27,3 +27,6 @@ DenoGres includes some functionality that is still in development - including da
 
 ## Documents
 More information on how to use DenoGres and leverage all its wonderful abstraction functionality can be found here: https://denogres.deno.dev/
+
+## License
+MIT
