@@ -42,6 +42,8 @@ export class Model {
     table: string;
   }[];
 
+  private record = {};
+
   private async primaryKey() {
     Model.sql = `SELECT a.attname
       FROM pg_index i
@@ -64,8 +66,8 @@ export class Model {
 
   async save() {
     const table = Object.getPrototypeOf(this).constructor.table;
-    const keys = Object.keys(this);
-    const values = Object.values(this);
+    const keys = Object.keys(this).filter(keys => keys !== 'record');
+    const values = Object.values(this).filter(values => !(typeof values === 'object' && values !== null));
 
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
@@ -73,41 +75,29 @@ export class Model {
       if (i !== values.length - 1) Model.sql += ', ';
       else Model.sql += ')';
     }
-    await Model.query();
-
-    const primaryKey = await this.primaryKey();
-
-    Model.sql += `SELECT ${primaryKey} FROM ${table} WHERE`;
-    for (let i = 0; i < values.length; i++) {
-      Model.sql += ` ${keys[i]} = '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ' AND';
-    }
-    const pkObj = await Model.query();
-    const pk = primaryKey.split(', ');    
-    for (let i = 0; i < pk.length; i++) {
-      const obj = pkObj[0] as IpkObj;
-      this[pk[i]] = obj[pk[i]];
-    }
+    Model.sql += ` RETURNING *`
+    const results = await Model.query();
+    if (typeof results[0] === 'object' && results[0] !== null)
+      this.record = results[0];
     return this;
   }
 
   async update() {
-    const primaryKey = await this.primaryKey(); 
-    const pk = primaryKey.split(', '); 
+    const newKeys = Object.keys(this).filter(keys => keys !== 'record');
+    const newValues = Object.values(this).filter(values => !(typeof values === 'object' && values !== null));
+    const keys = Object.keys(this.record); 
+    const values = Object.values(this.record);
+
     Model.sql = '';
     Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
-    const keys = Object.keys(this); 
-    const values = Object.values(this);
-
-    for (let i = 0; i < values.length; i++) {
-      if (pk.includes(keys[i])) continue;
-      Model.sql += ` ${keys[i]} = '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ',';
+    for (let i = 0; i < newKeys.length; i ++) {
+      Model.sql += ` ${newKeys[i]} = '${newValues[i]}'`;
+      if (i !== newValues.length - 1) Model.sql += ',';
     }
-    Model.sql += ` WHERE`;
-    for (let i = 0; i < pk.length; i++) {
-      Model.sql += ` ${pk[i]} = '${this[pk[i]]}'`;
-      if (i !== pk.length - 1) Model.sql += ' AND';
+    Model.sql += ` WHERE`
+    for (let i = 0; i < keys.length; i ++) {
+      Model.sql += ` ${keys[i]} = '${values[i]}'`;
+      if (i !== values.length - 1) Model.sql += ' AND';
     }
     return await Model.query();
   }
