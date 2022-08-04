@@ -275,7 +275,6 @@ export class Model {
   // execute query in database
   static async query(): Promise<unknown[]> {
     const db = await ConnectDb();
-    if (!this.sql.includes('SELECT a.attname')) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
     this.sql = '';
     await DisconnectDb(db);
