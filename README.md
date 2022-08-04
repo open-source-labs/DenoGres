@@ -1,4 +1,4 @@
-# DenoGres
+![](/public/DenoGresWide.png)
 Welcome to DenoGres! A new comprehensive ORM for PostgreSQL and Deno.
 
 ## Getting Started

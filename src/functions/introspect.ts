@@ -126,7 +126,9 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
                 refObj['autoIncrement'] = true;
             } else {
                 if (typeof el.col_default === 'string'){
-                const defaultVal = el.col_default.replace(/\:\:[\w\W]*/,'');
+                let defaultVal:unknown = el.col_default.replace(/\:\:[\w\W]*/,'');
+                if (defaultVal === "'false'"){defaultVal = false}
+                if (defaultVal === "'true'"){defaultVal = true}
                 refObj['defaultVal'] = defaultVal;
                 }
             }
@@ -134,7 +136,6 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
     });
 
     enumList.forEach(el => {
-        console.log('el', el)
         if (typeof el === 'object' && el !== null && enumElType(el)){
             const enumVals = el.enum_value.split(/ *, */);
             enumObj[el.enum_name] = enumVals;
@@ -204,5 +205,6 @@ export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
             }
         }
     })
+    
     return [tableListObj, enumObj];
 };
