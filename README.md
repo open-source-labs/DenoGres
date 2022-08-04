@@ -3,7 +3,7 @@ Welcome to DenoGres! A new comprehensive ORM for PostgreSQL and Deno.
 
 ## Getting Started
 To begin, let's download DenoGres! Execute the below in the terminal - this will give you access to DenoGres's CLI functionality.
->`deno install --allow-read --allow-write --allow-net --allow-env --name denogres https://raw.githubusercontent.com/oslabs-beta/DenoGres/dev/mod.ts`
+>`deno install --allow-read --allow-write --allow-net --allow-env --name denogres https://deno.land/x/denogres/mod.ts`
 
 After installation is complete, ensure deno is added to PATH.
 
