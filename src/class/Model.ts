@@ -50,7 +50,7 @@ export class Model {
       WHERE i.indrelid = '${
         Object.getPrototypeOf(this).constructor.table
       }'::regclass
-      AND i.indisprimary`;
+      AND i.indisprimary;`
     const pk = await Model.query();
     let primaryKey = '';
 
@@ -83,7 +83,7 @@ export class Model {
       if (i !== values.length - 1) Model.sql += ' AND';
     }
     const pkObj = await Model.query();
-    const pk = primaryKey.split(', ');
+    const pk = primaryKey.split(', ');    
     for (let i = 0; i < pk.length; i++) {
       const obj = pkObj[0] as IpkObj;
       this[pk[i]] = obj[pk[i]];
@@ -92,22 +92,21 @@ export class Model {
   }
 
   async update() {
-    const primaryKey = await this.primaryKey();
-    const pk = primaryKey.split(', ');
+    const primaryKey = await this.primaryKey(); 
+    const pk = primaryKey.split(', '); 
     Model.sql = '';
     Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
-    const keys = Object.keys(this);
-
+    const keys = Object.keys(this); 
     const values = Object.values(this);
 
     for (let i = 0; i < values.length; i++) {
+      if (pk.includes(keys[i])) continue;
       Model.sql += ` ${keys[i]} = '${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ',';
     }
-
     Model.sql += ` WHERE`;
     for (let i = 0; i < pk.length; i++) {
-      Model.sql += ` ${pk[i]} = ${this[pk[i]]}`;
+      Model.sql += ` ${pk[i]} = '${this[pk[i]]}'`;
       if (i !== pk.length - 1) Model.sql += ' AND';
     }
     return await Model.query();
@@ -128,7 +127,7 @@ export class Model {
       console.log(words);
       this.sql += ` '${words[1]}'`;
       if (i !== value.length - 1) this.sql += ' ,';
-      else this.sql += ')';
+      else this.sql += ')';      
     }
     return this;
   }
@@ -278,12 +277,7 @@ export class Model {
     const db = await ConnectDb();
     if (!this.sql.includes('SELECT a.attname')) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
-    if (
-      !this.sql.includes('SELECT a.attname') &&
-      !this.sql.includes('UPDATE') &&
-      !this.sql.includes('INSERT')
-    )
-      this.sql = '';
+    this.sql = '';
     await DisconnectDb(db);
     return queryResult.rows;
   }
