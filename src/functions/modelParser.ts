@@ -145,8 +145,17 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
                             colInfo = colInfo.replace(/checks: *\[ */, '');
 
                             const value = colInfo.split(/(?=\")]/, 1)[0].
+                                split(/(?<=\'|\")\]\,*/)[0].
                                 split(/\' *, *\'|\" *, *\"/).
-                                map(element => element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')'));
+                                map(element => {
+                                    element = element.replaceAll(/^\"\(|^\'\(/g, '').replaceAll(/\)\"|\)\'/g, '').
+                                        replaceAll(/^\'|\'$|^\"|\"$/g, '');
+
+                                    if(element[0] !== '(') element = '(' + element;
+                                    if(element[element.length-1] !== ')') element += ')';
+
+                                    return element;
+                                })
 
                             columnsObj.checks = value;
                             colInfo = colInfo.replace(/[\W\w]+ *\] *\,|[\W\w]+ *\] *\,*\}/, '');
@@ -208,13 +217,19 @@ const cleanedText = modelText.replaceAll(/export interface \w+ *\{[\n* *.*: \w+,
             
             if(prop.slice(0, 6) === 'checks') {
                 const checksArray = prop.replace(/checks: */, '').replaceAll(/^\[|\]\}$|\]$/g, '').split(/\' *, *\'|\" *, *\"/);
-                tableObj.checks = checksArray.map(element => element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')'));
+                tableObj.checks = checksArray.map(element => {
+                    element = element.replaceAll(/^\"\(|^\'\(/g, '(').replaceAll(/\)\"|\)\'/g, ')').replaceAll(/^\'|\'$|^\"|\"$/g, '');
+                    if(element[0] !== '(') element = '(' + element;
+                    if(element[element.length-1] !== ')') element += ')';
+
+                    return element;
+                });
             } else if(prop.slice(0, 10) === 'primaryKey') {
                 const pkArray = prop.replace(/ *primaryKey: *\[/, '').replaceAll(/\]$|\]\}$/g, '').split(",");
                 tableObj.primaryKey = pkArray.map(element => element.replaceAll(/^\"|^\'/g, '').replaceAll(/\"|\'/g, ''));
             } else if(prop.slice(0, 6) === 'unique') {
                 const uArray = prop.replace(/ *unique: *\[/, '').replace(/\]$|\]\}$/, '').split(/\] *, *\[/);
-                tableObj.unique = uArray.map(element => element.replaceAll(/^\[|\]$/g, '').replaceAll('"', '').split(','));
+                tableObj.unique = uArray.map(element => element.replaceAll(/^\[|\]$/g, '').replaceAll(/\"|\'/g, '').split(','));
             } else if (prop.slice(0, 10) === 'foreignKey') {
                 const fkObj = prop.replaceAll(/ *foreignKey: *\[ *\{|\}\]\}*$/g, '');
                 const fkArray = fkObj.split(/\} *\, *\{/);
