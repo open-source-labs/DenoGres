@@ -3,27 +3,29 @@ import { Model } from 'https://raw.githubusercontent.com/oslabs-beta/DenoGres/de
 
 
 export interface Customer {
-  customer_id: number
   customer_name: string
   username: string
+  customer_id: number
 }
 
 export class Customer extends Model {
   static table: 'customers';
   static columns: {
+    customer_name: {
+      type: 'varchar',
+      length: 255
+      notNull: true,
+    },
+    username: {
+      type: 'varchar',
+      length: 50
+      notNull: true,
+    },
     customer_id: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
-    },
-    customer_name: {
-      type: 'varchar',
-      notNull: true,
-    },
-    username: {
-      type: 'varchar',
-      notNull: true,
     },
   }
 }
@@ -56,7 +58,7 @@ export class Product extends Model {
       type: 'text',
     },
   }
-  static checks: ["(price > discounted_price)","(discounted_price > (0::numeric))","(price > (0::numeric))"]
+  static checks: ["(price > (0::numeric))","(discounted_price > (0::numeric))","(price > discounted_price)"]
   static unique: [["product_no","name"]]
 }
 
