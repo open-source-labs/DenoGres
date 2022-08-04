@@ -52,6 +52,12 @@ const newColAttr = (column: ModelColumn): string => {
     }
     if(column.association) {
         str += ` REFERENCES ${column.association.table}(${column.association.mappedCol})`}
+
+    if(column.checks) {
+        column.checks.forEach(check => {
+            str += ` CHECK ${check}`; 
+        })
+    }
     
     return str;
 
@@ -147,7 +153,6 @@ export const sync = async (overwrite = false) => {
                         let dV;
                         if(colObj.type === 'timestamp' && typeof colObj.defaultVal === 'string'){
                             dV = colObj.defaultVal.replaceAll(/\'|\"/g, '')
-                            console.log(dV, 'dV')
                         } else {
                             dV = colObj.defaultVal;
                         }
@@ -172,7 +177,7 @@ export const sync = async (overwrite = false) => {
                                     alterTableQueries += `ALTER TABLE ${el.table} DROP CONSTRAINT ${existingPK[0].conname}; `
                                 }
                                 
-                            } else { // TESTED
+                            } else {
                                 console.log(`Cannot remove column primary key from ${el.table} table without -x passed to --db-sync.`)
                             }
                         } else {
@@ -186,7 +191,7 @@ export const sync = async (overwrite = false) => {
                                 alterTableQueries += `ALTER TABLE ${el.table} DROP CONSTRAINT ${existingPK[0].conname}; ` +
                                 `ALTER TABLE ${el.table} ADD CONSTRAINT ${el.table}_pkey PRIMARY KEY (${colMA});`;
                             }
-                            } else { // TESTED
+                            } else {
                             // No prior primary key just add the update
                                 alterTableQueries += `ALTER TABLE ${el.table} ADD CONSTRAINT ${el.table}_pkey PRIMARY KEY (${colMA});`
                             }
@@ -197,8 +202,6 @@ export const sync = async (overwrite = false) => {
                     if(JSON.stringify(colObj.association) !== JSON.stringify(dbColObj.association)) {
                         // QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
                         // TO OVERWRITE
-                        //console.log('association', el.table, colMA)
-                        //console.log(colObj.association, dbColObj.association)
 
                         if(!overwrite && colObj.association === undefined) {
                             // remove exisisting foreign key, overwrite false - inform user update cannot be made
@@ -219,19 +222,11 @@ export const sync = async (overwrite = false) => {
                     }
 
                     if(alterTableQueries !== ``){
-                        console.log(alterTableQueries)
                         await db.queryObject(alterTableQueries);
                         alterTableQueries = ``;
                     }
                 }
         }
-        // ADD TABLE CONSTRAINT LOGIC
-
-        // CHECKS
-        if(JSON.stringify(dbTableObj.checks) !== JSON.stringify(el.checks)){
-            //console.log(String(dbTableObj.checks),  String(el.checks))
-        }
-
         // UNIQUE
         if(String(dbTableObj.unique) !== String(el.unique)) { //TESTED
             const toAdd: string[] = [];
@@ -301,23 +296,13 @@ export const sync = async (overwrite = false) => {
                     alterTableQueries += `ALTER TABLE ${el.table} DROP CONSTRAINT ${existingPK[0].conname}; ` +
                                     `ALTER TABLE ${el.table} ADD CONSTRAINT ${el.table}_pkey PRIMARY KEY (${el.primaryKey});`;
                 }
-            } else { // TESTED
+            } else {
              // No prior primary key just add the update
                 alterTableQueries += `ALTER TABLE ${el.table} ADD CONSTRAINT ${el.table}_pkey PRIMARY KEY (${el.primaryKey});`
             }
         }
         }
     }
-    console.log(createTableQueries, alterTableQueries)
     await db.queryObject(createTableQueries)
-    //console.log(tableListObj)
     DisconnectDb(db);
 }
-
-// PRIMARY KEY WORK ON WHEN THERE ARE INTERCONNECTED DEPENDENCIES (WHEN A FOREIGN KEY REFERENCES THE PRIMARY KEY)
-// CASCADE for unique - error handling for when there are dependencies and overwrite is false
-
-// Following changes will not be implemented via sync: changing column types, the deletes of individual UNIQUE table constraints all would need to be
-// deleted, the deltes of individual CHECKS all would need to be deleted
-// Do no support tables with more than one composite foreign key for ALTER
-// Sync will not handle composite keys, this should be done exclusively via association methods and introspection
