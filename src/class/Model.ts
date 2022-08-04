@@ -198,7 +198,7 @@ export class Model {
     for (let i = 1; i < condition.length; i++) {
       this.sql += ` ${condition[i]}`;
     }
-    console.log(this.query);
+    //console.log(this.query);
     return this;
   }
 
@@ -308,7 +308,7 @@ export class Model {
 
     // IF Existing relationships
     if (mappings !== undefined && mappings !== null) {
-      console.log('========== EXISTING ASSOCIATION ===========');
+      //console.log('========== EXISTING ASSOCIATION ===========');
       foreignKey_ColumnName = mappings.source_keyname;
       mappingTarget_ColumnName = mappings.target_keyname;
       // const columnAtt = {
@@ -319,7 +319,7 @@ export class Model {
       // Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      console.log('========== FORMING NEW ASSOCIATION ===========');
+      //console.log('========== FORMING NEW ASSOCIATION ===========');
       foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`;
       const tempPrime = await getprimaryKey(targetModel.table);
       mappingTarget_ColumnName = tempPrime ? tempPrime : 'id' || '_id'; // << hard coded
@@ -334,7 +334,7 @@ export class Model {
       };
 
       this.columns[foreignKey_ColumnName] = columnAtt;
-      console.log('columnAtt: ', columnAtt);
+      //console.log('columnAtt: ', columnAtt);
       // only if there's NO existing association or existing foreign key
       associationQuery = `
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
@@ -346,7 +346,7 @@ export class Model {
         targetModel.table
       } ON DELETE SET NULL ON UPDATE CASCADE
       ;`; // and this will NOT executed unless use explictly execute sync() on association instance created below
-      console.log('associationQuery:', associationQuery);
+      //console.log('associationQuery:', associationQuery);
     }
 
     // ========= COMPOSITE FOREIGN KEYS ONLY ============
@@ -366,9 +366,6 @@ export class Model {
       foreignKey_ColumnName: foreignKey_ColumnName,
       mapping_ColumnName: mappingTarget_ColumnName,
     };
-    // maybe making associations object in Model class?
-    // e.g.
-    // { Person_belongsTo_Species:mappingDetails }
 
     //console.log('mappingDetails:', mappingDetails)
     if (options?.associationName === 'hasOne') {
@@ -389,9 +386,8 @@ export class Model {
     let associationQuery = '';
 
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    //console.log(mappings)
     if (mappings !== undefined && mappings !== null) {
-      console.log('========== EXISTING ASSOCIATION ===========');
+      //console.log('========== EXISTING ASSOCIATION ===========');
       mapping_ColumnName = mappings.target_keyname;
       targetModel_foreignKey = mappings.source_keyname;
       const columnAtt = {
@@ -407,8 +403,8 @@ export class Model {
       //console.log(targetModel.columns[targetModel_foreignKey])
     } else {
       // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      console.log('========== FORMING NEW ASSOCIATION ===========');
-      console.log('========== need to execute belongsTo first ===========');
+      //console.log('========== FORMING NEW ASSOCIATION ===========');
+      //console.log('========== need to execute belongsTo first ===========');
     }
     // ========= WHEN COMPOSITE FOREIGN KEYS ...============
 
@@ -464,7 +460,7 @@ export async function getMappingKeys<T>(
   } finally {
     DisconnectDb(db);
   }
-  console.log('getMappingKeys RESULT', result);
+  //console.log('getMappingKeys RESULT', result);
   //if('rows' in result)
   if (typeof result === 'object' && 'rows' in result) {
     return result.rows[0] as IgetMappingKeysResult;

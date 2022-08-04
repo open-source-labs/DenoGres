@@ -178,7 +178,7 @@ describe('Testing Associations and Methods ', () => {
     await userTeamAssociation.syncAssociation();
     // check to see if the users table has foreign key field referencing teams table
     const mappingKeys = await getMappingKeys(User.table, Team.table)
-    console.log('mappingKeys', mappingKeys)
+    //console.log('mappingKeys', mappingKeys)
     assertStrictEquals(mappingKeys!.source_table, User.table)
     assertStrictEquals(mappingKeys!.source_keyname, `${Team.name.toLowerCase()}_id`)
   })
@@ -236,8 +236,8 @@ describe('Testing Associations and Methods ', () => {
     await manyToMany(Member, Club, { through: Member_Club });
     const member1Clubs = await member1.getClubs()
     const club1Members = await club1.getMembers();
-    console.log("====member1Clubs=====",member1Clubs)
-    console.log("====club1Members=====",club1Members)
+    //console.log("====member1Clubs=====",member1Clubs)
+    //console.log("====club1Members=====",club1Members)
     assertEquals(member1Clubs[0].clubname, 'Book Club')
     assertEquals(member1Clubs[1].clubname, 'Tennis Club')
     assert(club1Members[0].name==='member_one' || club1Members[0].name==='member_two')

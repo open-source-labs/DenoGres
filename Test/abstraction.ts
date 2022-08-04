@@ -292,15 +292,3 @@ describe('Abstraction Test', () => {
   // : 'where', 'having', 'query','queryInstance'
 
 })
-
-
-
-// const testInstance = new Test();
-// testInstance.name = 'tesia';
-// testInstance.hair_color = 'black' ;
-// await testInstance.save();
-// // Test {name = 'kristen', hair_color = 'black'}
-// // testInstance.hair_color = 'brown'
-// testInstance.name = 'kristen';
-// // Test {name = 'tesia', hair_color: 'brown'}
-// await testInstance.update();
