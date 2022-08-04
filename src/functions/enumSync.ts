@@ -95,7 +95,7 @@ export const enumSync = async () => {
             }
         }
     })
-
+    await db.queryArray(enumCreateAlter);
     DisconnectDb(db);
     console.log(enumCreateAlter)
 }

@@ -205,7 +205,7 @@ export const sync = async (overwrite = false) => {
                     }
 
                     if(alterTableQueries !== ``){
-                        //await db.queryObject(alterTableQueries);
+                        await db.queryObject(alterTableQueries);
                         console.log(alterTableQueries)
                         alterTableQueries = ``;
                     }
@@ -295,6 +295,7 @@ export const sync = async (overwrite = false) => {
         }
     }
     console.log(createTableQueries, alterTableQueries)
+    await db.queryObject(createTableQueries)
     //console.log(tableListObj)
     DisconnectDb(db);
 }
