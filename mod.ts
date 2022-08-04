@@ -12,9 +12,6 @@ switch(Deno.args[0]) {
         break;
 
     case '--db-pull': {// introspection begins
-        // Check for database URI
-        // Deno.env.set(URI, value)
-        // Deno.env.get(URI)
         const envVar = parse(await Deno.readTextFile('./.env')); // Get DB_URI
 
         if(envVar.DATABASE_URI === "") {
@@ -35,7 +32,6 @@ switch(Deno.args[0]) {
 
 function displayHelpMsg() {
   return `flags:
--h, --help: display help message
 --init: set-up DenoGres required files
 --db-pull: Introspect database and create and populate model.ts file`;
 }
