@@ -4,7 +4,6 @@ export function init() {
 // create .env file in root directory 
     const envFilePath = "./";
     const envFileContent = `
-# See the documentation for more detail: // detail here!
 # Set your environment either 'development' or 'test'
 ENVIRONMENT=development
 # Please enter your database uri below :
