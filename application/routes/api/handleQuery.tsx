@@ -7,10 +7,12 @@ export const handler: Handlers = {
     // await Deno.writeTextFile(path, str, { append: false });
 
     const getResult = async (): Promise<any> => {
-      const str = `export default function test () {
-      console.log('This is a test');
-      return [1,2,3,4,5];
-      }`;
+      const str = `
+      import * as denogres from './models/model.ts';\n
+      export default async (): Promise<unknown[]> => {
+        const result = await denogres.Species.select('*').query();
+        return result;
+      };`;
 
       const writePath = "./function.ts";
       await Deno.writeTextFile(writePath, str, { append: false });
@@ -21,7 +23,15 @@ export const handler: Handlers = {
 
     const queryResult = await getResult();
 
-    const response = new Response(JSON.stringify(queryResult), {
+    // function to stringify where field is bigint
+    const stringify = (obj: object): string => {
+      return JSON.stringify(
+        obj,
+        (key, value) => typeof value === "bigint" ? value.toString() : value,
+      );
+    };
+
+    const response = new Response(stringify(queryResult), {
       status: 200,
       headers: {
         "content-type": "application/json",

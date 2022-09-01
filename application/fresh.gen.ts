@@ -5,7 +5,7 @@
 import * as $0 from "./routes/api/handleQuery.tsx";
 import * as $1 from "./routes/explorer.tsx";
 import * as $2 from "./routes/index.tsx";
-import * as $$0 from "./islands/Button.tsx";
+import * as $$0 from "./islands/Console.tsx";
 
 const manifest = {
   routes: {
@@ -14,7 +14,7 @@ const manifest = {
     "./routes/index.tsx": $2,
   },
   islands: {
-    "./islands/Button.tsx": $$0,
+    "./islands/Console.tsx": $$0,
   },
   baseUrl: import.meta.url,
 };
