@@ -33,4 +33,6 @@ console.log('introspection[0]\n', introspection[0]);
 
 // console.log(typeof introspection[0], typeof parsedModel);
 
-console.log(introspection[0].people.columns.species_id.association);
+// console.log(introspection[0].people.columns.species_id.association);
+
+// console.log(parsedModel[1].columns.species_id.association);
