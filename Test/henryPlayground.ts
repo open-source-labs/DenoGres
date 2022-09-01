@@ -2,11 +2,9 @@ import { modelParser } from "../src/functions/modelParser.ts";
 
 import { introspect } from "../src/functions/introspect.ts";
 
-import { sync } from "../src/functions/sync.ts";
+import { sync } from '../src/functions/sync.ts'
 
 // const modelText = Deno.readTextFileSync("./models/model.ts");
-
-// console.log(modelText);
 
 // const cleanedText = modelText
 //   .replaceAll(
@@ -48,14 +46,6 @@ import { sync } from "../src/functions/sync.ts";
 
 await sync();
 
-// const modelArray = modelParser();
 
-// const speciesAssociation = modelArray[1].columns.species_id.association;
 
-// console.log(
-//   "species_id association",
-//   speciesAssociation,
-// );
 
-// console.log(speciesAssociation?.table);
-// console.log(speciesAssociation?.mappedCol);

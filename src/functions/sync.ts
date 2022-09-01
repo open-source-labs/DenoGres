@@ -23,47 +23,42 @@ const conQueryGuard = (record: object): record is IConQuery => {
   return "conname" in record && "table_name" in record;
 };
 
-const newColAttr = (columnName: ModelColumn): string => {
+const newColAttr = (column: ModelColumn): string => {
   let str = ``;
 
-  // Make columnName type SERIAL if auto-increment is true
-  if (columnName.autoIncrement) {
+  // Make column type SERIAL if auto-increment is true
+  if (column.autoIncrement) {
     str += ` SERIAL`;
-  } else if (columnName.type === "enum") {
-    str += ` ${columnName.enumName}`;
-    if (columnName.notNull && !columnName.primaryKey) str += ` NOT NULL`;
+  } else if (column.type === "enum") {
+    str += ` ${column.enumName}`;
+    if (column.notNull && !column.primaryKey) str += ` NOT NULL`;
   } else {
     // Otherwise use
-    str += `${columnName.type}`;
-    if (columnName.length) str += `(${columnName.length})`;
+    str += `${column.type}`;
+    if (column.length) str += `(${column.length})`;
     // Not Null for non-serial columns
-    if (columnName.notNull && !columnName.primaryKey) str += ` NOT NULL`;
+    if (column.notNull && !column.primaryKey) str += ` NOT NULL`;
   }
-  if (columnName.primaryKey) str += ` PRIMARY KEY`;
-  if (
-    columnName.unique && !columnName.primaryKey && !columnName.autoIncrement
-  ) {
+  if (column.primaryKey) str += ` PRIMARY KEY`;
+  if (column.unique && !column.primaryKey && !column.autoIncrement) {
     str += ` UNIQUE`;
   }
-  if (columnName.defaultVal) {
-    let defaultValue;
-    if (
-      columnName.type === "timestamp" &&
-      typeof columnName.defaultVal === "string"
-    ) {
-      defaultValue = columnName.defaultVal.replaceAll(/\'|\"/g, "");
+  if (column.defaultVal) {
+    let dV;
+    if (column.type === "timestamp" && typeof column.defaultVal === "string") {
+      dV = column.defaultVal.replaceAll(/\'|\"/g, "");
     } else {
-      defaultValue = columnName.defaultVal;
+      dV = column.defaultVal;
     }
-    str += ` DEFAULT ${defaultValue}`;
+    str += ` DEFAULT ${dV}`;
   }
-  if (columnName.association) {
+  if (column.association) {
     str +=
-      ` REFERENCES ${columnName.association.table}(${columnName.association.mappedCol})`;
+      ` REFERENCES ${column.association.table}(${column.association.mappedCol})`;
   }
 
-  if (columnName.checks) {
-    columnName.checks.forEach((check) => {
+  if (column.checks) {
+    column.checks.forEach((check) => {
       str += ` CHECK ${check}`;
     });
   }
@@ -121,9 +116,9 @@ const alterTableError = (err: Error) => {
 };
 
 export const sync = async (overwrite = false) => {
-  const [tables] = await introspect();
+  const [tableListObj] = await introspect();
 
-  const models = modelParser();
+  const modelArray = modelParser();
 
   let createTableQueries = ``;
   let alterTableQueries = ``;
@@ -131,43 +126,13 @@ export const sync = async (overwrite = false) => {
   // ! Need to Come back to this later
   // await enumSync();
 
-  console.log("models\n", models);
-  // console.log("modelObject\n", tables);
-  console.log("tables\n", tables);
-
-  /*
-    OPTION 1: refactor model parser
-      easier down the line
-        compare modelObject.species vs. tables.species
-
-    OPTION 2:
-      harder time from interpretation...?
-
-  */
+  console.log('modelArray\n', modelArray);
 
   const db = await ConnectDb(); // db connection to send off alter and create queries
 
-  for (const model of models) {
-    /* e.g. model
-      {
-        table: "species",
-        columns: {
-          language: { type: "varchar" },
-          eye_colors: { type: "varchar" },
-          skin_colors: { type: "varchar" },
-          hair_colors: { type: "varchar" },
-          average_lifespan: { type: "varchar" },
-          average_height: { type: "varchar" },
-          classification: { type: "varchar" },
-          name: { type: "varchar", notNull: true },
-          _id: { type: "int4", notNull: true, primaryKey: true, autoIncrement: true },
-          homeworld_id: { type: "int8" }
-        }
-      }
-    */
-
+  for (const model of modelArray) {
     // SQL statements for tables not currently in the database
-    if (!tables[String(model.table)]) {
+    if (!tableListObj[String(model.table)]) {
       // New Table Added in Model by User
       createTableQueries += createTable(
         String(model.table),
@@ -177,108 +142,61 @@ export const sync = async (overwrite = false) => {
         model.primaryKey,
         model.foreignKey,
       );
-    } else { // ! Commented Out Section Start
-      const table = tables[String(model.table)];
-      /* e.g. table
-        {
-          columns: {
-            language: { type: "varchar", notNull: false },
-            eye_colors: { type: "varchar", notNull: false },
-            skin_colors: { type: "varchar", notNull: false },
-            hair_colors: { type: "varchar", notNull: false },
-            average_lifespan: { type: "varchar", notNull: false },
-            average_height: { type: "varchar", notNull: false },
-            classification: { type: "varchar", notNull: false },
-            name: { type: "varchar", notNull: true },
-            _id: { type: "int4", notNull: true, autoIncrement: true, primaryKey: true },
-            homeworld_id: { type: "int8", notNull: false }
-          },
-          checks: []
-        }
-      */
+    } else {
+      const dbTableObj = tableListObj[String(model.table)];
 
-      for (const columnName of Object.keys(model.columns)) {
-        /* e.g. model.columns
-          {
-            language: { type: "varchar" },
-            eye_colors: { type: "varchar" },
-            skin_colors: { type: "varchar" },
-            hair_colors: { type: "varchar" },
-            average_lifespan: { type: "varchar" },
-            average_height: { type: "varchar" },
-            classification: { type: "varchar" },
-            name: { type: "varchar", notNull: true },
-            _id: { type: "int4", notNull: true, primaryKey: true, autoIncrement: true },
-            homeworld_id: { type: "int8" }
-          }
-        */
-
-        /*
-          e.g. columnName
-          'language'
-        */
-
-        // models columnName object
-        const columnValues = model.columns[columnName];
-
-        /*
-          e.g. columnValues (from columnName: 'language')
-          { type: "varchar" }
-        */
-
+      for (const colMA of Object.keys(model.columns)) {
+        // modelArray column object
+        const colObj = model.columns[colMA];
         // New Column added in Model by User
-        // ? Refactor ??? if !tables[model]
-        // ? Refactor ??? if (! model[key] in tables)
-        if (!tables[model.table].columns[columnName]) {
-          alterTableQueries += `ALTER TABLE ${model.table} ADD ${columnName} `;
+        if (!tableListObj[model.table].columns[colMA]) {
+          alterTableQueries += `ALTER TABLE ${model.table} ADD ${colMA} `;
 
-          alterTableQueries += newColAttr(columnValues) + ";";
+          alterTableQueries += newColAttr(colObj) + ";";
         } else {
-          // Check columnName constraints for updates
-          const dbColumns = tables[model.table].columns[columnName];
+          // Check column constraints for updates
+          const dbColObj = tableListObj[model.table].columns[colMA];
           // NOT NULL updated
 
-          if (Boolean(columnValues.notNull) !== dbColumns.notNull) { //TESTED
+          if (Boolean(colObj.notNull) !== dbColObj.notNull) { //TESTED
             alterTableQueries +=
-              `ALTER TABLE ${model.table} ALTER COLUMN ${columnName} `;
-            alterTableQueries += columnValues.notNull ? `SET ` : `DROP `;
+              `ALTER TABLE ${model.table} ALTER COLUMN ${colMA} `;
+            alterTableQueries += colObj.notNull ? `SET ` : `DROP `;
             alterTableQueries += `NOT NULL; `;
           }
           // UNIQUE updated
-          if (Boolean(columnValues.unique) !== Boolean(dbColumns.unique)) { //TESTED
+          if (Boolean(colObj.unique) !== Boolean(dbColObj.unique)) { //TESTED
             alterTableQueries += `ALTER TABLE ${model.table} `;
-            alterTableQueries += columnValues.unique
-              ? `ADD UNIQUE (${columnName});`
+            alterTableQueries += colObj.unique
+              ? `ADD UNIQUE (${colMA});`
               : !overwrite
-              ? `DROP CONSTRAINT ${model.table}_${columnName}_key;`
-              : `DROP CONSTRAINT ${model.table}_${columnName}_key CASCADE;`;
+              ? `DROP CONSTRAINT ${model.table}_${colMA}_key;`
+              : `DROP CONSTRAINT ${model.table}_${colMA}_key CASCADE;`;
           }
           // DEFAULT updated
           if (
-            (columnValues.defaultVal === undefined
-                ? null
-                : columnValues.defaultVal) !==
-              dbColumns.defaultVal &&
-            (columnValues.defaultVal !== undefined && dbColumns !== undefined)
+            (colObj.defaultVal === undefined ? null : colObj.defaultVal) !==
+              dbColObj.defaultVal &&
+            (colObj.defaultVal !== undefined && dbColObj !== undefined)
           ) { // TESTED
-            let defaultValue;
+            let dV;
             if (
-              columnValues.type === "timestamp" &&
-              typeof columnValues.defaultVal === "string"
+              colObj.type === "timestamp" &&
+              typeof colObj.defaultVal === "string"
             ) {
-              defaultValue = columnValues.defaultVal.replaceAll(/\'|\"/g, "");
+              dV = colObj.defaultVal.replaceAll(/\'|\"/g, "");
             } else {
-              defaultValue = columnValues.defaultVal;
+              dV = colObj.defaultVal;
             }
             alterTableQueries +=
-              `ALTER TABLE ${model.table} ALTER COLUMN ${columnName} `;
-            alterTableQueries += columnValues.defaultVal === null ||
-                columnValues.defaultVal === ""
+              `ALTER TABLE ${model.table} ALTER COLUMN ${colMA} `;
+            alterTableQueries += colObj.defaultVal === null ||
+                colObj.defaultVal === ""
               ? `DROP DEFAULT; `
-              : `SET DEFAULT ${defaultValue}; `;
+              : `SET DEFAULT ${dV}; `;
           }
           // PRIMARY KEY updated
-          if (columnValues.primaryKey !== dbColumns.primaryKey) {
+          if (colObj.primaryKey !== dbColObj.primaryKey) {
             // QUERY TO UPDATE PRIMARY KEY - CHECK ON ISSUES WITH PRIMARY KEY ALREADY EXISISTING AND NEEDING
             // TO OVERWRITE
 
@@ -288,7 +206,7 @@ export const sync = async (overwrite = false) => {
             );
             const existingPK = pKeys.rows;
 
-            if (!columnValues.primaryKey) {
+            if (!colObj.primaryKey) {
               // remove exisisting primaryKey
               if (overwrite) {
                 // overwrite is true so can be deleted
@@ -303,13 +221,11 @@ export const sync = async (overwrite = false) => {
                 }
               } else {
                 console.log(
-                  `Cannot remove columnName primary key from ${model.table} table without -x passed to --db-sync.`,
+                  `Cannot remove column primary key from ${model.table} table without -x passed to --db-sync.`,
                 );
               }
             } else {
-              if (
-                existingPK.length > 0 && !overwrite && columnValues.primaryKey
-              ) { // TESTED
+              if (existingPK.length > 0 && !overwrite && colObj.primaryKey) { // TESTED
                 // add primary key but there is exisisting primary key and overwrite is false
                 console.log(
                   `Cannot overwrite existing primary key information to the ${model.table} table. If you wish to proceed with these` +
@@ -325,45 +241,45 @@ export const sync = async (overwrite = false) => {
                     `ALTER TABLE ${model.table} DROP CONSTRAINT ${
                       existingPK[0].conname
                     }; ` +
-                    `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                    `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${colMA});`;
                 }
               } else {
                 // No prior primary key just add the update
                 alterTableQueries +=
-                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${colMA});`;
               }
             }
           }
           // FOREIGN KEY updated
           if (
-            JSON.stringify(columnValues.association) !==
-              JSON.stringify(dbColumns.association)
+            JSON.stringify(colObj.association) !==
+              JSON.stringify(dbColObj.association)
           ) {
             // QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
             // TO OVERWRITE
 
-            if (!overwrite && columnValues.association === undefined) {
+            if (!overwrite && colObj.association === undefined) {
               // remove exisisting foreign key, overwrite false - inform user update cannot be made
               console.log(
-                `Cannot delete foreign key from columnName ${columnName} on ${model.table}. Please re-run command with -x flag.`,
+                `Cannot delete foreign key from column ${colMA} on ${model.table}. Please re-run command with -x flag.`,
               );
-            } else if (overwrite && columnValues.association === undefined) {
+            } else if (overwrite && colObj.association === undefined) {
               // remove exisisting foreign key, overwrite true
               alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
-            } else if (dbColumns.association === undefined) {
-              // add new foreign key to columnName
+                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${colMA}_fkey; `;
+            } else if (dbColObj.association === undefined) {
+              // add new foreign key to column
               alterTableQueries +=
-                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${colMA}_fkey FOREIGN KEY (${colMA}) REFERENCES ${colObj.association?.table}(${colObj.association?.mappedCol}); `;
             } else if (!overwrite) {
               // update exisisting foreign key overwrite false - inform user update cannot be made
               console.log(
-                `Cannot update foreign key on columnName ${columnName} on ${model.table} table. Please re-run command with -x flag.`,
+                `Cannot update foreign key on column ${colMA} on ${model.table} table. Please re-run command with -x flag.`,
               );
             } else {
               alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
-                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${colMA}_fkey; ` +
+                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${colMA}_fkey FOREIGN KEY (${colMA}) REFERENCES ${colObj.association?.table}(${colObj.association?.mappedCol}); `;
             }
           }
 
@@ -374,11 +290,11 @@ export const sync = async (overwrite = false) => {
         }
       }
       // UNIQUE
-      if (String(table.unique) !== String(model.unique)) { //TESTED
+      if (String(dbTableObj.unique) !== String(model.unique)) { //TESTED
         const toAdd: string[] = [];
         const toRemove: string[] = [];
 
-        if (!table.unique) {
+        if (!dbTableObj.unique) {
           // add unique table constraints to db where there previously weren't any
           alterTableQueries +=
             `ALTER TABLE ${model.table} ADD UNIQUE (${model.unique});`;
@@ -402,11 +318,11 @@ export const sync = async (overwrite = false) => {
             }
           });
         } else if (model.unique) {
-          const dbUniques = table.unique.map((unique) => String(unique));
-          const modelUniques = model.unique.map((unique) => String(unique));
+          const dbU = dbTableObj.unique.map((element) => String(element));
+          const modelU = model.unique.map((element) => String(element));
 
-          modelUniques.forEach((unique) => {
-            if (!dbUniques.includes(unique)) toAdd.push(unique);
+          modelU.forEach((element) => {
+            if (!dbU.includes(element)) toAdd.push(element);
           });
 
           if (toAdd.length) {
@@ -423,8 +339,8 @@ export const sync = async (overwrite = false) => {
             );
           } else {
             // REMOVE UNIQUES FROM DB
-            // dbUniques.forEach(element => {
-            //     if(!modelUniques.includes(element)) toRemove.push(element);
+            // dbU.forEach(element => {
+            //     if(!modelU.includes(element)) toRemove.push(element);
             // })
 
             // if(toRemove.length){
@@ -439,11 +355,9 @@ export const sync = async (overwrite = false) => {
       }
 
       // PRIMARY KEY
-      if (String(table.primaryKey) !== String(model.primaryKey)) {
-        // Check if table has existing primary key (required b/c columnName level primary key)
-        const pKeys = await db.queryObject(
-          primaryKeyQuery + `'${model.table}';`,
-        );
+      if (String(dbTableObj.primaryKey) !== String(model.primaryKey)) {
+        // Check if table has existing primary key (required b/c column level primary key)
+        const pKeys = await db.queryObject(primaryKeyQuery + `'${model.table}';`);
         const existingPK = pKeys.rows;
 
         if (existingPK[0] && !overwrite) {
@@ -465,13 +379,10 @@ export const sync = async (overwrite = false) => {
         } else {
           // No prior primary key just add the update
           alterTableQueries +=
-            `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${model.primaryKey});`;
+            `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${el.primaryKey});`;
         }
       }
     }
-    // ! Commented Out Section End
-
-    // ! end of giant for loop
   }
 
   await db.queryObject(createTableQueries);
