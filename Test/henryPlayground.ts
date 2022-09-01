@@ -2,54 +2,50 @@ import { modelParser } from "../src/functions/modelParser.ts";
 
 import { introspect } from "../src/functions/introspect.ts";
 
+import { sync } from '../src/functions/sync.ts'
+
+// const modelText = Deno.readTextFileSync("./models/model.ts");
+
+// const cleanedText = modelText
+//   .replaceAll(
+//     /export interface \w+ *\{[\n* *.*: \w+,*]+\}/g,
+//     "",
+//   )
+//   .replaceAll(
+//     "import { Model } from 'https://deno.land/x/denogres/mod.ts'\n",
+//     "",
+//   )
+//   // initial wording
+//   .replaceAll(/\/\/ user model definition comes here\n+/g, "")
+//   .replaceAll(/\n */g, "")
+//   .replaceAll(/export enum \w+ {[\n *\w+\,*]+}/g, ""); // remove enums for now, will need different logic to parse these
+
+// const tableArray: string[] = cleanedText.split(
+//   /export class \w+ extends Model */g,
+// );
+
+// console.log(modelText);
+
+// console.log(cleanedText);
+
+// console.log(tableArray);
+
+// let test: any = modelText.match(
+//   /export class \w+ extends Model {\n(\w+)\n\n\n/g,
+// );
+
+// test = modelText.replace(/export class \w+ extends Model(.*)\n\n$/g, "$1");
+
+// console.log(test);
+
+// let test2: any = "hello World".replace(/(hello)/, "$1$1");
+
+// console.log(test2);
+
+// sync();
+
+await sync();
 
 
-const modelText = Deno.readTextFileSync('./models/model.ts');
-
-// console.log('modelText\n', modelText);
-
-// console.log(JSON.stringify(modelText));
-
-// const beforeJSON = JSON.parse(modelText);
-
-// const afterJSON = JSON.stringify(modelText);
 
 
-// console.log('after\n', JSON.parse(JSON.stringify(modelText)));
-
-// console.log(modelText === afterJSON);
-
-// console.log(afterJSON);
-
-// console.log(JSON.parse(afterJSON));
-
-const beforeParse = JSON.stringify(modelText);
-
-console.log('beforeParse\n', beforeParse);
-
-const afterParse = JSON.parse(beforeParse);
-
-console.log('afterParse\n', afterParse);
-
-// console.log('modelParser\n', modelParser());
-
-// console.log(await introspect());
-
-// const parsedModel = modelParser();
-
-// console.log('parsedModel', parsedModel);
-
-// const introspection = await introspect();
-
-// console.log('introspection[0]\n', introspection[0]);
-
-// console.log(typeof introspection[0], typeof parsedModel);
-
-// console.log(introspection[0].people.columns.species_id.association);
-
-// console.log(parsedModel[1].columns.species_id.association);
-
-
-// console.log(JSON.stringify(`
-//   I love food
-// `))
