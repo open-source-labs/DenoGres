@@ -3,6 +3,8 @@ import { Model } from 'https://deno.land/x/denogres/mod.ts'
 
 
 export interface Species {
+  homeworld_id: bigint
+  _id: number
   language: string
   eye_colors: string
   skin_colors: string
@@ -11,18 +13,27 @@ export interface Species {
   average_height: string
   classification: string
   name: string
-  _id: number
-  homeworld_id: bigint
 }
 
 export class Species extends Model {
   static table = 'species';
   static columns = {
+    homeworld_id: {
+      type: 'int8',
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     language: {
       type: 'varchar',
+      notNull: true,
     },
     eye_colors: {
       type: 'varchar',
+      notNull: true,
     },
     skin_colors: {
       type: 'varchar',
@@ -43,23 +54,18 @@ export class Species extends Model {
       type: 'varchar',
       notNull: true,
     },
-    _id: {
-      type: 'int4',
-      notNull: true,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    homeworld_id: {
-      type: 'int8',
-    },
+    nameID: {
+      type: 'varchar',
+      notNull: false,
+    }
   }
 }
 
 
 export interface Person {
   name: string
-  species_id: bigint
   _id: number
+  species_id: bigint
 }
 
 export class Person extends Model {
@@ -68,6 +74,13 @@ export class Person extends Model {
     name: {
       type: 'varchar',
       notNull: true,
+      unique: true,
+    },
+    _id: {
+      type: 'int4',
+      notNull: true,
+      primaryKey: true,
+      autoIncrement: true,
     },
     species_id: {
       type: 'int8',
@@ -77,11 +90,47 @@ export class Person extends Model {
         mappedCol: '_id',
       }
     },
+  }
+}
+
+
+export interface Dog {
+  _id: number
+  name: string
+  name2: string
+  species_id: bigint
+}
+
+export class Dog extends Model {
+  static table = 'dog';
+  static columns = {
     _id: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
+    },
+    name: {
+      type: 'varchar',
+      notNull: true,
+      unique: true,
+      defaultVal: 'Kevin',
+    },
+    name2: {
+      type: 'varchar',
+      defaultVal: 'Kevin',
+      association: {
+        table: 'species',
+        mappedCol: 'nameID',
+      }
+    },
+    species_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'species',
+        mappedCol: '_id',
+      }
     },
   }
 }

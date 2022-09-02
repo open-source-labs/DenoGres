@@ -128,7 +128,7 @@ export const sync = async (overwrite = false) => {
 
   console.log("models\n", modelArray);
   // console.log("modelObject\n", tables);
-  console.log("tables\n", tables);
+  // console.log("tables\n", tables);
 
   /*
     OPTION 1: refactor model parser
@@ -143,6 +143,8 @@ export const sync = async (overwrite = false) => {
   const db = await ConnectDb(); // db connection to send off alter and create queries
 
   for (const model of modelArray) {
+    console.log("model\n", model);
+
     // SQL statements for tables not currently in the database
     if (!tables[String(model.table)]) {
       // New Table Added in Model by User

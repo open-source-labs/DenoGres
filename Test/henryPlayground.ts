@@ -46,7 +46,8 @@ import { sync } from "../src/functions/sync.ts";
 
 // sync();
 
-await sync();
+await sync(true);
+// await sync();
 
 // const modelArray = modelParser();
 
