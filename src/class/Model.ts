@@ -243,8 +243,8 @@ export class Model {
   }
 
   // execute query in database
-  static async query(): Promise<unknown[]> {
-    const db = await ConnectDb();
+  static async query(uri?: string): Promise<unknown[]> {
+    const db = await ConnectDb(uri);
     const queryResult = await db.queryObject(this.sql);
     this.sql = '';
     await DisconnectDb(db);
@@ -253,8 +253,8 @@ export class Model {
 
   // same method with query but returning one instance
   // only work with getting
-  static async queryInstance(print?: string) {
-    const db = await ConnectDb();
+  static async queryInstance(uri?: string, print?: string) {
+    const db = await ConnectDb(uri);
     if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
     this.sql = '';
@@ -403,7 +403,8 @@ interface IgetMappingKeysResult {
 //helper function to find mapping keys between two tables
 export async function getMappingKeys<T>(
   sourcTable: string,
-  targetTable: string
+  targetTable: string,
+  uri?: string
 ): Promise<IgetMappingKeysResult | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
@@ -421,7 +422,7 @@ export async function getMappingKeys<T>(
   ;
   `;
   let result;
-  const db = await ConnectDb();
+  const db = await ConnectDb(uri);
   try {
     result = await db.queryObject(queryText, [sourcTable, targetTable]);
   } catch (error) {
@@ -437,13 +438,13 @@ export async function getMappingKeys<T>(
 } // end of getMappingKeys
 
 //helper function to find existing foreign key related to target table
-async function getForeignKey<T>(thisTable: string, targetTable: string) {
+async function getForeignKey<T>(thisTable: string, targetTable: string, uri?: string) {
   const queryText = `SELECT a.attname
   FROM pg_constraint c 
   JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
   WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`;
   let result;
-  const db = await ConnectDb();
+  const db = await ConnectDb(uri);
   try {
     result = await db.queryObject(queryText, [thisTable, targetTable]);
     //console.log("RESULT: ",result.rows[0].attname)
@@ -465,7 +466,8 @@ async function getForeignKey<T>(thisTable: string, targetTable: string) {
 
 //helper function to find primary key of target table
 export async function getprimaryKey<T>(
-  tableName: string
+  tableName: string,
+  uri?: string
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -474,7 +476,7 @@ export async function getprimaryKey<T>(
   WHERE i.indrelid = $1::regclass
   AND i.indisprimary`;
   let result;
-  const db = await ConnectDb();
+  const db = await ConnectDb(uri);
   try {
     result = await db.queryObject(queryText, [tableName]);
     //console.log("RESULT: ",result.rows[0].attname)

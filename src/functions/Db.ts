@@ -6,9 +6,11 @@ import { Pool, PoolClient } from '../../deps.ts'
 
 const POOL_CONNECTIONS = 3;
 
-export const ConnectDb = async () => {
-  let dbUri;
-  if(Deno.env.get('ENVIRONMENT')==='test') {
+export const ConnectDb = async (inputUri?: string) => {
+  let dbUri: string | undefined;
+  if (inputUri) {
+    dbUri = inputUri;
+  } else if(Deno.env.get('ENVIRONMENT')==='test') {
     dbUri = Deno.env.get('TEST_DB_URI')
   } else if(Deno.env.get('ENVIRONMENT')==='development') {
     dbUri = Deno.env.get('DATABASE_URI')
