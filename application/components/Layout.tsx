@@ -12,7 +12,9 @@ function Layout({ children }: any) {
       <Head>
         <title>Denogres 2.0</title>
       </Head>
-      <div className={tw`flex flex-row max-w-screen-lg h-screen p-4 mx-auto`}>
+      <div
+        className={tw`flex flex-row max-w-screen-lg h-screen p-4 mx-auto`}
+      >
         <NavBar />
         {children}
       </div>

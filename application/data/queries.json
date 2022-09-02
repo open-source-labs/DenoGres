@@ -1,0 +1,22 @@
+[
+  {
+    "_id": 1,
+    "name": "Awesome query 1",
+    "queryText": "People.select('*').query();"
+  },
+  {
+    "_id": 2,
+    "name": "Awesome query 2",
+    "queryText": "Species.select('*').query();"
+  },
+  {
+    "_id": 3,
+    "name": "Awesome query 3",
+    "queryText": "Person.insert('species_id = 3, name = 'Loralyn', mood = 'happy' ).query()"
+  },
+  {
+    "_id": 4,
+    "name": "Awesome query 4",
+    "queryText": "Person.select('*').leftJoin('person.species_id', '_id', 'species')"
+  }
+]
