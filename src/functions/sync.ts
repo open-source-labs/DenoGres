@@ -76,6 +76,11 @@ const createTable = (
 ): string => {
   let queryText = `CREATE TABLE ${table_name}(`;
 
+  console.log("createTable checks", checks);
+  console.log("createTable unique", unique);
+  console.log("createTable primaryKey", primaryKey);
+  console.log("createTable foreignKey", foreignKey);
+
   // Add columns to query
   for (const key in columns) {
     queryText += ` ${key} ${newColAttr(columns[key])},`;
@@ -116,9 +121,9 @@ const alterTableError = (err: Error) => {
 };
 
 export const sync = async (overwrite = false) => {
-  const [tables] = await introspect();
+  const [dbTables] = await introspect();
 
-  const modelArray = modelParser();
+  const models = modelParser();
 
   let createTableQueries = ``;
   let alterTableQueries = ``;
@@ -126,14 +131,30 @@ export const sync = async (overwrite = false) => {
   // ! Need to Come back to this later
   // await enumSync();
 
-  console.log("models\n", modelArray);
-  // console.log("modelObject\n", tables);
-  // console.log("tables\n", tables);
+  console.log("models\n", models);
+  // console.log("modelObject\n", dbTables);
+  console.log("dbTables\n", dbTables);
+
+  console.log("list of model checks\n", models.map((model) => model.checks));
+  console.log("list of model unique\n", models.map((model) => model.unique));
+  console.log(
+    "list of model primaryKey\n",
+    models.map((model) => model.primaryKey),
+  );
+  console.log(
+    "list of model foreignKey\n",
+    models.map((model) => model.foreignKey),
+  );
+
+  // console.log(
+  //   "dog species_id association\n",
+  //   models[2].columns.species_id.association,
+  // );
 
   /*
     OPTION 1: refactor model parser
       easier down the line
-        compare modelObject.species vs. tables.species
+        compare modelObject.species vs. dbTables.species
 
     OPTION 2:
       harder time from interpretation...?
@@ -142,11 +163,11 @@ export const sync = async (overwrite = false) => {
 
   const db = await ConnectDb(); // db connection to send off alter and create queries
 
-  for (const model of modelArray) {
-    console.log("model\n", model);
+  for (const model of models) {
+    // console.log("model\n", model);
 
-    // SQL statements for tables not currently in the database
-    if (!tables[String(model.table)]) {
+    // SQL statements for dbTables not currently in the database
+    if (!dbTables[String(model.table)]) {
       // New Table Added in Model by User
       createTableQueries += createTable(
         String(model.table),
@@ -158,20 +179,22 @@ export const sync = async (overwrite = false) => {
       );
     } else { // ! Commented Out Portion Start
       // * Check columnValues
-      const table = tables[String(model.table)];
+      const table = dbTables[String(model.table)];
+
+      // console.log("table\n", table);
 
       for (const columnName of Object.keys(model.columns)) {
-        // modelArray column object
+        // models column object
         const columnValues = model.columns[columnName];
         // New Column added in Model by User
         // * New columnValue entry
-        if (!tables[model.table].columns[columnName]) {
+        if (!dbTables[model.table].columns[columnName]) {
           alterTableQueries += `ALTER TABLE ${model.table} ADD ${columnName} `;
 
           alterTableQueries += newColAttr(columnValues) + ";";
         } else {
           // * Check column constraints for updates
-          const dbColumnValues = tables[model.table].columns[columnName];
+          const dbColumnValues = dbTables[model.table].columns[columnName];
           // NOT NULL updated
 
           // * Check notNull
@@ -333,6 +356,8 @@ export const sync = async (overwrite = false) => {
         } else if (!model.unique && overwrite) {
           // remove all exisisting db unique table constraints
           const results = await db.queryObject(tableUniqueQuery);
+
+          // console.log(results);
           const dbUniqueConst = results.rows;
 
           dbUniqueConst.forEach((uniqueTables) => {
