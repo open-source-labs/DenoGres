@@ -1,7 +1,8 @@
 {
   "tasks": {
     "watch": "deno run -A --watch=static/,routes/ ./application/dev.ts",
-    "start": "deno run -A ./application/dev.ts"
+    "start": "deno run -A ./application/dev.ts",
+    "app": "deno run -Ar --unstable ./webview/webview.ts"
   },
   "importMap": "./application/import_map.json"
 }
