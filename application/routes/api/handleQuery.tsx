@@ -15,31 +15,19 @@ export const handler: Handlers = {
     //TODO: obtain uri from user input
     const uri: string = 'postgres://fzggghbk:yuXc_N9fnsXb-g8HFEH_ujg5JB5O4urH@heffalump.db.elephantsql.com/fzggghbk';
     const queryStr: string = await req.json();
-    //Person.select('*).query();
     const str: string = writeQueryText(uri, queryStr);
 
     const writePath: string = './application/data/query.ts';
     Deno.writeTextFileSync(writePath, str);
-    const importPath: string = '../../data/query.ts';
-
-    // TODO: refresh page on click? 
-    // let funcToRun = await import(importPath);
-    let importedModule: object = {};
-    let queryResult: object[] | undefined;
-    //TODO: look at this approach: chaining promises
-    import(importPath)
-      .then((module: object) => importedModule = module)
-      .then(() => importedModule.default())
-
-    // const queryResult = await import(importPath).default();
-    // console.log(funcToRun);
-    // console.log(funcToRun.default.toString());
-    // let queryResult: object[] = await funcToRun.default();
-    // console.log(queryResult);
-    Deno.removeSync(writePath);
-    // funcToRun = null;
-    // console.log(funcToRun);
-    return new Response(stringify(queryResult));
+    // const importPath: string = '../../data/query.ts';
+    const cmd: Array<string> = ['deno', 'run', '-A', `${writePath}`];
+    const process = Deno.run({ cmd, stdout: 'piped' });
+    const output: Uint8Array = await process.output();
+    // console.log(output);
+    const decoded: string = new TextDecoder().decode(output);
+    console.log(decoded);
+    // Deno.removeSync(writePath);
+    return new Response(decoded);
   },
 };
 // export const handler: Handlers = {

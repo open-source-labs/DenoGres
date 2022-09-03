@@ -6,6 +6,8 @@ import Record from "../components/Record.tsx";
 import recordJson from "../data/records.json" assert { type: "json" };
 import queriesJson from "../data/queries.json" assert { type: "json" };
 
+export interface IRecord {};
+
 export default function Console() {
   //TODO: Currently state here is set as dummy data
   const [showModal, setShowModal] = useState(false);
@@ -13,7 +15,7 @@ export default function Console() {
   const [queryText, setQueryText] = useState("");
   const [modelText, setModelText] = useState("");
 
-  const [records, setRecords] = useState(recordJson);
+  const [records, setRecords] = useState<IRecord[]>(recordJson);
   const [queriesList, setQueriesList] = useState(queriesJson);
 
   // ----EVENT LISTENERS -----
@@ -32,10 +34,11 @@ export default function Console() {
     // console.log(res.body);
     // type of data seems to actually be the interface corresponding to which model
     // we are calling method on! maybe can obtain from user supplied model.ts?
-    const data: any = await res.json();
-    console.log(queryName);
-    console.log(queryText);
-    console.log(data);
+    const data: object[] = await res.json();
+    // console.log(queryName);
+    // console.log(queryText);
+    // console.log(data);
+    // console.log(typeof data);
     setRecords(data);
   };
 
