@@ -22,8 +22,21 @@ export default function Console() {
     //TODO: Put a save function here, fetch data from server
   };
 
-  const handleRun = async () => {
+  const handleRun = async (e: MouseEvent) => {
     //TODO: Put a run function here, fetch data from server
+    e.preventDefault();
+    const res = await fetch('/api/handleQuery', {
+      method:"POST",
+      body: JSON.stringify(queryText)
+    });
+    // console.log(res.body);
+    // type of data seems to actually be the interface corresponding to which model
+    // we are calling method on! maybe can obtain from user supplied model.ts?
+    const data: any = await res.json();
+    console.log(queryName);
+    console.log(queryText);
+    console.log(data);
+    setRecords(data);
   };
 
   // map saved queries to display components
