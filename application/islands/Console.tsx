@@ -3,7 +3,7 @@ import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
 import Record from "../components/Record.tsx";
-import queriesJson from "../data/queries.json" assert { type: "json" };
+// import queriesJson from "../data/queries.json" assert { type: "json" };
 import { nanoid } from "nanoid";
 
 export interface IRecord {};
@@ -37,12 +37,12 @@ export default function Console() {
       queryName,
       queryText
     }
-    setQueriesList([...queriesList, newQuery]);
+    await setQueriesList([...queriesList, newQuery]);
     // const writePath: string = '../data/queries.json';
     // Deno.writeFileSync(writePath, queriesList)
     await fetch('/api/handleQuerySave', {
       method: "POST",
-      body: JSON.stringify(queriesList)
+      body: JSON.stringify(newQuery)
     })
     setQueryName('');
     setQueryText('');
