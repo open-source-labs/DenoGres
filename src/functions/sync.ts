@@ -131,20 +131,20 @@ export const sync = async (overwrite = false) => {
   // ! Need to Come back to this later
   // await enumSync();
 
-  console.log("models\n", models);
-  // console.log("modelObject\n", dbTables);
-  console.log("dbTables\n", dbTables);
+  // console.log("models\n", models);
+  // // console.log("modelObject\n", dbTables);
+  // console.log("dbTables\n", dbTables);
 
-  console.log("list of model checks\n", models.map((model) => model.checks));
-  console.log("list of model unique\n", models.map((model) => model.unique));
-  console.log(
-    "list of model primaryKey\n",
-    models.map((model) => model.primaryKey),
-  );
-  console.log(
-    "list of model foreignKey\n",
-    models.map((model) => model.foreignKey),
-  );
+  // console.log("list of model checks\n", models.map((model) => model.checks));
+  // console.log("list of model unique\n", models.map((model) => model.unique));
+  // console.log(
+  //   "list of model primaryKey\n",
+  //   models.map((model) => model.primaryKey),
+  // );
+  // console.log(
+  //   "list of model foreignKey\n",
+  //   models.map((model) => model.foreignKey),
+  // );
 
   // console.log(
   //   "dog species_id association\n",
@@ -163,10 +163,12 @@ export const sync = async (overwrite = false) => {
 
   const db = await ConnectDb(); // db connection to send off alter and create queries
 
+  // * Alter Table Columns
   for (const model of models) {
     // console.log("model\n", model);
 
     // SQL statements for dbTables not currently in the database
+    // * Create Table
     if (!dbTables[String(model.table)]) {
       // New Table Added in Model by User
       createTableQueries += createTable(
@@ -178,12 +180,107 @@ export const sync = async (overwrite = false) => {
         model.foreignKey,
       );
     } else { // ! Commented Out Portion Start
+      // * Create Table Columns
+      const columnNames = Object.keys(model.columns);
+
       // * Check columnValues
       const table = dbTables[String(model.table)];
 
       // console.log("table\n", table);
 
-      for (const columnName of Object.keys(model.columns)) {
+      /*
+        possible constraints
+
+        type: keyof typeof sqlDataTypes
+        primaryKey?: boolean,
+        notNull?: boolean,
+        unique?: boolean,
+        checks?: string[],
+        defaultVal?: unknown,
+        autoIncrement?: boolean,
+        length?: number,
+        association?: { rel_type?: string, table: string, mappedCol: string}
+      */
+
+      for (const columnName of columnNames) {
+        if (!(columnName in table.columns)) {
+          // let addColumnQuery =
+          //   `ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${model.columns.columnName.type} `;
+
+          let addColumnQuery = "";
+
+          const associations = [];
+
+          for (const constraint in model.columns[columnName]) {
+            switch (constraint) {
+              case "association": {
+                /*
+                  `
+                  ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+                */
+                associations.push({
+                  columnName: columnName,
+                  // table: model.columns[columnName].table,
+                  // mappedCol: model.columns[columnName].mappedCol,
+                  table: model.columns[columnName].association?.table,
+                  mappedCol: model.columns[columnName].association?.mappedCol,
+                });
+                break;
+              }
+              case "primaryKey": {
+                addColumnQuery += `PRIMARY KEY `;
+                break;
+              }
+              case "notNull": {
+                addColumnQuery += `NOT NULL `;
+                break;
+              }
+              case "unique": {
+                addColumnQuery += `UNIQUE `;
+                break;
+              }
+              case "autoIncrement": {
+                addColumnQuery += `SERIAL `;
+                break;
+              }
+              case "defaultVal": {
+                addColumnQuery +=
+                  `DEFAULT ${model.columns.columnName.defaultVal} `;
+                break;
+              }
+              // ! Work on these later
+              case "checks": {
+                break;
+              }
+              case "length": {
+                break;
+              }
+              default: {
+                break;
+              }
+            }
+          }
+
+          addColumnQuery += `;`;
+
+          for (const association of associations) {
+            const { columnName, table, mappedCol } = association;
+
+            // console.log('association')
+
+            let addAssociationQuery = `
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES '${table}(${mappedCol})'
+            `;
+            console.log(
+              "This is the foreign key query \n",
+              addAssociationQuery,
+            );
+            /*
+              ALTER TABLE dog ADD CONSTRAINT dog_fk FOREIGN KEY ("dog_id") REFERENCES ('species(id)')
+            */
+          }
+        }
+
         // models column object
         const columnValues = model.columns[columnName];
         // New Column added in Model by User

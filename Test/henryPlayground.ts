@@ -46,6 +46,30 @@ import { sync } from "../src/functions/sync.ts";
 
 // sync();
 
+const models = modelParser();
+
+// console.log("models\n", models);
+const associations = [];
+
+for (const model of models) {
+  for (const columnName in model.columns) {
+    // console.log(columnName);
+
+    if (model.columns[columnName].association) {
+      // console.log(model.)
+      // console.log(model.columns[columnName]);
+
+      associations.push({
+        columnName: columnName,
+        table: model.columns[columnName].association?.table,
+        mappedCol: model.columns[columnName].association?.mappedCol,
+      });
+    }
+  }
+}
+
+// console.log(associations);
+
 await sync(true);
 // await sync();
 
