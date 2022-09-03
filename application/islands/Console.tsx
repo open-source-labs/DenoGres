@@ -31,7 +31,7 @@ export default function Console() {
     return (
       <button
         key={idx}
-        className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded`}
+        className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded text-left`}
         type="button"
         onClick={(e) => {
           setQueryName(ele.name);
@@ -71,7 +71,9 @@ export default function Console() {
       <div className={tw`w-5/12 bg-white rounded mx-3`}>
         <div className={tw`h-2/4 p-3 flex flex-col items-center`}>
           <h2 className={tw`mb-3`}>Saved Queries</h2>
-          {savedQueries}
+          <div className={tw`flex flex-col w-full`}>
+            {savedQueries}
+          </div>
         </div>
         <div className={tw`flex flex-col items-center p-3 h-2/4`}>
           <h2 className={tw`flex-1`}>Active Models</h2>
