@@ -7,7 +7,7 @@ export const writeQueryText = (uri: string, userQueryStr: string): string => {
   if (!isValidModel(userQueryStr)) {
     return `
       const modelMissing = (): string => {
-        console.log('Error: model does not exist in database instance');
+        console.log(JSON.stringify([{ Error: 'Model does not exist in database instance.'}]));
       };
       modelMissing();
     `;

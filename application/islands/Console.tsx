@@ -3,32 +3,56 @@ import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
 import Record from "../components/Record.tsx";
-import recordJson from "../data/records.json" assert { type: "json" };
 import queriesJson from "../data/queries.json" assert { type: "json" };
+import { nanoid } from "nanoid";
 
 export interface IRecord {};
+
+export interface IQueryObject {
+  _id: string,
+  queryName: string,
+  queryText: string
+};
 
 export default function Console() {
   //TODO: Currently state here is set as dummy data
   const [showModal, setShowModal] = useState(false);
-  const [queryName, setQueryName] = useState("");
-  const [queryText, setQueryText] = useState("");
+  const [queryName, setQueryName] = useState<string>("");
+  const [queryText, setQueryText] = useState<string>("");
   const [modelText, setModelText] = useState("");
 
-  const [records, setRecords] = useState<IRecord[]>(recordJson);
-  const [queriesList, setQueriesList] = useState(queriesJson);
+  const [records, setRecords] = useState<IRecord[]>([]);
+  const [queriesList, setQueriesList] = useState<IQueryObject[]>([]);
 
   // ----EVENT LISTENERS -----
 
-  const handleSave = () => {
+  // TODO: some useEffect or similar to fetch prev. saved queriesList on first load
+  // since this list might eventually live on a DB instead of locally
+
+  const handleSave = async (e: MouseEvent) => {
     //TODO: Put a save function here, fetch data from server
+    e.preventDefault();
+    const newQuery: IQueryObject = {
+      _id: nanoid(),
+      queryName,
+      queryText
+    }
+    setQueriesList([...queriesList, newQuery]);
+    // const writePath: string = '../data/queries.json';
+    // Deno.writeFileSync(writePath, queriesList)
+    await fetch('/api/handleQuerySave', {
+      method: "POST",
+      body: JSON.stringify(queriesList)
+    })
+    setQueryName('');
+    setQueryText('');
   };
 
   const handleRun = async (e: MouseEvent) => {
     //TODO: Put a run function here, fetch data from server
     e.preventDefault();
-    const res = await fetch('/api/handleQuery', {
-      method:"POST",
+    const res = await fetch('/api/handleQueryRun', {
+      method: "POST",
       body: JSON.stringify(queryText)
     });
     // console.log(res.body);
@@ -50,11 +74,11 @@ export default function Console() {
         className={tw`bg-[#97C2DB] text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded`}
         type="button"
         onClick={(e) => {
-          setQueryName(ele.name);
+          setQueryName(ele.queryName);
           setQueryText(ele.queryText);
         }}
       >
-        {ele.name}
+        {ele.queryName}
       </button>
     );
   });

@@ -4,12 +4,13 @@ import { writeQueryText } from "../../utils/fileTextWriters.ts";
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
 
-    const stringify = (obj: object): string => {
-      return JSON.stringify(
-        obj,
-        (key: string, value: any): void => typeof value === "bigint" ? value.toString() : value,
-      );
-    };
+    // custom stringify helper func whenever there's bigint
+    // const stringify = (obj: object): string => {
+    //   return JSON.stringify(
+    //     obj,
+    //     (key: string, value: any): void => typeof value === "bigint" ? value.toString() : value,
+    //   );
+    // };
 
     // console.log("In the handler");
     //TODO: obtain uri from user input
@@ -21,12 +22,26 @@ export const handler: Handlers = {
     Deno.writeTextFileSync(writePath, str);
     // const importPath: string = '../../data/query.ts';
     const cmd: Array<string> = ['deno', 'run', '-A', `${writePath}`];
-    const process = Deno.run({ cmd, stdout: 'piped' });
-    const output: Uint8Array = await process.output();
+    const process = Deno.run({ cmd, stdout: 'piped', stderr: 'piped' });
+    const [ output, error ]: [ Uint8Array, Uint8Array ] = await Promise.all([
+      process.output(),
+      process.stderrOutput()
+    ]);
+    process.close();
+
+    // this currently handles all DB errors. could add more validation for syntax
+    // before even sending query to db
+    if (error.length) {
+      // console.log(error);
+      Deno.removeSync(writePath);
+      return new Response(JSON.stringify([{ Error: `
+        An error occurred while retrieving records from the database. Please check your query syntax.
+      `}]));
+    }
     // console.log(output);
     const decoded: string = new TextDecoder().decode(output);
-    console.log(decoded);
-    // Deno.removeSync(writePath);
+    // console.log(decoded);
+    Deno.removeSync(writePath);
     return new Response(decoded);
   },
 };
