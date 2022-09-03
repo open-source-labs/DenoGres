@@ -31,7 +31,7 @@ export default function Console() {
     return (
       <button
         key={idx}
-        className={tw`bg-[#97C2DB] text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded`}
+        className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded`}
         type="button"
         onClick={(e) => {
           setQueryName(ele.name);
@@ -126,7 +126,7 @@ export default function Console() {
                         className={tw`flex items-center justify-end p-6 border-solid border-slate-200 rounded-b`}
                       >
                         <button
-                          className={tw`bg-gray-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
+                          className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
                           type="button"
                           onClick={() => {
                             setShowModal(false);
@@ -137,8 +137,6 @@ export default function Console() {
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className={tw`opacity-25 fixed inset-0 z-40 bg-black`}>
                 </div>
               </div>
             )
@@ -179,13 +177,13 @@ export default function Console() {
           <div className={tw`flex flex-row justify-end`}>
             <button
               type="button"
-              className={tw`bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
+              className={tw`bg-deno-pink-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-pink-200`}
               onClick={handleSave}
             >
               Save
             </button>
             <button
-              className={tw`bg-[#97C2DB] px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
+              className={tw`bg-deno-blue-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-blue-200`}
               onClick={handleRun}
             >
               Run
