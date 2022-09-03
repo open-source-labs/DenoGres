@@ -1,3 +1,4 @@
+/* This module contains the denoGres commands that are compiled when typed in a command line */
 import { parse, config } from './deps.ts'
 
 import "https://deno.land/x/dotenv/load.ts";
@@ -8,11 +9,11 @@ import { dbPull } from './src/functions/dbPull.ts'
 
 switch(Deno.args[0]) {
     case '--init':
-        init();
+        init(); // This function is imported on line 5, It creates a models folder, and a env file.
         break;
 
     case '--db-pull': {// introspection begins
-        const envVar = parse(await Deno.readTextFile('./.env')); // Get DB_URI
+        const envVar = parse(await Deno.readTextFile('./.env')); // Gets the DB_URI
 
         if(envVar.DATABASE_URI === "") {
             console.log('Please enter a valid DATABASE_URI value in .env')
@@ -34,6 +35,7 @@ switch(Deno.args[0]) {
     default:
 }
 
+// This is the message that details what the commands do
 function displayHelpMsg() {
   return `flags:
 --init: set-up DenoGres required files
