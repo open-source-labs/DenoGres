@@ -3,6 +3,7 @@ import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { primaryKeyQuery, tableUniqueQuery } from "../queries/introspection.ts";
 import { ModelColumn, ModelInfo, modelParser } from "./modelParser.ts";
 import { enumSync } from "./enumSync.ts";
+import { abortable } from "https://deno.land/std@0.141.0/async/abortable.ts";
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
@@ -180,10 +181,10 @@ export const sync = async (overwrite = false) => {
         model.foreignKey,
       );
     } else { // ! Commented Out Portion Start
-      // * Create Table Columns
+      // * Table Columns
       const columnNames = Object.keys(model.columns);
 
-      // * Check columnValues
+      // * Column Values
       const table = dbTables[String(model.table)];
 
       // console.log("table\n", table);
@@ -203,11 +204,14 @@ export const sync = async (overwrite = false) => {
       */
 
       for (const columnName of columnNames) {
+        // * START OF ADD COLUMN QUERY
         if (!(columnName in table.columns)) {
-          // let addColumnQuery =
-          //   `ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${model.columns.columnName.type} `;
+          // ? changed the last variable below to ${model.columns[columnName].type}
+          let addColumnQuery = `
+            ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${model.columns[columnName].type}
+          `;
 
-          let addColumnQuery = "";
+          // let addColumnQuery = "";
 
           const associations = [];
 
@@ -239,6 +243,7 @@ export const sync = async (overwrite = false) => {
                 addColumnQuery += `UNIQUE `;
                 break;
               }
+              // ? isn't type already serial ???
               case "autoIncrement": {
                 addColumnQuery += `SERIAL `;
                 break;
@@ -262,25 +267,37 @@ export const sync = async (overwrite = false) => {
           }
 
           addColumnQuery += `;`;
+          // ? query looks bit cleaner with code below but isn't necessary
+          // addColumnQuery = addColumnQuery.slice(0, addColumnQuery.length - 1) + `;`;
+          
 
           for (const association of associations) {
             const { columnName, table, mappedCol } = association;
 
             // console.log('association')
 
-            let addAssociationQuery = `
-              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES '${table}(${mappedCol})'
-            `;
-            console.log(
-              "This is the foreign key query \n",
-              addAssociationQuery,
-            );
+            // let addAssociationQuery = `
+            //   ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES '${table}(${mappedCol}); '
+            // `;
+            // console.log(
+            //   "This is the foreign key query \n",
+            //   addAssociationQuery,
+            // );
             /*
               ALTER TABLE dog ADD CONSTRAINT dog_fk FOREIGN KEY ("dog_id") REFERENCES ('species(id)')
             */
-          }
-        }
 
+            // ? removed single quotes surroundign ${table}(${mappedCol})
+            addColumnQuery += `
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+            `
+          }
+
+          console.log(addColumnQuery);
+
+          // ? had to invoke addColumnQuery immediately in cases where alterTablesQueries wasn't invoked (when you only add a column to a table but leave the rest of the model schema untouched)
+          await db.queryObject(addColumnQuery);
+        }
         // models column object
         const columnValues = model.columns[columnName];
         // New Column added in Model by User
@@ -396,7 +413,7 @@ export const sync = async (overwrite = false) => {
             }
           }
           // FOREIGN KEY updated
-          // * check foreign key (which can be derived from association property)
+          // * check foreign key
           if (
             JSON.stringify(columnValues.association) !==
               JSON.stringify(dbColumnValues.association)
@@ -430,13 +447,16 @@ export const sync = async (overwrite = false) => {
           }
 
           if (alterTableQueries !== ``) {
+            // ? need addColumnQuery to run separately with alterTableQueries because users can add a new column without making any changes to any other column in all the tables (in which case, alterTableQueries won't fire)
+            // console.log('alterTableQueries\n', alterTableQueries);
+
             await db.queryObject(alterTableQueries);
             alterTableQueries = ``;
           }
         }
       }
       // UNIQUE
-      // * check the list of uniqueValues inside the model/table
+      // TODO (NOT FUNCTIONAL ATM) check the list of uniqueValues inside the model/table
       if (String(table.unique) !== String(model.unique)) { //TESTED
         const toAdd: string[] = [];
         const toRemove: string[] = [];
@@ -507,7 +527,7 @@ export const sync = async (overwrite = false) => {
         }
       }
 
-      // PRIMARY KEY
+      // TODO PRIMARY KEY LIST: NOT FUNCTIONAL ATM
       if (String(table.primaryKey) !== String(model.primaryKey)) {
         // Check if table has existing primary key (required b/c columnName level primary key)
         const pKeys = await db.queryObject(
