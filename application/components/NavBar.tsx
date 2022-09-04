@@ -7,7 +7,7 @@ function NavBar() {
     <nav
       class={tw`flex flex-col p-3 bg-gradient-to-b from-white to-gray-50 rounded`}
     >
-      <a href="/" className={tw`pb-10 mx-auto`}>
+      <a href="/" className={tw`pb-10`}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -28,7 +28,7 @@ function NavBar() {
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          stroke-width={1.5}
+          stroke-width={1.35}
           stroke="currentColor"
           className={tw`w-7 h-7`}
         >

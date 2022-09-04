@@ -149,9 +149,9 @@ export default function Console() {
         <div
           className={tw`flex flex-col h-2/4 bg-white p-3 mb-3 rounded`}
         >
-          <div>
+          <h2>
             Query Console
-          </div>
+          </h2>
           <div className={tw`my-1`}>
             <label className={tw`mr-1`}>
               Query Name:
@@ -195,7 +195,7 @@ export default function Console() {
         <div
           className={tw`bg-white h-full rounded p-3 overflow-y-scroll flex flex-col`}
         >
-          <h2>Results</h2>
+          <h2 className={tw`mb-3`}>Results</h2>
           {queryRows}
         </div>
       </div>
