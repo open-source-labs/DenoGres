@@ -8,6 +8,7 @@ import { InnerRenderFunction, RenderContext, start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";
 
 import { config, setup } from "@twind";
+import * as colors from "twind/colors";
 import { virtualSheet } from "twind/sheets";
 
 const sheet = virtualSheet();
@@ -24,6 +25,7 @@ setup({
         "deno-pink-200": "hsl(278, 19%, 57%)",
         "deno-blue-100": "hsl(198, 40%, 72%)",
         "deno-blue-200": "hsl(201, 27%, 58%)",
+        ...colors,
       },
     },
   },

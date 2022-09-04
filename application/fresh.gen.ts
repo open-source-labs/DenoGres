@@ -6,8 +6,10 @@ import * as $0 from "./routes/api/handleQuery.tsx";
 import * as $1 from "./routes/connections.tsx";
 import * as $2 from "./routes/explorer.tsx";
 import * as $3 from "./routes/index.tsx";
+import * as $4 from "./routes/migrations.tsx";
 import * as $$0 from "./islands/Connections.tsx";
 import * as $$1 from "./islands/Console.tsx";
+import * as $$2 from "./islands/Migrations.tsx";
 
 const manifest = {
   routes: {
@@ -15,10 +17,12 @@ const manifest = {
     "./routes/connections.tsx": $1,
     "./routes/explorer.tsx": $2,
     "./routes/index.tsx": $3,
+    "./routes/migrations.tsx": $4,
   },
   islands: {
     "./islands/Connections.tsx": $$0,
     "./islands/Console.tsx": $$1,
+    "./islands/Migrations.tsx": $$2,
   },
   baseUrl: import.meta.url,
 };
