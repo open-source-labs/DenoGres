@@ -4,19 +4,27 @@
 
 import * as $0 from "./routes/api/handleQueryRun.tsx";
 import * as $1 from "./routes/api/handleQuerySave.tsx";
-import * as $2 from "./routes/explorer.tsx";
-import * as $3 from "./routes/index.tsx";
-import * as $$0 from "./islands/Console.tsx";
+import * as $2 from "./routes/connections.tsx";
+import * as $3 from "./routes/explorer.tsx";
+import * as $4 from "./routes/index.tsx";
+import * as $5 from "./routes/migrations.tsx";
+import * as $$0 from "./islands/Connections.tsx";
+import * as $$1 from "./islands/Console.tsx";
+import * as $$2 from "./islands/Migrations.tsx";
 
 const manifest = {
   routes: {
     "./routes/api/handleQueryRun.tsx": $0,
     "./routes/api/handleQuerySave.tsx": $1,
-    "./routes/explorer.tsx": $2,
-    "./routes/index.tsx": $3,
+    "./routes/connections.tsx": $2,
+    "./routes/explorer.tsx": $3,
+    "./routes/index.tsx": $4,
+    "./routes/migrations.tsx": $5,
   },
   islands: {
-    "./islands/Console.tsx": $$0,
+    "./islands/Connections.tsx": $$0,
+    "./islands/Console.tsx": $$1,
+    "./islands/Migrations.tsx": $$2,
   },
   baseUrl: import.meta.url,
 };

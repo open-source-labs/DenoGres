@@ -9,6 +9,5 @@ webview.size = {
 };
 
 webview.title = "Denogres 2.0";
-// webview.navigate("http://localhost:8000");
-webview.navigate("https://deno.land/");
+webview.navigate("http://localhost:8000");
 webview.run();

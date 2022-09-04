@@ -71,7 +71,7 @@ export default function Console() {
     return (
       <button
         key={idx}
-        className={tw`bg-[#97C2DB] text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded`}
+        className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded text-left`}
         type="button"
         onClick={(e) => {
           setQueryName(ele.queryName);
@@ -111,7 +111,9 @@ export default function Console() {
       <div className={tw`w-5/12 bg-white rounded mx-3`}>
         <div className={tw`h-2/4 p-3 flex flex-col items-center`}>
           <h2 className={tw`mb-3`}>Saved Queries</h2>
-          {savedQueries}
+          <div className={tw`flex flex-col w-full`}>
+            {savedQueries}
+          </div>
         </div>
         <div className={tw`flex flex-col items-center p-3 h-2/4`}>
           <h2 className={tw`flex-1`}>Active Models</h2>
@@ -166,7 +168,7 @@ export default function Console() {
                         className={tw`flex items-center justify-end p-6 border-solid border-slate-200 rounded-b`}
                       >
                         <button
-                          className={tw`bg-gray-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
+                          className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
                           type="button"
                           onClick={() => {
                             setShowModal(false);
@@ -178,8 +180,6 @@ export default function Console() {
                     </div>
                   </div>
                 </div>
-                <div className={tw`opacity-25 fixed inset-0 z-40 bg-black`}>
-                </div>
               </div>
             )
             : null}
@@ -189,9 +189,9 @@ export default function Console() {
         <div
           className={tw`flex flex-col h-2/4 bg-white p-3 mb-3 rounded`}
         >
-          <div>
+          <h2>
             Query Console
-          </div>
+          </h2>
           <div className={tw`my-1`}>
             <label className={tw`mr-1`}>
               Query Name:
@@ -219,13 +219,13 @@ export default function Console() {
           <div className={tw`flex flex-row justify-end`}>
             <button
               type="button"
-              className={tw`bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
+              className={tw`bg-deno-pink-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-pink-200`}
               onClick={handleSave}
             >
               Save
             </button>
             <button
-              className={tw`bg-[#97C2DB] px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
+              className={tw`bg-deno-blue-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-blue-200`}
               onClick={handleRun}
             >
               Run
@@ -235,7 +235,7 @@ export default function Console() {
         <div
           className={tw`bg-white h-full rounded p-3 overflow-y-scroll flex flex-col`}
         >
-          <h2>Results</h2>
+          <h2 className={tw`mb-3`}>Results</h2>
           {queryRows}
         </div>
       </div>
