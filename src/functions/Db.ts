@@ -4,7 +4,8 @@ import { Pool, PoolClient } from '../../deps.ts'
 
 //import * as postgres from "https://deno.land/x/postgres/mod.ts";
 
-const POOL_CONNECTIONS = 3;
+// const POOL_CONNECTIONS = 3;
+const POOL_CONNECTIONS = 10; // ? changed this to 10
 
 export const ConnectDb = async () => {
   let dbUri;

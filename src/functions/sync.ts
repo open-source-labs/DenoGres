@@ -4,6 +4,7 @@ import { primaryKeyQuery, tableUniqueQuery } from "../queries/introspection.ts";
 import { ModelColumn, ModelInfo, modelParser } from "./modelParser.ts";
 import { enumSync } from "./enumSync.ts";
 import { abortable } from "https://deno.land/std@0.141.0/async/abortable.ts";
+import { CHAR_LINE_FEED } from "https://deno.land/std@0.141.0/path/_constants.ts";
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
@@ -270,7 +271,7 @@ export const sync = async (overwrite = false) => {
           // ? query looks bit cleaner with code below but isn't necessary
           // addColumnQuery = addColumnQuery.slice(0, addColumnQuery.length - 1) + `;`;
           
-
+          let associationIndex = 0;
           for (const association of associations) {
             const { columnName, table, mappedCol } = association;
 
@@ -289,8 +290,9 @@ export const sync = async (overwrite = false) => {
 
             // ? removed single quotes surroundign ${table}(${mappedCol})
             addColumnQuery += `
-              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk${associationIndex} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
             `
+            associationIndex++;
           }
 
           console.log(addColumnQuery);
@@ -414,12 +416,23 @@ export const sync = async (overwrite = false) => {
           }
           // FOREIGN KEY updated
           // * check foreign key
+          // TODO 
           if (
             JSON.stringify(columnValues.association) !==
               JSON.stringify(dbColumnValues.association)
           ) {
             // QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
             // TO OVERWRITE
+
+            console.log('entered JSON STRINGIFY');
+
+            console.log('model.table', model.table);
+
+            console.log('columnValues Association', columnValues.association);
+
+            // console.log(`dbColumnValuesAssociation ${dbColumnValues.association}`);
+            console.log('dbColumnValuesAssociation', dbColumnValues.association);
+            // console.log(dbColumnValues.association);
 
             if (!overwrite && columnValues.association === undefined) {
               // remove exisisting foreign key, overwrite false - inform user update cannot be made
@@ -428,8 +441,10 @@ export const sync = async (overwrite = false) => {
               );
             } else if (overwrite && columnValues.association === undefined) {
               // remove exisisting foreign key, overwrite true
+              // alterTableQueries +=
+              //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
               alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
+                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_fk0; `;
             } else if (dbColumnValues.association === undefined) {
               // add new foreign key to column
               alterTableQueries +=
@@ -440,6 +455,10 @@ export const sync = async (overwrite = false) => {
                 `Cannot update foreign key on column ${columnName} on ${model.table} table. Please re-run command with -x flag.`,
               );
             } else {
+              // alterTableQueries +=
+              //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
+              //   `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+              // ? 
               alterTableQueries +=
                 `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
                 `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
@@ -448,7 +467,7 @@ export const sync = async (overwrite = false) => {
 
           if (alterTableQueries !== ``) {
             // ? need addColumnQuery to run separately with alterTableQueries because users can add a new column without making any changes to any other column in all the tables (in which case, alterTableQueries won't fire)
-            // console.log('alterTableQueries\n', alterTableQueries);
+            console.log('alterTableQueries:', alterTableQueries);
 
             await db.queryObject(alterTableQueries);
             alterTableQueries = ``;
