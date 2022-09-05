@@ -1,5 +1,6 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
 import { writeQueryText } from "../../utils/fileTextWriters.ts";
+import userUri from '../../user/uri.ts';
 
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
@@ -14,7 +15,7 @@ export const handler: Handlers = {
 
     // console.log("In the handler");
     //TODO: obtain uri from user input
-    const uri: string = '';
+    const uri: string = userUri;
     const queryStr: string = await req.json();
     const str: string = writeQueryText(uri, queryStr);
 
@@ -33,7 +34,7 @@ export const handler: Handlers = {
     // before even sending query to db
     if (error.length) {
       // console.log(error);
-      Deno.removeSync(writePath);
+      // Deno.removeSync(writePath);
       return new Response(JSON.stringify([{ Error: `
         An error occurred while retrieving records from the database. Please check your query syntax.
       `}]));
@@ -41,7 +42,7 @@ export const handler: Handlers = {
     // console.log(output);
     const decoded: string = new TextDecoder().decode(output);
     // console.log(decoded);
-    Deno.removeSync(writePath);
+    // Deno.removeSync(writePath);
     return new Response(decoded);
   },
 };

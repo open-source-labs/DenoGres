@@ -10,6 +10,7 @@ export interface IModel {
 
 // check if first second of query string is a valid model in DB
 export const isValidModel = (queryStr: string): boolean => {
+  // const models = await import('../user/model.ts');
   const modelName = queryStr.split('.')[0];
   const modelsDict: IModel = {};
   for (const key in models) {

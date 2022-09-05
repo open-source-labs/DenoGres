@@ -16,10 +16,10 @@ export interface IQueryObject {
 
 export default function Console() {
   //TODO: Currently state here is set as dummy data
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
   const [queryName, setQueryName] = useState<string>("");
   const [queryText, setQueryText] = useState<string>("");
-  const [modelText, setModelText] = useState("");
+  const [modelText, setModelText] = useState<string>("");
 
   const [records, setRecords] = useState<IRecord[]>([]);
   const [queriesList, setQueriesList] = useState<IQueryObject[]>(queriesJson);
@@ -29,6 +29,7 @@ export default function Console() {
   // TODO: some useEffect or similar to fetch prev. saved queriesList on first load
   // since this list might eventually live on a DB instead of locally
 
+  // Saves query object in local JSON file and reset query name/text fields
   const handleSave = async (e: MouseEvent) => {
     //TODO: Put a save function here, fetch data from server
     e.preventDefault();
@@ -37,9 +38,7 @@ export default function Console() {
       queryName,
       queryText
     }
-    await setQueriesList([...queriesList, newQuery]);
-    // const writePath: string = '../data/queries.json';
-    // Deno.writeFileSync(writePath, queriesList)
+    setQueriesList([...queriesList, newQuery]);
     await fetch('/api/handleQuerySave', {
       method: "POST",
       body: JSON.stringify(newQuery)
@@ -48,6 +47,7 @@ export default function Console() {
     setQueryText('');
   };
 
+  // Runs query and updates state to render result
   const handleRun = async (e: MouseEvent) => {
     //TODO: Put a run function here, fetch data from server
     e.preventDefault();
@@ -56,7 +56,7 @@ export default function Console() {
       body: JSON.stringify(queryText)
     });
     // console.log(res.body);
-    // type of data seems to actually be the interface corresponding to which model
+    // Type of data seems to actually be the interface corresponding to which model
     // we are calling method on! maybe can obtain from user supplied model.ts?
     const data: object[] = await res.json();
     // console.log(queryName);
@@ -65,6 +65,19 @@ export default function Console() {
     // console.log(typeof data);
     setRecords(data);
   };
+
+  // save user supplied model.ts locally for reference
+  const handleModelSave = async (e: MouseEvent) => {
+    e.preventDefault();
+    await fetch('/api/handleModelSave', {
+      method: "POST",
+      body: JSON.stringify(modelText)
+    });
+    // after model.ts has been saved, server can return an array of strings 
+    // representing names of models in the file
+    // these can be displayed on the left hand side under "availale models"
+    // stretch: clicking name of model pulls up its schema
+  }
 
   // map saved queries to display components
   const savedQueries = queriesList.map((ele, idx) => {
@@ -167,6 +180,13 @@ export default function Console() {
                       <div
                         className={tw`flex items-center justify-end p-6 border-solid border-slate-200 rounded-b`}
                       >
+                        <button
+                          className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
+                          type="button"
+                          onClick={handleModelSave}
+                        >
+                          Save
+                        </button>
                         <button
                           className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
                           type="button"
