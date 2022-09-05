@@ -14,7 +14,7 @@ export const handler: Handlers = {
 
     // console.log("In the handler");
     //TODO: obtain uri from user input
-    const uri: string = 'postgres://fzggghbk:yuXc_N9fnsXb-g8HFEH_ujg5JB5O4urH@heffalump.db.elephantsql.com/fzggghbk';
+    const uri: string = '';
     const queryStr: string = await req.json();
     const str: string = writeQueryText(uri, queryStr);
 
