@@ -1,4 +1,5 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
+import { IQueryObject } from '../../islands/Console.tsx';
 // import { writeQueryText } from "../../utils/fileTextWriters.ts";
 
 export const handler: Handlers = {
@@ -7,9 +8,9 @@ export const handler: Handlers = {
     const newQuery: string = await req.json();
 
     const path: string = './application/data/queries.json';
-    
-    // need to read from file, parse out the array, push new obj into that array, and then write it!
-    // Deno.writeTextFileSync(path, JSON.stringify([newQuery]));
+    const savedQueries:  = JSON.parse(Deno.readTextFileSync(path));
+    savedQueries.push(newQuery);
+    Deno.writeTextFileSync(path, JSON.stringify(savedQueries));
 
     return new Response('Successfully saved query!', { status: 200 });
   },

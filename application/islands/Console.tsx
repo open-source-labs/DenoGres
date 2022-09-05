@@ -3,7 +3,7 @@ import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
 import Record from "../components/Record.tsx";
-// import queriesJson from "../data/queries.json" assert { type: "json" };
+import queriesJson from "../data/queries.json" assert { type: "json" };
 import { nanoid } from "nanoid";
 
 export interface IRecord {};
@@ -22,7 +22,7 @@ export default function Console() {
   const [modelText, setModelText] = useState("");
 
   const [records, setRecords] = useState<IRecord[]>([]);
-  const [queriesList, setQueriesList] = useState<IQueryObject[]>([]);
+  const [queriesList, setQueriesList] = useState<IQueryObject[]>(queriesJson);
 
   // ----EVENT LISTENERS -----
 
