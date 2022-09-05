@@ -11,6 +11,8 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
 import { QueryObjectResult } from "https://deno.land/x/postgres@v0.16.1/query/query.ts";
 
+import { enumParser } from "../src/functions/enumParser.ts";
+
 // const cleanedText = modelText
 //   .replaceAll(
 //     /export interface \w+ *\{[\n* *.*: \w+,*]+\}/g,
@@ -157,7 +159,7 @@ const tableForeignKeysQuery = `
 
 // DisconnectDb(db);
 
-await sync(true);
+// await sync(true);
 
 // const models = modelParser();
 
@@ -186,3 +188,41 @@ await sync(true);
 // }
 
 // DisconnectDb(db);
+
+// const test = modelParser();
+
+// console.log(test);
+
+// const [testTable] = await introspect();
+
+// console.log(testTable);
+
+const test = enumParser();
+
+// console.log(test);
+
+
+const modelText = Deno.readTextFileSync('./models/model.ts');
+
+
+// console.log(JSON.stringify(modelText));
+
+// const JSONmodelText = JSON.stringify(modelText);
+
+const enumText = modelText.replaceAll(/export interface \w+ {[\n +\w+: \w+]+}/g, '').
+replaceAll("import { Model } from 'https://deno.land/x/denogres/mod.ts'\n", ''). // initial wording
+replaceAll(/\/\/ user model definition comes here\n+/g, '').
+replaceAll(/\n */g, '')
+// matchAll(/export enum \w+ {[\n *\w+\,*]+}/g) // remove enums for now, will need different logic to parse these
+
+console.log(enumText);
+
+// console.log(JSONmodelText);
+
+// const testMatch = modelText.match(/export enum [\s\S]*\n}\n\n$/);
+const testMatch = modelText.match(/export enum \w+ {[\n *\w+\,*]+}/g);
+
+//matchAll(/export enum \w+ {[\n *\w+\,*]+}/g)
+// const testMatch = JSONmodelText.match(/export enum \s*/gm);
+
+console.log(testMatch);

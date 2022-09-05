@@ -3,42 +3,48 @@ import { Model } from 'https://deno.land/x/denogres/mod.ts'
 
 
 export interface Species {
-  _id: number
   average_lifespan: string
-  name: string
-  skin_colors: string
   hair_colors: string
-  eye_colors: string
-  classification: string
-  homeworld_id: bigint
+  skin_colors: string
+  _id: number
   language: string
+  homeworld_id: bigint
+  eye_colors: string
+  name: string
+  classification: string
   average_height: string
 }
 
 export class Species extends Model {
   static table = 'species';
   static columns = {
+    average_lifespan: {
+      type: 'varchar',
+    },
+    hair_colors: {
+      type: 'varchar',
+    },
+    skin_colors: {
+      type: 'varchar',
+    },
     _id: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
     },
-    average_lifespan: {
+    language: {
+      type: 'varchar',
+    },
+    homeworld_id: {
+      type: 'int8',
+    },
+    eye_colors: {
       type: 'varchar',
     },
     name: {
       type: 'varchar',
       notNull: true,
-    },
-    skin_colors: {
-      type: 'varchar',
-    },
-    hair_colors: {
-      type: 'varchar',
-    },
-    eye_colors: {
-      type: 'varchar',
     },
     classification: {
       type: 'varchar',
@@ -51,22 +57,15 @@ export class Species extends Model {
 
 
 export interface Person {
-  species_id: bigint
   _id: number
   name: string
+  species_id: bigint
+  current_mood: keyof typeof Mood
 }
 
 export class Person extends Model {
   static table = 'people';
   static columns = {
-    species_id: {
-      type: 'int8',
-      notNull: true,
-      association: {
-        table: 'species',
-        mappedCol: '_id',
-      }
-    },
     _id: {
       type: 'int4',
       notNull: true,
@@ -77,6 +76,43 @@ export class Person extends Model {
       type: 'varchar',
       notNull: true,
     },
+    species_id: {
+      type: 'int8',
+      notNull: true,
+      association: {
+        table: 'species',
+        mappedCol: '_id',
+      }
+    },
+    current_mood: {
+      type: 'enum',
+      enumName: 'mood'
+    },
   }
+}
+
+export enum Mood {
+sad,
+ok,
+happy,
+elated,
+}
+
+export enum Mood2 {
+sad,
+ok,
+happy,
+}
+
+export enum Mood3 {
+sad,
+ok,
+happy,
+}
+
+export enum Mood4 {
+sad,
+ok,
+happy,
 }
 
