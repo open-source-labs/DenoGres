@@ -44,26 +44,6 @@ export class Model {
 
   private record = {};
 
-  private async primaryKey() {
-    Model.sql = `SELECT a.attname
-      FROM pg_index i
-      JOIN pg_attribute a ON a.attrelid = i.indrelid
-      AND a.attnum = ANY(i.indkey)
-      WHERE i.indrelid = '${
-        Object.getPrototypeOf(this).constructor.table
-      }'::regclass
-      AND i.indisprimary;`
-    const pk = await Model.query();
-    let primaryKey = '';
-
-    for (let i = 0; i < pk.length; i++) {
-      const a = pk[i] as IpkObj;
-      primaryKey += a.attname;
-      if (i < pk.length - 1) primaryKey += ', ';
-    }
-    return primaryKey;
-  }
-
   async save() {
     const table = Object.getPrototypeOf(this).constructor.table;
     const keys = Object.keys(this).filter(keys => keys !== 'record');

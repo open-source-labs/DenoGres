@@ -43,3 +43,4 @@ function displayHelpMsg() {
 }
 
 export { Model } from './src/class/Model.ts'
+export { manyToMany } from './src/class/Model.ts'
