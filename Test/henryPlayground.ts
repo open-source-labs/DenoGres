@@ -4,6 +4,8 @@ import { getDbData, introspect } from "../src/functions/introspect.ts";
 
 import { sync } from "../src/functions/sync.ts";
 
+import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
+
 // import { parse } from "https://deno.land/std@0.152.0/path/posix.ts";
 
 import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
@@ -57,6 +59,24 @@ import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
 // console.log(test2);
 
 // sync();
+
+const foreignKeyQuery = `
+SELECT conrelid::regclass AS table_name, 
+conname AS foreign_key, 
+pg_get_constraintdef(oid) 
+FROM   pg_constraint 
+WHERE  contype = 'f' 
+AND    connamespace = 'public'::regnamespace   
+ORDER  BY conrelid::regclass::text, contype DESC;
+`
+const db = await ConnectDb();
+
+// console.log(await db.queryObject(foreignKeyQuery));
+const foreignKeys = await db.queryObject(foreignKeyQuery);
+
+console.log(foreignKeys.rows);
+
+DisconnectDb(db);
 
 const models = modelParser();
 
