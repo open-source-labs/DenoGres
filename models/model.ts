@@ -4,16 +4,15 @@ import { Model } from 'https://deno.land/x/denogres/mod.ts'
 
 export interface Species {
   average_height: string
-  classification: string
-  name: string
-  skin_colors: string
-  homeworld_id: bigint
-  nameid: string
-  language: string
-  eye_colors: string
-  _id: number
-  hair_colors: string
   average_lifespan: string
+  hair_colors: string
+  _id: number
+  eye_colors: string
+  language: string
+  homeworld_id: bigint
+  skin_colors: string
+  name: string
+  classification: string
 }
 
 export class Species extends Model {
@@ -22,29 +21,11 @@ export class Species extends Model {
     average_height: {
       type: 'varchar',
     },
-    classification: {
+    average_lifespan: {
       type: 'varchar',
     },
-    name: {
+    hair_colors: {
       type: 'varchar',
-      notNull: true,
-    },
-    skin_colors: {
-      type: 'varchar',
-    },
-    homeworld_id: {
-      type: 'int8',
-    },
-    nameid: {
-      type: 'varchar',
-    },
-    language: {
-      type: 'varchar',
-      notNull: true,
-    },
-    eye_colors: {
-      type: 'varchar',
-      notNull: true,
     },
     _id: {
       type: 'int4',
@@ -52,10 +33,23 @@ export class Species extends Model {
       primaryKey: true,
       autoIncrement: true,
     },
-    hair_colors: {
+    eye_colors: {
       type: 'varchar',
     },
-    average_lifespan: {
+    language: {
+      type: 'varchar',
+    },
+    homeworld_id: {
+      type: 'int8',
+    },
+    skin_colors: {
+      type: 'varchar',
+    },
+    name: {
+      type: 'varchar',
+      notNull: true,
+    },
+    classification: {
       type: 'varchar',
     },
   }
@@ -63,78 +57,29 @@ export class Species extends Model {
 
 
 export interface Person {
+  _id: number
   name: string
   species_id: bigint
-  _id: number
 }
 
 export class Person extends Model {
   static table = 'people';
   static columns = {
-    name: {
-      type: 'varchar',
-      notNull: true,
-      unique: true,
-    },
-    species_id: {
-      type: 'int8',
-      notNull: true,
-      association: {
-        table: 'species',
-        mappedCol: '_id',
-      }
-    },
     _id: {
       type: 'int4',
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
-    },
-  }
-}
-
-
-export interface Dog {
-  name_three: string
-  name_two: string
-  name: string
-  _id: number
-  species_id: bigint
-}
-
-export class Dog extends Model {
-  static table = 'dog';
-  static columns = {
-    name_three: {
-      type: 'varchar',
-      notNull: true,
-      unique: true,
-      defaultVal: 'hello',
-    },
-    name_two: {
-      type: 'varchar',
-      unique: true,
-    },
-    name: {
-      type: 'varchar',
-      notNull: true,
-      unique: true,
-    },
-    _id: {
-      type: 'int4',
-      notNull: true,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    species_id: {
-      type: 'int8',
-      notNull: true,
       association: {
         table: 'species',
         mappedCol: '_id',
       }
     },
-    species_id2: {
+    name: {
+      type: 'varchar',
+      notNull: true,
+    },
+    species_id: {
       type: 'int8',
       notNull: true,
       association: {

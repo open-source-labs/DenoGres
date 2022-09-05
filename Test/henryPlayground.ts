@@ -4,6 +4,8 @@ import { introspect } from "../src/functions/introspect.ts";
 
 import { sync } from "../src/functions/sync.ts";
 
+import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
+
 // const modelText = Deno.readTextFileSync("./models/model.ts");
 
 // console.log(modelText);
@@ -46,6 +48,24 @@ import { sync } from "../src/functions/sync.ts";
 
 // sync();
 
+const foreignKeyQuery = `
+SELECT conrelid::regclass AS table_name, 
+conname AS foreign_key, 
+pg_get_constraintdef(oid) 
+FROM   pg_constraint 
+WHERE  contype = 'f' 
+AND    connamespace = 'public'::regnamespace   
+ORDER  BY conrelid::regclass::text, contype DESC;
+`
+const db = await ConnectDb();
+
+// console.log(await db.queryObject(foreignKeyQuery));
+const foreignKeys = await db.queryObject(foreignKeyQuery);
+
+console.log(foreignKeys.rows);
+
+DisconnectDb(db);
+
 const models = modelParser();
 
 // console.log("models\n", models);
@@ -70,7 +90,7 @@ for (const model of models) {
 
 // console.log(associations);
 
-await sync(true);
+// await sync(true);
 // await sync();
 
 // const modelArray = modelParser();

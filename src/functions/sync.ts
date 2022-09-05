@@ -290,9 +290,9 @@ export const sync = async (overwrite = false) => {
 
             // ? removed single quotes surroundign ${table}(${mappedCol})
             addColumnQuery += `
-              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk${associationIndex} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
             `
-            associationIndex++;
+            // ? associationIndex++;
           }
 
           console.log(addColumnQuery);
