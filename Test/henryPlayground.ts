@@ -9,18 +9,7 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 // import { parse } from "https://deno.land/std@0.152.0/path/posix.ts";
 
 import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
-
-// import makeloc from 'https://x.nest.land/dirname@v1.1.2/mod.ts'
-
-// const { __dirname,  __filename } = makeloc(import.meta)
-
-// import { path } from 'npm:path';
-
-// import { resolve } from "https://deno.land/std@0.154.0/path/posix.ts";
-
-// const modelText = Deno.readTextFileSync("./models/model.ts");
-
-// console.log(modelText);
+import { QueryObjectResult } from "https://deno.land/x/postgres@v0.16.1/query/query.ts";
 
 // const cleanedText = modelText
 //   .replaceAll(
@@ -60,80 +49,140 @@ import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
 
 // sync();
 
-const foreignKeyQuery = `
-SELECT conrelid::regclass AS table_name, 
-conname AS foreign_key, 
-pg_get_constraintdef(oid) 
-FROM   pg_constraint 
-WHERE  contype = 'f' 
-AND    connamespace = 'public'::regnamespace   
-ORDER  BY conrelid::regclass::text, contype DESC;
-`
-const db = await ConnectDb();
-
-// console.log(await db.queryObject(foreignKeyQuery));
-const foreignKeys = await db.queryObject(foreignKeyQuery);
-
-console.log(foreignKeys.rows);
-
-DisconnectDb(db);
-
-const models = modelParser();
-
-// console.log("models\n", models);
-const associations = [];
-
-for (const model of models) {
-  for (const columnName in model.columns) {
-    // console.log(columnName);
-
-    if (model.columns[columnName].association) {
-      // console.log(model.)
-      // console.log(model.columns[columnName]);
-
-      associations.push({
-        columnName: columnName,
-        table: model.columns[columnName].association?.table,
-        mappedCol: model.columns[columnName].association?.mappedCol,
-      });
-    }
-  }
-}
-
-// console.log(associations);
-
 // await sync(true);
 
-//       Deno.run({
-//   cmd: ["deno", "fmt"],
-// });
+// const models = modelParser();
 
-// console.log(parse('./henryPlayground.ts'));
+// console.log("models\n", models);
+// const associations = [];
 
-// console.log(resolve('./henryPlayground.ts'));
-// console.log(resolve('./Test/henryPlayground.ts'));
+// for (const model of models) {
+//   for (const columnName in model.columns) {
+//     // console.log(columnName);
 
-Deno.run({ cmd: ["deno", "fmt", resolve("./Test/henryPlayground.ts")] });
+//     if (model.columns[columnName].association) {
+//       // console.log(model.)
+//       // console.log(model.columns[columnName]);
 
-// Deno.run({})
+//       associations.push({
+//         columnName: columnName,
+//         table: model.columns[columnName].association?.table,
+//         mappedCol: model.columns[columnName].association?.mappedCol,
+//       });
+//     }
+//   }
+// }
 
-//  Deno.run
-// await sync();
+// TODO Deno.run({ cmd: ["deno", "fmt", resolve("./Test/henryPlayground.ts")] });
 
-// console.log(await getDbData());
+// ? Below is testing out the foreign key functionality
+const foreignKeysQuery = `
+  SELECT conrelid::regclass AS table_name, 
+  conname AS foreign_key, 
+  pg_get_constraintdef(oid) 
+  FROM   pg_constraint 
+  WHERE  contype = 'f' 
+  AND    connamespace = 'public'::regnamespace   
+  ORDER  BY conrelid::regclass::text, contype DESC;
+`;
 
-// const test = await getDbData();
+const tableForeignKeysQuery = `
+  SELECT conrelid::regclass AS table_name, 
+        conname AS foreign_key, 
+        pg_get_constraintdef(oid) 
+  FROM   pg_constraint 
+  WHERE  contype = 'f' and conrelid::regclass::text = 'people' 
+  AND    connamespace = 'public'::regnamespace   
+  ORDER  BY conrelid::regclass::text, contype DESC;  
+`;
 
-// console.log(test.constraintList);
+// interface ForeignKey {
+//   table_name: string;
+//   foreign_key: string;
+//   pg_get_constraintdef: string;
+// }
 
-// const modelArray = modelParser();
+// interface ForeignKeys extends Array<ForeignKey>{};
 
-// const speciesAssociation = modelArray[1].columns.species_id.association;
+// const db = await ConnectDb();
 
-// console.log(
-//   "species_id association",
-//   speciesAssociation,
-// );
+// console.log(await db.queryObject(foreignKeyQuery));
+// const foreignKeys = await db.queryObject(tableForeignKeysQuery);
 
-// console.log(speciesAssociation?.table);
-// console.log(speciesAssociation?.mappedCol);
+// console.log(foreignKeys);
+
+// const tableForeignKeys: ForeignKey[] | unknown[] = foreignKeys.rows;
+// let tableForeignKey;
+
+// console.log(tableForeignKeys);
+
+// console.log(tableForeignKeys);
+
+// type foreignKey = Object;
+
+/*
+  table_name: string;
+  foreign_key: string;
+  pg_get_constraintdef: string;
+*/
+
+// let mappedCol = "_id";
+// let table = "species";
+// let columnName = "_id";
+
+// const isForeignKeys = (records: ForeignKey[] | unknown[]): records is ForeignKey[] => {
+//   return records.every((record: any) => {
+//     return (
+//       "table_name" in record &&
+//       "foreign_key" in record &&
+//       "pg_get_constraintdef" in record
+//     );
+//   })
+// }
+
+// if (isForeignKeys(tableForeignKeys)) {
+//   let foreignKeyDefinition;
+//   for (const foreignKey of tableForeignKeys) {
+//     // console.log(foreignKey.pg_get_constraintdef);
+//     foreignKeyDefinition = foreignKey.pg_get_constraintdef;
+
+//     if (foreignKeyDefinition.includes(`(${columnName})`) && foreignKeyDefinition.includes(`${table}(${mappedCol})`)) {
+//       tableForeignKey = foreignKey;
+//       break;
+//     }
+//   }
+// }
+
+// console.log('TABLE FOREIGN KEY FOUND!',tableForeignKey);
+
+// DisconnectDb(db);
+
+await sync(true);
+
+// const models = modelParser();
+
+// console.log(models);
+
+// let modelNameList = models.map((model) => model.table);
+
+// const modelNameList: {[key: string]: string} = {};
+
+// for (const model of models) {
+//   modelNameList[model.table] = model.table;
+// }
+
+// console.log(modelNameList);
+
+// // console.log(modelNameList);
+
+// const db = await ConnectDb();
+
+// const [dbTables] = await introspect();
+
+// for (const table in dbTables) {
+//   if (!(modelNameList.table)) {
+//     console.log("Deleting", table);
+//   }
+// }
+
+// DisconnectDb(db);
