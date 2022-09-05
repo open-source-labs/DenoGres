@@ -1,8 +1,20 @@
 import { modelParser } from "../src/functions/modelParser.ts";
 
-import { introspect } from "../src/functions/introspect.ts";
+import { getDbData, introspect } from "../src/functions/introspect.ts";
 
 import { sync } from "../src/functions/sync.ts";
+
+// import { parse } from "https://deno.land/std@0.152.0/path/posix.ts";
+
+import { resolve } from "https://deno.land/std@0.152.0/path/posix.ts";
+
+// import makeloc from 'https://x.nest.land/dirname@v1.1.2/mod.ts'
+
+// const { __dirname,  __filename } = makeloc(import.meta)
+
+// import { path } from 'npm:path';
+
+// import { resolve } from "https://deno.land/std@0.154.0/path/posix.ts";
 
 // const modelText = Deno.readTextFileSync("./models/model.ts");
 
@@ -70,8 +82,29 @@ for (const model of models) {
 
 // console.log(associations);
 
-await sync(true);
+// await sync(true);
+
+//       Deno.run({
+//   cmd: ["deno", "fmt"],
+// });
+
+// console.log(parse('./henryPlayground.ts'));
+
+// console.log(resolve('./henryPlayground.ts'));
+// console.log(resolve('./Test/henryPlayground.ts'));
+
+Deno.run({ cmd: ["deno", "fmt", resolve("./Test/henryPlayground.ts")] });
+
+// Deno.run({})
+
+//  Deno.run
 // await sync();
+
+// console.log(await getDbData());
+
+// const test = await getDbData();
+
+// console.log(test.constraintList);
 
 // const modelArray = modelParser();
 

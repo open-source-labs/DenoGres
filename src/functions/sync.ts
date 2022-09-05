@@ -204,12 +204,16 @@ export const sync = async (overwrite = false) => {
         association?: { rel_type?: string, table: string, mappedCol: string}
       */
 
+      let index = 0;
+
       for (const columnName of columnNames) {
         // * START OF ADD COLUMN QUERY
         if (!(columnName in table.columns)) {
           // ? changed the last variable below to ${model.columns[columnName].type}
           let addColumnQuery = `
-            ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${model.columns[columnName].type}
+            ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${
+            model.columns[columnName].type
+          }
           `;
 
           // let addColumnQuery = "";
@@ -270,7 +274,7 @@ export const sync = async (overwrite = false) => {
           addColumnQuery += `;`;
           // ? query looks bit cleaner with code below but isn't necessary
           // addColumnQuery = addColumnQuery.slice(0, addColumnQuery.length - 1) + `;`;
-          
+
           let associationIndex = 0;
           for (const association of associations) {
             const { columnName, table, mappedCol } = association;
@@ -290,9 +294,9 @@ export const sync = async (overwrite = false) => {
 
             // ? removed single quotes surroundign ${table}(${mappedCol})
             addColumnQuery += `
-              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk${associationIndex} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
-            `
-            associationIndex++;
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+            `;
+            // ? associationIndex++;
           }
 
           console.log(addColumnQuery);
@@ -405,18 +409,20 @@ export const sync = async (overwrite = false) => {
                     `ALTER TABLE ${model.table} DROP CONSTRAINT ${
                       existingPK[0].conname
                     }; ` +
-                    `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                    // ? `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                    `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pk PRIMARY KEY (${columnName});`;
                 }
               } else {
                 // No prior primary key just add the update
                 alterTableQueries +=
-                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                  // ? `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pk PRIMARY KEY (${columnName});`;
               }
             }
           }
           // FOREIGN KEY updated
           // * check foreign key
-          // TODO 
+          // TODO
           if (
             JSON.stringify(columnValues.association) !==
               JSON.stringify(dbColumnValues.association)
@@ -424,14 +430,17 @@ export const sync = async (overwrite = false) => {
             // QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
             // TO OVERWRITE
 
-            console.log('entered JSON STRINGIFY');
+            // console.log('entered JSON STRINGIFY');
 
-            console.log('model.table', model.table);
+            // console.log('model.table', model.table);
 
-            console.log('columnValues Association', columnValues.association);
+            console.log("columnValues Association", columnValues.association);
 
             // console.log(`dbColumnValuesAssociation ${dbColumnValues.association}`);
-            console.log('dbColumnValuesAssociation', dbColumnValues.association);
+            console.log(
+              "dbColumnValuesAssociation",
+              dbColumnValues.association,
+            );
             // console.log(dbColumnValues.association);
 
             if (!overwrite && columnValues.association === undefined) {
@@ -441,12 +450,18 @@ export const sync = async (overwrite = false) => {
               );
             } else if (overwrite && columnValues.association === undefined) {
               // remove exisisting foreign key, overwrite true
-              // alterTableQueries +=
-              //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
+              // ? alterTableQueries +=
+              // ?  `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
+
+              // TODO
               alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_fk0; `;
+                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_fk${index}; `;
+
+              // ${model.table}_fk${index++}
             } else if (dbColumnValues.association === undefined) {
               // add new foreign key to column
+
+              // TODO
               alterTableQueries +=
                 `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
             } else if (!overwrite) {
@@ -458,7 +473,7 @@ export const sync = async (overwrite = false) => {
               // alterTableQueries +=
               //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
               //   `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
-              // ? 
+              // ?
               alterTableQueries +=
                 `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
                 `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
@@ -467,7 +482,7 @@ export const sync = async (overwrite = false) => {
 
           if (alterTableQueries !== ``) {
             // ? need addColumnQuery to run separately with alterTableQueries because users can add a new column without making any changes to any other column in all the tables (in which case, alterTableQueries won't fire)
-            console.log('alterTableQueries:', alterTableQueries);
+            console.log("alterTableQueries:", alterTableQueries);
 
             await db.queryObject(alterTableQueries);
             alterTableQueries = ``;
