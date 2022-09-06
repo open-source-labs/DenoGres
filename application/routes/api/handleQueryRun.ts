@@ -1,27 +1,22 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
 import { writeQueryText } from "../../utils/fileTextWriters.ts";
+import findInputError, { IError } from '../../utils/inputChecker.ts';
 import userUri from '../../user/uri.ts';
 
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
 
-    // custom stringify helper func whenever there's bigint
-    // const stringify = (obj: object): string => {
-    //   return JSON.stringify(
-    //     obj,
-    //     (key: string, value: any): void => typeof value === "bigint" ? value.toString() : value,
-    //   );
-    // };
-
-    // console.log("In the handler");
-    //TODO: obtain uri from user input
     const uri: string = userUri;
     const queryStr: string = await req.json();
-    const str: string = writeQueryText(uri, queryStr);
+    const errorObj: IError | null = await findInputError(queryStr);
+    if (errorObj) {
+      return new Response(JSON.stringify([errorObj]));
+    }
 
+    const fileStr: string = writeQueryText(uri, queryStr);
     const writePath: string = './application/data/query.ts';
-    Deno.writeTextFileSync(writePath, str);
-    // const importPath: string = '../../data/query.ts';
+    Deno.writeTextFileSync(writePath, fileStr);
+    
     const cmd: Array<string> = ['deno', 'run', '-A', `${writePath}`];
     const process = Deno.run({ cmd, stdout: 'piped', stderr: 'piped' });
     const [ output, error ]: [ Uint8Array, Uint8Array ] = await Promise.all([
@@ -29,21 +24,20 @@ export const handler: Handlers = {
       process.stderrOutput()
     ]);
     process.close();
-
-    // this currently handles all DB errors. could add more validation for syntax
-    // before even sending query to db
+    // this currently handles all other DB errors; 
+    // can look into more robust & descriptive error handling
     if (error.length) {
       // console.log(error);
-      // Deno.removeSync(writePath);
+      Deno.removeSync(writePath);
       return new Response(JSON.stringify([{ Error: `
         An error occurred while retrieving records from the database. Please check your query syntax.
       `}]));
     }
     // console.log(output);
-    const decoded: string = new TextDecoder().decode(output);
+    const records: string = new TextDecoder().decode(output);
     // console.log(decoded);
-    // Deno.removeSync(writePath);
-    return new Response(decoded);
+    Deno.removeSync(writePath);
+    return new Response(records);
   },
 };
 // export const handler: Handlers = {
