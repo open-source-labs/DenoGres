@@ -22,7 +22,12 @@ switch (Deno.args[0]) {
     break;
   }
   case "--db-sync": {
+<<<<<<< HEAD
     Deno.args[1] === "-x" ? sync(true) : sync();
+=======
+    Deno.args[1] === "-x" ? sync(true) : sync(true);
+    // -CASCADE ? DROP CASCADE
+>>>>>>> dev
     break;
   }
   case "-h": {

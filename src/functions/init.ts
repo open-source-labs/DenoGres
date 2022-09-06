@@ -22,7 +22,7 @@ TEST_DB_URI=" "
 // inside the model folder, create model.ts file with boilerplate code
     const modelFilePath = "./models/";
     const modelFileContent = `    
-import { Model } from 'https://deno.land/x/denogres/mod.ts'
+import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
 // user model definition comes here    
     `
     ensureDir(modelFilePath).then(() => {

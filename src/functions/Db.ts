@@ -1,6 +1,6 @@
 import "https://deno.land/x/dotenv/load.ts";
 
-import { Pool, PoolClient } from '../../deps.ts'
+import { Pool, PoolClient } from "../../deps.ts";
 
 //import * as postgres from "https://deno.land/x/postgres/mod.ts";
 
@@ -20,11 +20,10 @@ export const ConnectDb = async (inputUri?: string) => {
   const pool = new Pool(dbUri, POOL_CONNECTIONS, true);
   const connection = await pool.connect();
   return connection;
-}
+};
 
 export const DisconnectDb = async (connection: PoolClient) => {
-  
   connection.release();
   await connection.end();
   connection.release();
-}
+};

@@ -1,4 +1,4 @@
-// import { Model } from 'https://deno.land/x/denogres/mod.ts'
+// import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
 import { Model } from '../src/class/Model.ts';
 // user model definition comes here
 

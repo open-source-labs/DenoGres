@@ -30,7 +30,7 @@ export default function index() {
                   <br></br>
                   >`deno install --allow-read --allow-write --allow-net
                   --allow-env --name denogres
-                  https://deno.land/x/denogres/mod.ts`
+                  https://deno.land/x/denogresdev/mod.ts`
                   <br></br>
                   After installation is complete, ensure deno is added to PATH.
                 </p>
