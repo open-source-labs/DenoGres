@@ -9,13 +9,17 @@ import { Model } from "../src/class/Model.ts";
 import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import * as denogres from "../models/model.ts";
 
-Deno.test(async function helloWorld3() {
-  const db = await ConnectDb(
-    // * starwars
-    // "postgres://obdwuryp:EcSMdYz0mPXGgiQSD4_8vLEYPjkHOJ5e@heffalump.db.elephantsql.com/obdwuryp",
-  );
+Deno.test(async function insertQuery() {
+  // const db = await ConnectDb(
+  //   // * starwars
+  //   // "postgres://obdwuryp:EcSMdYz0mPXGgiQSD4_8vLEYPjkHOJ5e@heffalump.db.elephantsql.com/obdwuryp",
+  // );
 
-  const people = [
+  const desiredQuery = `
+    INSERT INTO people (name, _id, species_id) VALUES ('john', '10', '2'), ('david', '12', '2'), ('jessica', '13', '2');
+  `;
+
+  const people: any[] = [
     {
       name: "john",
       _id: 10,
@@ -33,33 +37,49 @@ Deno.test(async function helloWorld3() {
     },
   ];
 
-  let insertQuery = `INSERT INTO ${denogres.Person.table} (${Object.keys(denogres.Person.columns)}) VALUES `;
-  // let columns = `(`;
-  let values = ``;
+  let columns = "";
 
-  console.log('insertQuery', insertQuery);
+  for (const column in people[0]) {
+    columns += `${column}, `;
+  }
 
-  // for (const column in denogres.Person.columns) {
-  //   console.log('column in denogres.PErson.columns', column);
-  //   columns += `${column}, `;
-  // }
+  columns = columns.slice(0, columns.length - 2);
+
+  let insertQuery = `INSERT INTO ${denogres.Person.table} (${columns}) VALUES `;
+
+  let value;
+  let values = "";
 
   for (const person of people) {
-    values += `(${Object.values(person)}), `;
+    value = "(";
+    for (const key in person) {
+      value += `'${person[key]}', `;
+    }
+    value = value.slice(0, value.length - 2) + "), ";
+    values += value;
   }
 
   // console.log(columns, values);
 
-  values = values.slice(0, values.length - 2) + ';';
+  values = values.slice(0, values.length - 2) + ";";
 
-  console.log(values);
+  // console.log(values);
 
   insertQuery += values;
 
-  console.log('final insertQuery', insertQuery);
+  // console.log("final insertQuery");
 
+  // console.log(insertQuery);
 
-  DisconnectDb(db);
+  console.log(desiredQuery.replace(/\s/gm, ""));
+
+  console.log(insertQuery.replace(/\s/gm, ""));
+
+  assertEquals(
+    desiredQuery.replace(/\s/gm, ""),
+    insertQuery.replace(/\s/gm, ""),
+  );
+  // DisconnectDb(db);
 });
 
 // const people = denogres.Person;
