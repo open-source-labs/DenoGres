@@ -1,6 +1,6 @@
 [
   {
-    "_id": 1,
+    "_id": "1",
     "name": "TestDB",
     "address": "heffalump.db.elephantsql.com",
     "port": "5432",
@@ -9,7 +9,7 @@
     "password": "yuXc_N9fnsXb-g8HFEH_ujg5JB5O4urH"
   },
   {
-    "_id": 2,
+    "_id": "2",
     "name": "humanResources",
     "address": "heffalump.db.elephantsql.com",
     "port": "5432",
@@ -18,7 +18,7 @@
     "password": "5rYgSMAxUocIMVBBeREASzlqxUYvBRG1"
   },
   {
-    "_id": 3,
+    "_id": "3",
     "name": "starwars",
     "address": "heffalump.db.elephantsql.com",
     "port": "5432",

@@ -34,9 +34,18 @@ switch (Deno.args[0]) {
     break;
   }
   case "--gui": {
-    const app = Deno.run({ cmd: ["deno", "run", "-A", "webview_script.ts"] });
-    console.log('app');
-    app.status();
+    const app = Deno.run({
+      cmd: [
+        "deno",
+        "run",
+        "-A",
+        // FOR DEVELOPMENT
+        // "webview_script.ts",
+        // FOR PRODUCTION
+        "https://deno.land/x/denogresdev/webview_script.ts",
+      ],
+    });
+    await app.status();
     break;
   }
   default:
