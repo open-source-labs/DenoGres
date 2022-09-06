@@ -2,28 +2,30 @@
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running `dev.ts`.
 
-import * as $0 from "./routes/api/handleModelSave.ts";
-import * as $1 from "./routes/api/handleQueryRun.ts";
-import * as $2 from "./routes/api/handleQuerySave.ts";
-import * as $3 from "./routes/api/writeUriToFile.ts";
-import * as $4 from "./routes/connections.tsx";
-import * as $5 from "./routes/explorer.tsx";
-import * as $6 from "./routes/index.tsx";
-import * as $7 from "./routes/migrations.tsx";
+import * as $0 from "./routes/api/handleConnectionSave.ts";
+import * as $1 from "./routes/api/handleModelSave.ts";
+import * as $2 from "./routes/api/handleQueryRun.ts";
+import * as $3 from "./routes/api/handleQuerySave.ts";
+import * as $4 from "./routes/api/writeUriToFile.ts";
+import * as $5 from "./routes/connections.tsx";
+import * as $6 from "./routes/explorer.tsx";
+import * as $7 from "./routes/index.tsx";
+import * as $8 from "./routes/migrations.tsx";
 import * as $$0 from "./islands/Connections.tsx";
 import * as $$1 from "./islands/Console.tsx";
 import * as $$2 from "./islands/Migrations.tsx";
 
 const manifest = {
   routes: {
-    "./routes/api/handleModelSave.ts": $0,
-    "./routes/api/handleQueryRun.ts": $1,
-    "./routes/api/handleQuerySave.ts": $2,
-    "./routes/api/writeUriToFile.ts": $3,
-    "./routes/connections.tsx": $4,
-    "./routes/explorer.tsx": $5,
-    "./routes/index.tsx": $6,
-    "./routes/migrations.tsx": $7,
+    "./routes/api/handleConnectionSave.ts": $0,
+    "./routes/api/handleModelSave.ts": $1,
+    "./routes/api/handleQueryRun.ts": $2,
+    "./routes/api/handleQuerySave.ts": $3,
+    "./routes/api/writeUriToFile.ts": $4,
+    "./routes/connections.tsx": $5,
+    "./routes/explorer.tsx": $6,
+    "./routes/index.tsx": $7,
+    "./routes/migrations.tsx": $8,
   },
   islands: {
     "./islands/Connections.tsx": $$0,

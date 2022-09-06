@@ -1,4 +1,5 @@
 export const writeQueryText = (uri: string, userQueryStr: string): string => {
+  userQueryStr = userQueryStr.replaceAll('‘', '\'').replaceAll('’', '\'');
   const fullQueryString: string = userQueryStr.slice(0, -2) + '\'' + uri + '\'' + userQueryStr.slice(-2);
   return `
     import * as denogres from '../user/model.ts';\n

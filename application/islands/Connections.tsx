@@ -2,18 +2,28 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
-import { route } from "preact-router";
 import connectionsJson from "../data/connections.json" assert { type: "json" };
+import { nanoid } from "nanoid";
+
+export interface IConnectionObject {
+  _id: string,
+  name: string,
+  address: string,
+  port: string,
+  username: string,
+  defaultdb: string,
+  password: string
+};
 
 // list of saved connections
 export default function Connections() {
-  const [connectList, setconnectList] = useState(connectionsJson);
-  const [connectionName, setconnectionName] = useState("");
-  const [address, setAddress] = useState("");
-  const [port, setPort] = useState("");
-  const [username, setUsername] = useState("");
-  const [defaultDB, setDefaultDB] = useState("");
-  const [password, setPassword] = useState("");
+  const [connectList, setConnectList] = useState<IConnectionObject[]>(connectionsJson);
+  const [connectionName, setconnectionName] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [port, setPort] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [defaultDB, setDefaultDB] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
   // <------------ EVENT LISTENERS ------------>
 
@@ -24,6 +34,22 @@ export default function Connections() {
       method: "POST",
       body: JSON.stringify(uriText)
     });
+
+    const newConnectionObject: IConnectionObject = {
+      _id: nanoid(),
+      name: connectionName,
+      address,
+      port,
+      username,
+      defaultdb: defaultDB,
+      password
+    };
+    setConnectList([...connectList, newConnectionObject]);
+    await fetch('/api/handleConnectionSave', {
+      method: "POST",
+      body: JSON.stringify(newConnectionObject)
+    });
+
     // can add logic to save connection to list on clicking "connect"
     // in future this will be a request to db to save connection assoc. w/ user
 

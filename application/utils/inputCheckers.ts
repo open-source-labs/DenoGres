@@ -14,6 +14,7 @@ export interface IError {
   Error: string;
 }
 
+// current list of supported query methods
 const METHODS: IMethodsDict = {
   query: true,
   select: true,
@@ -56,11 +57,21 @@ const allMethodsAreValid = (methodsArr: string[], methods: IMethodsDict): boolea
   return true;
 };
 
+// helper function to parse query string into array of terms (model name + methods)
+const separateQueryTerms = (queryStr: string): string[] => {
+  return queryStr.replace(/\(.*?\)/g, '').replace(/;$/, '').split('.');
+}
+
+// extract the main CRUD method invoked in this query 
+export const extractType = (queryStr: string): string => {
+  return separateQueryTerms(queryStr)[1];
+}
+
 // check input query string for errors
-export default async (queryStr: string): Promise<IError | null> => {
+export const checkInput = async (queryStr: string): Promise<IError | null> => {
   const importPath: string = '../user/model.ts';
   const models = await import(importPath);
-  const termsArray: string[] = queryStr.replace(/\(.*?\)/g, '').replace(/;$/, '').split('.');
+  const termsArray: string[] = separateQueryTerms(queryStr);
   console.log(termsArray);
   const modelName: string | undefined = termsArray.shift();
   if (!isValidModel(modelName, models)) {
@@ -71,8 +82,6 @@ export default async (queryStr: string): Promise<IError | null> => {
   }
   return null;
 }
-
-
 
 /* 
 Currently, all other query syntax errors will be handled via DB error.

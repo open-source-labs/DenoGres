@@ -1,19 +1,20 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
 import { writeQueryText } from "../../utils/fileTextWriters.ts";
-import findInputError, { IError } from '../../utils/inputChecker.ts';
-// import { userUri } from '../../user/uri.ts';
+import { checkInput, extractType, IError } from '../../utils/inputCheckers.ts';
 
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
+
     const uriFilePath = '../../user/uri.ts';
     const { userUri } = await import(uriFilePath);
-    // const uri: string = userUri;
     const queryStr: string = await req.json();
-    const errorObj: IError | null = await findInputError(queryStr);
+
+    const errorObj: IError | null = await checkInput(queryStr);
     if (errorObj) {
       return new Response(JSON.stringify([errorObj]));
     }
 
+    const queryType: string = extractType(queryStr);
     const fileStr: string = writeQueryText(userUri, queryStr);
     const writePath: string = './application/data/query.ts';
     Deno.writeTextFileSync(writePath, fileStr);
@@ -28,56 +29,32 @@ export const handler: Handlers = {
     // this currently handles all other DB errors; 
     // can look into more robust & descriptive error handling
     if (error.length) {
-      // console.log(error);
+      const decodedError: string = new TextDecoder().decode(error);
       Deno.removeSync(writePath);
       return new Response(JSON.stringify([{ Error: `
-        An error occurred while retrieving records from the database. Please check your query syntax.
+        An error occurred while retrieving records from the database.
       `}]));
     }
-    // console.log(output);
+
+    if (queryType === 'insert') {
+      return new Response(JSON.stringify([{ Success: `
+        Inserted record into database.
+      `}]));
+    }
+    if (queryType === 'edit') {
+      return new Response(JSON.stringify([{ Success: `
+        Updated record(s) in database.
+      `}]));
+    }
+    if (queryType === 'delete') {
+      return new Response(JSON.stringify([{ Success: `
+        Deleted record(s) from database.
+      `}]));
+    }
+
     const records: string = new TextDecoder().decode(output);
-    // console.log(decoded);
     Deno.removeSync(writePath);
     return new Response(records);
   },
 };
-// export const handler: Handlers = {
-//   async POST(_, ctx) {
-//     console.log("In the handler");
 
-//     // await Deno.writeTextFile(path, str, { append: false });
-
-//     const getResult = async (): Promise<any> => {
-//       const str = `
-//       import * as denogres from './models/model.ts';\n
-//       export default async (): Promise<unknown[]> => {
-//         const result = await denogres.Species.select('*').query();
-//         return result;
-//       };`;
-
-//       const writePath = "./function.ts";
-//       await Deno.writeTextFile(writePath, str, { append: false });
-//       const importPath = "../../../function.ts";
-//       const funcToRun = await import(importPath);
-//       return funcToRun.default();
-//     };
-
-//     const queryResult = await getResult();
-
-//     // function to stringify where field is bigint
-//     const stringify = (obj: object): string => {
-//       return JSON.stringify(
-//         obj,
-//         (key, value) => typeof value === "bigint" ? value.toString() : value,
-//       );
-//     };
-
-//     const response = new Response(stringify(queryResult), {
-//       status: 200,
-//       headers: {
-//         "content-type": "application/json",
-//       },
-//     });
-//     return response;
-//   },
-// };

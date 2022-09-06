@@ -1,7 +1,7 @@
 {
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.0.2/",
-    "nanoid": "https://deno.land/x/nanoid/mod.ts",
+    "nanoid": "https://deno.land/x/nanoid@v3.0.0/mod.ts",
     "preact": "https://esm.sh/preact@10.10.0",
     "preact/": "https://esm.sh/preact@10.10.0/",
     "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.1?external=preact",

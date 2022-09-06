@@ -1,6 +1,5 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
 import { IQueryObject } from '../../islands/Console.tsx';
-// import { writeQueryText } from "../../utils/fileTextWriters.ts";
 
 // obtain query object from front-end and update local queries.json
 // TODO: add functionality to save to DB once set up 

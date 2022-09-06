@@ -26,43 +26,33 @@ export default function Console() {
 
   // ----EVENT LISTENERS -----
 
-  // TODO: some useEffect or similar to fetch prev. saved queriesList on first load
-  // since this list might eventually live on a DB instead of locally
+  // TODO: loading queryList data from external DB instead of local file
 
   // Saves query object in local JSON file and reset query name/text fields
   const handleSave = async (e: MouseEvent) => {
-    //TODO: Put a save function here, fetch data from server
     e.preventDefault();
     const newQuery: IQueryObject = {
       _id: nanoid(),
       queryName,
       queryText
-    }
+    };
     setQueriesList([...queriesList, newQuery]);
     await fetch('/api/handleQuerySave', {
       method: "POST",
       body: JSON.stringify(newQuery)
-    })
+    });
     setQueryName('');
     setQueryText('');
   };
 
   // Runs query and updates state to render result
   const handleRun = async (e: MouseEvent) => {
-    //TODO: Put a run function here, fetch data from server
     e.preventDefault();
     const res = await fetch('/api/handleQueryRun', {
       method: "POST",
       body: JSON.stringify(queryText)
     });
-    // console.log(res.body);
-    // Type of data seems to actually be the interface corresponding to which model
-    // we are calling method on! maybe can obtain from user supplied model.ts?
     const data: object[] = await res.json();
-    // console.log(queryName);
-    // console.log(queryText);
-    // console.log(data);
-    // console.log(typeof data);
     setRecords(data);
   };
 

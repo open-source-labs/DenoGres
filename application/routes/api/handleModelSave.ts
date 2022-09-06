@@ -1,5 +1,4 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
-// import { writeQueryText } from "../../utils/fileTextWriters.ts";
 
 // obtain plain text of model.ts and write file in user folder
 export const handler: Handlers = {
