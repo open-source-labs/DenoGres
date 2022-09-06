@@ -30,7 +30,7 @@ export const handler: Handlers = {
     // can look into more robust & descriptive error handling
     if (error.length) {
       const decodedError: string = new TextDecoder().decode(error);
-      Deno.removeSync(writePath);
+      // Deno.removeSync(writePath);
       return new Response(JSON.stringify([{ Error: `
         An error occurred while retrieving records from the database.
       `}]));
@@ -53,7 +53,7 @@ export const handler: Handlers = {
     }
 
     const records: string = new TextDecoder().decode(output);
-    Deno.removeSync(writePath);
+    // Deno.removeSync(writePath);
     return new Response(records);
   },
 };
