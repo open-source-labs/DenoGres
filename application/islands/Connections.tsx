@@ -2,11 +2,13 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
+
 import connectionsJson from "../data/connections.json" assert { type: "json" };
 
 // list of saved connections
 export default function Connections() {
   const [connectList, setconnectList] = useState(connectionsJson);
+  const [connectionId, setConnectionId] = useState(-Infinity);
   const [connectionName, setconnectionName] = useState("");
   const [address, setAddress] = useState("");
   const [port, setPort] = useState("");
@@ -23,6 +25,7 @@ export default function Connections() {
           className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded text-left`}
           type="button"
           onClick={() => {
+            setConnectionId(ele._id);
             setconnectionName(ele.name);
             setAddress(ele.address);
             setPort(ele.port);
@@ -35,15 +38,50 @@ export default function Connections() {
         </button>
       );
     });
+
+    // ADD NEW CONNECTION
+    const createConnection = async (): Promise<void> => {
+      const emptyObj = {
+        _id: connectionsJson.length + 1,
+        name: "",
+        address: "",
+        port: "",
+        username: "",
+        defaultdb: "",
+        password: "",
+      };
+
+      const emptyObjString = JSON.stringify(emptyObj);
+
+      const response = await fetch("/api/getConnections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+      console.log(data);
+    };
+
     return (
       <div className={tw`flex flex-col`}>
         {connections}
+        <div className={tw`flex flex-row justify-end`}>
+          <button
+            onClick={createConnection}
+            type="button"
+            className={tw`flex-0 bg-gray-300 py-1 px-2 text-sm shadow-sm font-medium text-gray-600 hover:shadow-2xl hover:bg-gray-400 rounded`}
+          >
+            +
+          </button>
+        </div>
       </div>
     );
   }
 
   // <------------ CONNECTION FORM ------------>
-  function connectionForm() {
+  function connectionForm(): h.JSX.Element {
+    const handleClick = (): void => {
+    };
+
     const labelStyle: string = tw`py-1`;
     const inputStyle: string =
       tw`my-1 py-2 px-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-11/12`;
@@ -72,6 +110,13 @@ export default function Connections() {
             className={tw`bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
           >
             Test Connection
+          </button>
+          <button
+            onClick={handleClick}
+            type="button"
+            className={tw`bg-deno-pink-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-pink-200`}
+          >
+            Save
           </button>
           <button
             type="button"
