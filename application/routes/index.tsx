@@ -2,10 +2,12 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import Layout from "../components/Layout.tsx";
+import NavBar from "../components/NavBar.tsx";
 
 export default function index() {
   return (
     <Layout>
+      <NavBar active="/" />
       <div className={tw`w-full flex flex-row ml-3`}>
         <div className={tw`flex flex-col w-full`}>
           <div
