@@ -17,7 +17,7 @@ import { QueryObjectResult } from "https://deno.land/x/postgres@v0.16.1/query/qu
 //     "",
 //   )
 //   .replaceAll(
-//     "import { Model } from 'https://deno.land/x/denogres/mod.ts'\n",
+//     "import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n",
 //     "",
 //   )
 //   // initial wording

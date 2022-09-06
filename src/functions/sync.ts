@@ -3,8 +3,6 @@ import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { primaryKeyQuery, tableUniqueQuery } from "../queries/introspection.ts";
 import { ModelColumn, ModelInfo, modelParser } from "./modelParser.ts";
 import { enumSync } from "./enumSync.ts";
-import { abortable } from "https://deno.land/std@0.141.0/async/abortable.ts";
-import { CHAR_LINE_FEED } from "https://deno.land/std@0.141.0/path/_constants.ts";
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results

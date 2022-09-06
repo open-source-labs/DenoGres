@@ -22,8 +22,12 @@ switch (Deno.args[0]) {
     break;
   }
   case "--db-sync": {
+<<<<<<< HEAD
+    Deno.args[1] === "-x" ? sync(true) : sync();
+=======
     Deno.args[1] === "-x" ? sync(true) : sync(true);
     // -CASCADE ? DROP CASCADE
+>>>>>>> dev
     break;
   }
   case "-h": {
@@ -32,6 +36,21 @@ switch (Deno.args[0]) {
   }
   case "--help": {
     console.log(displayHelpMsg());
+    break;
+  }
+  case "--gui": {
+    const app = Deno.run({
+      cmd: [
+        "deno",
+        "run",
+        "-A",
+        // FOR DEVELOPMENT
+        // "webview_script.ts",
+        // FOR PRODUCTION
+        "https://deno.land/x/denogresdev/webview_script.ts",
+      ],
+    });
+    await app.status();
     break;
   }
   default:

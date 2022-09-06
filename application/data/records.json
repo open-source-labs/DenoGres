@@ -1,0 +1,122 @@
+[
+  {
+    "_id": 3,
+    "name": "Wookiee",
+    "classification": "mammal",
+    "average_height": "210",
+    "average_lifespan": "400",
+    "hair_colors": "black, brown",
+    "skin_colors": "gray",
+    "eye_colors": "blue, green, yellow, brown, golden, red",
+    "language": "Shyriiwook",
+    "homeworld_id": "14"
+  },
+  {
+    "_id": 2,
+    "name": "Droid",
+    "classification": "artificial",
+    "average_height": "n/a",
+    "average_lifespan": "indefinite",
+    "hair_colors": "n/a",
+    "skin_colors": "n/a",
+    "eye_colors": "n/a",
+    "language": "n/a",
+    "homeworld_id": null
+  },
+  {
+    "_id": 1,
+    "name": "Human",
+    "classification": "mammal",
+    "average_height": "180",
+    "average_lifespan": "120",
+    "hair_colors": "blonde, brown, black, red",
+    "skin_colors": "caucasian, black, asian, hispanic",
+    "eye_colors": "brown, blue, green, hazel, grey, amber",
+    "language": "Galactic Basic",
+    "homeworld_id": "9"
+  },
+  {
+    "_id": 4,
+    "name": "Rodian",
+    "classification": "sentient",
+    "average_height": "170",
+    "average_lifespan": "unknown",
+    "hair_colors": "n/a",
+    "skin_colors": "green, blue",
+    "eye_colors": "black",
+    "language": "Galactic Basic",
+    "homeworld_id": "23"
+  },
+  {
+    "_id": 5,
+    "name": "Hutt",
+    "classification": "gastropod",
+    "average_height": "300",
+    "average_lifespan": "1000",
+    "hair_colors": "n/a",
+    "skin_colors": "green, brown, tan",
+    "eye_colors": "yellow, red",
+    "language": "Huttese",
+    "homeworld_id": "24"
+  },
+  {
+    "_id": 6,
+    "name": "Yoda's species",
+    "classification": "mammal",
+    "average_height": "66",
+    "average_lifespan": "900",
+    "hair_colors": "brown, white",
+    "skin_colors": "green, yellow",
+    "eye_colors": "brown, green, yellow",
+    "language": "Galactic basic",
+    "homeworld_id": "28"
+  },
+  {
+    "_id": 7,
+    "name": "Trandoshan",
+    "classification": "reptile",
+    "average_height": "200",
+    "average_lifespan": "unknown",
+    "hair_colors": "none",
+    "skin_colors": "brown, green",
+    "eye_colors": "yellow, orange",
+    "language": "Dosh",
+    "homeworld_id": "29"
+  },
+  {
+    "_id": 8,
+    "name": "Mon Calamari",
+    "classification": "amphibian",
+    "average_height": "160",
+    "average_lifespan": "unknown",
+    "hair_colors": "none",
+    "skin_colors": "red, blue, brown, magenta",
+    "eye_colors": "yellow",
+    "language": "Mon Calamarian",
+    "homeworld_id": "31"
+  },
+  {
+    "_id": 9,
+    "name": "Ewok",
+    "classification": "mammal",
+    "average_height": "100",
+    "average_lifespan": "unknown",
+    "hair_colors": "white, brown, black",
+    "skin_colors": "brown",
+    "eye_colors": "orange, brown",
+    "language": "Ewokese",
+    "homeworld_id": "7"
+  },
+  {
+    "_id": 10,
+    "name": "Sullustan",
+    "classification": "mammal",
+    "average_height": "180",
+    "average_lifespan": "unknown",
+    "hair_colors": "none",
+    "skin_colors": "pale",
+    "eye_colors": "black",
+    "language": "Sullutese",
+    "homeworld_id": "33"
+  }
+]
