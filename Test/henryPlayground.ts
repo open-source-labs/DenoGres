@@ -157,8 +157,6 @@ const tableForeignKeysQuery = `
 
 // DisconnectDb(db);
 
-await sync(true);
-
 // const models = modelParser();
 
 // console.log(models);
@@ -186,3 +184,5 @@ await sync(true);
 // }
 
 // DisconnectDb(db);
+
+await sync(true);
