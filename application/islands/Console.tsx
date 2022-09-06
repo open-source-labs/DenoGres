@@ -73,6 +73,7 @@ export default function Console() {
       method: "POST",
       body: JSON.stringify(modelText)
     });
+    setModelText('');
     // after model.ts has been saved, server can return an array of strings 
     // representing names of models in the file
     // these can be displayed on the left hand side under "availale models"
@@ -183,7 +184,10 @@ export default function Console() {
                         <button
                           className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
                           type="button"
-                          onClick={handleModelSave}
+                          onClick={(e) => {
+                            handleModelSave(e);
+                            setShowModal(false);
+                          }}
                         >
                           Save
                         </button>
