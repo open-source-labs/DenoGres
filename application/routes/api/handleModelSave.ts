@@ -2,7 +2,6 @@ import { Handlers, HandlerContext } from "$fresh/server.ts";
 // import { writeQueryText } from "../../utils/fileTextWriters.ts";
 
 // obtain plain text of model.ts and write file in user folder
-// TODO: after writing, can dynamically import models in other files?
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
     // could potentially use fileTextWriter to add import statement in model.ts
