@@ -2,6 +2,7 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
+import { route } from "preact-router";
 import connectionsJson from "../data/connections.json" assert { type: "json" };
 
 // list of saved connections
@@ -13,6 +14,22 @@ export default function Connections() {
   const [username, setUsername] = useState("");
   const [defaultDB, setDefaultDB] = useState("");
   const [password, setPassword] = useState("");
+
+  // <------------ EVENT LISTENERS ------------>
+
+  const handleUriSaveAndRedirect = async (e: MouseEvent) => {
+    e.preventDefault();
+    const uriText: string = `postgres://${username}:${password}@${address}:${port}/${defaultDB}`;
+    await fetch('/api/writeUriToFile', {
+      method: "POST",
+      body: JSON.stringify(uriText)
+    });
+    // can add logic to save connection to list on clicking "connect"
+    // in future this will be a request to db to save connection assoc. w/ user
+
+    // must be a better way to do this. maybe can get preact router working?
+    window.location.href = 'http://localhost:8000/explorer';
+  }
 
   // <------------ LIST OF CONNECTIONS ------------>
   function connectionsList() {
@@ -76,6 +93,7 @@ export default function Connections() {
           <button
             type="button"
             className={tw`bg-deno-blue-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-blue-200`}
+            onClick={handleUriSaveAndRedirect}
           >
             Connect
           </button>

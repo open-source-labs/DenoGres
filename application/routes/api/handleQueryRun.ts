@@ -1,19 +1,20 @@
 import { Handlers, HandlerContext } from "$fresh/server.ts";
 import { writeQueryText } from "../../utils/fileTextWriters.ts";
 import findInputError, { IError } from '../../utils/inputChecker.ts';
-import userUri from '../../user/uri.ts';
+// import { userUri } from '../../user/uri.ts';
 
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
-
-    const uri: string = userUri;
+    const uriFilePath = '../../user/uri.ts';
+    const { userUri } = await import(uriFilePath);
+    // const uri: string = userUri;
     const queryStr: string = await req.json();
     const errorObj: IError | null = await findInputError(queryStr);
     if (errorObj) {
       return new Response(JSON.stringify([errorObj]));
     }
 
-    const fileStr: string = writeQueryText(uri, queryStr);
+    const fileStr: string = writeQueryText(userUri, queryStr);
     const writePath: string = './application/data/query.ts';
     Deno.writeTextFileSync(writePath, fileStr);
     
