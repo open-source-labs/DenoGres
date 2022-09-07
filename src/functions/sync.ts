@@ -353,7 +353,10 @@ export const sync = async (overwrite = false) => {
               // ? isn't type already serial ???
               // TODO
               case "autoIncrement": {
-                addColumnQuery += `SERIAL `;
+                // ? Constraint for autoincrementation
+
+                addColumnQuery +=
+                  `DEFAULT nextval('${model.table}_${columnName}_seq'::regclass)`;
                 break;
               }
               case "defaultVal": {
