@@ -3,8 +3,6 @@ import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { primaryKeyQuery, tableUniqueQuery } from "../queries/introspection.ts";
 import { ModelColumn, ModelInfo, modelParser } from "./modelParser.ts";
 import { enumSync } from "./enumSync.ts";
-import { abortable } from "https://deno.land/std@0.141.0/async/abortable.ts";
-import { CHAR_LINE_FEED } from "https://deno.land/std@0.141.0/path/_constants.ts";
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
@@ -264,7 +262,7 @@ export const sync = async (overwrite = false) => {
 
       for (const dbColumn in table.columns) {
         if (!(modelColumnNameList[dbColumn])) {
-          console.log("DELETING COLUMN", dbColumn);
+          // console.log("DELETING COLUMN", dbColumn);
           deleteColumn = true;
           deleteColumnsQuery += `DROP COLUMN ${dbColumn} CASCADE, `;
           // ALTER TABLE people DROP COLUMN _id CASCADE, DROP COLUMN name CASCADE,
@@ -652,6 +650,8 @@ export const sync = async (overwrite = false) => {
               //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
               //   `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
 
+              console.log("ENTERED THIS BLOCK");
+
               const tableForeignKeys: TableForeignKey[] | unknown[] =
                 tableForeignKeysQueryResult.rows;
               let foreignKeyIndex: number = 0;
@@ -686,14 +686,41 @@ export const sync = async (overwrite = false) => {
                   // console.log(tableForeignKey.pg_get_constraintdef);
                   foreignKeyDefinition = tableForeignKey.pg_get_constraintdef;
 
+                  // console.log('for of loop');
+
+                  console.log(tableForeignKey);
+
+                  console.log(
+                    "list of foreignKeyDefinitions",
+                    foreignKeyDefinition,
+                  );
+
+                  console.log(foreignKeyDefinition.includes(`(${columnName})`));
+                  console.log(foreignKeyDefinition.includes(
+                    `${model.columns[columnName].association
+                      ?.table}(${model.columns[columnName].association
+                      ?.mappedCol})`,
+                  ));
+
+                  // console.log(table);
+                  console.log("columnName", columnName);
+
+                  // console.log(model.columns[columnName].association
+                  //   ?.table);
+
                   if (
                     foreignKeyDefinition.includes(`(${columnName})`) &&
-                    foreignKeyDefinition.includes(
-                      `${table}(${model.columns[columnName].association
+                    !foreignKeyDefinition.includes(
+                      `${model.columns[columnName].association
+                        ?.table}(${model.columns[columnName].association
                         ?.mappedCol})`,
                     )
                   ) {
                     const { table_name, foreign_key } = tableForeignKey;
+
+                    console.log("FOREIGN KEY NAME", foreign_key);
+
+                    console.log("table_name", table_name);
 
                     alterTableQueries +=
                       `ALTER TABLE ${table_name} DROP CONSTRAINT ${foreign_key} CASCADE; ` +
