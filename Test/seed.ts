@@ -10,17 +10,15 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import * as denogres from "../models/model.ts";
 import { Person } from "../models/model.ts";
 
-Deno.test(async function insertQuery() {
+Deno.test("insertQuery Test", async function insertQuery() {
   // const db = await ConnectDb(
   //   // * starwars
   //   // "postgres://obdwuryp:EcSMdYz0mPXGgiQSD4_8vLEYPjkHOJ5e@heffalump.db.elephantsql.com/obdwuryp",
   // );
 
-  const desiredQuery = `
+  const expectedInsertQuery = `
     INSERT INTO people (name, _id, species_id) VALUES ('john', '10', '2'), ('david', '12', '2'), ('jessica', '13', '2');
   `;
-
-  // const random = denogres.Person.prototype;
 
   // interface Person2 {
   //   _id: number;
@@ -34,19 +32,16 @@ Deno.test(async function insertQuery() {
       name: "john",
       _id: 10,
       species_id: BigInt(2),
-      current_mood: "sad",
     },
     {
       name: "david",
       _id: 12,
       species_id: BigInt(2),
-      current_mood: "sad",
     },
     {
       name: "jessica",
       _id: 13,
       species_id: BigInt(2),
-      current_mood: "sad",
     },
   ];
 
@@ -54,14 +49,6 @@ Deno.test(async function insertQuery() {
   // denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
   // denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
   // denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
-
-  // for (let i = 0; i < people.length; i += 2) {
-  //   denogres.Person.insert(`'name' = ${people[i].name}, '_id' = ${people[i].name}, 'species_id'`)
-  // }
-
-  // for (const person of people) {
-  //   denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
-  // }
 
   let columns = "";
 
@@ -90,21 +77,21 @@ Deno.test(async function insertQuery() {
   values = values.slice(0, values.length - 2) + ";";
 
   // console.log(values);
-
+  //
   insertQuery += values;
 
   // console.log("final insertQuery");
 
   // console.log(insertQuery);
 
-  console.log(insertQuery);
+  // console.log(insertQuery);
 
-  console.log("DQuery:", desiredQuery.replace(/\s/gm, ""));
+  console.log("DQuery:", expectedInsertQuery.replace(/\s/gm, ""));
 
   console.log("IQuery:", insertQuery.replace(/\s/gm, ""));
 
   assertEquals(
-    desiredQuery.replace(/\s/gm, ""),
+    expectedInsertQuery.replace(/\s/gm, ""),
     insertQuery.replace(/\s/gm, ""),
   );
   // DisconnectDb(db);
@@ -113,3 +100,74 @@ Deno.test(async function insertQuery() {
 // const people = denogres.Person;
 
 // console.log(await people.select('*').query());
+
+Deno.test(async function createTableQuery() {
+  const expectedCreateTableQuery = `
+    CREATE TABLE IF NOT EXISTS people
+    (
+      _id serial NOT NULL,
+      name varchar NOT NULL,
+      species_id bigint NOT NULL
+    );
+  `;
+
+  let createTableQuery =
+    `CREATE TABLE IF NOT EXISTS ${denogres.Person.table} (`;
+
+  const people: any[] = [
+    {
+      name: "john",
+      _id: 10,
+      species_id: BigInt(2),
+    },
+    {
+      name: "david",
+      _id: 12,
+      species_id: BigInt(2),
+    },
+    {
+      name: "jessica",
+      _id: 13,
+      species_id: BigInt(2),
+    },
+  ];
+
+  let constraints = "";
+
+  const columns: any = denogres.Person.columns;
+
+  const associations = [];
+
+  // ! Working Here
+  for (const column in columns) {
+    console.log("columns column", column);
+    console.log(columns[column]);
+    for (const constraint in columns[column]) {
+      switch (constraint) {
+        case "association": {
+          break;
+        }
+        case "type": {
+          break;
+        }
+        case "primaryKey": {
+          break;
+        }
+        case "notNull": {
+          break;
+        }
+        case "unique": {
+          break;
+        }
+        case "defaultVal": {
+          break;
+        }
+        case "autoIncrement": {
+          break;
+        }
+      }
+    }
+  }
+
+  console.log(denogres.Person.columns);
+});
