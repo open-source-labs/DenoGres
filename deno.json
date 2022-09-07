@@ -1,8 +1,11 @@
 {
   "tasks": {
     "watch": "deno run -A --watch=static/,routes/ ./application/dev.ts",
+    "watchPROD": "deno run -A --watch=static/,routes/ \"https://deno.land/x/denogresdev/application/dev.ts\"",
     "start": "deno run -A ./application/dev.ts",
-    "app": "deno run -A webview_script.ts"
+    "startPROD": "deno run -A \"https://deno.land/x/denogresdev/application/dev.ts\"",
+    "app": "deno run -A webview_script.ts",
+    "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogresdev/webview/webview.ts\""
   },
   "importMap": "./application/import_map.json"
 }
