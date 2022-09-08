@@ -312,6 +312,11 @@ export const sync = async (overwrite = false) => {
       for (const columnName of columnNames) {
         // * START OF ADD COLUMN QUERY
         if (!(columnName in table.columns)) {
+          // ? Takes care of autoincrementation by changing the datatype of the current column to "SERIAL"
+          if (model.columns[columnName].autoIncrement) {
+            model.columns[columnName].type = "SERIAL";
+          }
+
           let addColumnQuery = `
             ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${
             model.columns[columnName].type
@@ -348,12 +353,6 @@ export const sync = async (overwrite = false) => {
               }
               case "unique": {
                 addColumnQuery += `UNIQUE `;
-                break;
-              }
-              // ? isn't type already serial ???
-              // TODO
-              case "autoIncrement": {
-                addColumnQuery += `SERIAL `;
                 break;
               }
               case "defaultVal": {
@@ -400,7 +399,7 @@ export const sync = async (overwrite = false) => {
             `;
           }
 
-          console.log("addColumnQuery:", addColumnQuery);
+          // console.log("addColumnQuery:", addColumnQuery);
 
           await db.queryObject(addColumnQuery);
         }
@@ -650,7 +649,7 @@ export const sync = async (overwrite = false) => {
               //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
               //   `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
 
-              console.log("ENTERED THIS BLOCK");
+              // console.log("ENTERED THIS BLOCK");
 
               const tableForeignKeys: TableForeignKey[] | unknown[] =
                 tableForeignKeysQueryResult.rows;
@@ -688,22 +687,22 @@ export const sync = async (overwrite = false) => {
 
                   // console.log('for of loop');
 
-                  console.log(tableForeignKey);
+                  // ? console.log(tableForeignKey);
 
-                  console.log(
-                    "list of foreignKeyDefinitions",
-                    foreignKeyDefinition,
-                  );
+                  // ? console.log(
+                  // ?   "list of foreignKeyDefinitions",
+                  // ?  foreignKeyDefinition,
+                  // ? );
 
-                  console.log(foreignKeyDefinition.includes(`(${columnName})`));
-                  console.log(foreignKeyDefinition.includes(
-                    `${model.columns[columnName].association
-                      ?.table}(${model.columns[columnName].association
-                      ?.mappedCol})`,
-                  ));
+                  // ? console.log(foreignKeyDefinition.includes(`(${columnName})`));
+                  // console.log(foreignKeyDefinition.includes(
+                  //   `${model.columns[columnName].association
+                  // ?     ?.table}(${model.columns[columnName].association
+                  // ?    ?.mappedCol})`,
+                  // ));
 
-                  // console.log(table);
-                  console.log("columnName", columnName);
+                  // ? console.log(table);
+                  // ? console.log("columnName", columnName);
 
                   // console.log(model.columns[columnName].association
                   //   ?.table);
@@ -735,7 +734,7 @@ export const sync = async (overwrite = false) => {
 
           if (alterTableQueries !== ``) {
             // ? need addColumnQuery to run separately with alterTableQueries because users can add a new column without making any changes to any other column in all the tables (in which case, alterTableQueries won't fire)
-            console.log("alterTableQueries:", alterTableQueries);
+            // ? console.log("alterTableQueries:", alterTableQueries);
 
             await db.queryObject(alterTableQueries);
             alterTableQueries = ``;
