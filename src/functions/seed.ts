@@ -113,6 +113,19 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
     ");";
 
+  let associationsQuery = ``;
+  let associationIndex = 0;
+
+  for (const association of associations) {
+    const { columnName, table, mappedCol } = association;
+
+    associationsQuery += `
+      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+    `;
+  }
+
+  createTableQuery += associationsQuery;
+
   return createTableQuery;
 };
 

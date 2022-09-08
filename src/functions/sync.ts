@@ -399,7 +399,7 @@ export const sync = async (overwrite = false) => {
             `;
           }
 
-          console.log("addColumnQuery:", addColumnQuery);
+          // console.log("addColumnQuery:", addColumnQuery);
 
           await db.queryObject(addColumnQuery);
         }
