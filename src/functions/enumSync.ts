@@ -1,4 +1,4 @@
-import { enumParser } from './enumParser.ts';
+    import { enumParser } from './enumParser.ts';
 import { ConnectDb, DisconnectDb } from './Db.ts';
 import { enumQuery } from '../queries/introspection.ts';
 

@@ -129,7 +129,7 @@ export const sync = async (overwrite = false) => {
   let alterTableQueries = ``;
 
   // ! Need to Come back to this later
-  // await enumSync();
+  await enumSync();
 
   console.log("models\n", models);
   // console.log("modelObject\n", dbTables);
