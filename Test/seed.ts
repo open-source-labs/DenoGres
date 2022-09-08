@@ -32,6 +32,275 @@ const sampleData: any[] = [
 
 const sampleTableName = "people";
 
+Deno.test(function parseSeedSingle() {
+  let data = Deno.readTextFileSync("./Test/seedDataTest.ts");
+
+  // const tableName = data.replace(/\w+ (\w+)[\s\S]*/, "$1");
+
+  // console.log(data.match(/(const|let|var)\s\w+:/g));
+
+  const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
+
+  // console.log(tableNames);
+
+  for (let i = 0; i < tableNames.length; i++) {
+    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
+  }
+
+  // console.log(tableNames);
+
+  data = data.replace(/\s*/g, "");
+
+  const tablesData: any = data.match(/\{.*\,\}/g);
+
+  let tableData = tablesData[0];
+
+  const regex = /[\{\,\}]/g;
+
+  tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+
+  tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
+
+  for (let i = 0; i < tableData.length; i++) {
+    tableData[i] = tableData[i].split(" ");
+    for (let j = 0; j < tableData[i].length; j++) {
+      tableData[i][j] = tableData[i][j].split(":");
+    }
+  }
+
+  const tableEntries = [];
+  let columnData: any;
+
+  for (const entry of tableData) {
+    columnData = {};
+    for (const column of entry) {
+      const [columnName, columnValue] = column;
+      if (columnValue.includes("BigInt")) {
+        columnData[columnName] = BigInt(
+          columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
+        );
+      } else columnData[columnName] = JSON.parse(columnValue);
+    }
+    tableEntries.push(columnData);
+  }
+
+  const output: any = {};
+
+  for (const tableName of tableNames) {
+    output[tableName] = tableEntries;
+  }
+
+  // console.log(output);
+
+  // console.log(tableEntries);
+  // console.log(sampleData);
+  // console.log(String(tableEntries) == String(sampleData));
+
+  assertEquals(String(tableEntries), String(sampleData));
+});
+
+Deno.test(async function parseSeedMultiple() {
+  let data: any = Deno.readTextFileSync("./Test/seedData2Test.ts");
+  const output: any = {};
+  const expectedOutput: any = {
+    people: [
+      {
+        name: "john",
+        _id: 10,
+        species_id: BigInt(2),
+      },
+      {
+        name: "david",
+        _id: 12,
+        species_id: BigInt(2),
+      },
+      {
+        name: "jessica",
+        _id: 13,
+        species_id: BigInt(2),
+      },
+    ],
+    people2: [
+      {
+        name: "john2",
+        _id: 10,
+        species_id: BigInt(2),
+      },
+      {
+        name: "david2",
+        _id: 12,
+        species_id: BigInt(2),
+      },
+      {
+        name: "jessica2",
+        _id: 13,
+        species_id: BigInt(2),
+      },
+    ],
+  };
+
+  const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
+
+  for (let i = 0; i < tableNames.length; i++) {
+    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
+  }
+
+  // console.log(tableNames);
+
+  let tablesData = data.replace(/\s*/g, "");
+
+  tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
+
+  tablesData = tablesData.split(" ");
+
+  // console.log(data);
+
+  for (let i = 0; i < tablesData.length; i++) {
+    tablesData[i] = tablesData[i].match(/\{.*\,\}/)[0];
+
+    let tableData = tablesData[i];
+
+    const regex = /[\{\,\}]/g;
+
+    tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+
+    tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
+
+    for (let i = 0; i < tableData.length; i++) {
+      tableData[i] = tableData[i].split(" ");
+      for (let j = 0; j < tableData[i].length; j++) {
+        tableData[i][j] = tableData[i][j].split(":");
+      }
+    }
+
+    const tableEntries = [];
+    let columnData: any;
+
+    for (const entry of tableData) {
+      columnData = {};
+      for (const column of entry) {
+        const [columnName, columnValue] = column;
+        if (columnValue.includes("BigInt")) {
+          columnData[columnName] = BigInt(
+            columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
+          );
+        } else columnData[columnName] = JSON.parse(columnValue);
+      }
+      tableEntries.push(columnData);
+    }
+
+    for (const tableName of tableNames) {
+      output[tableName] = tableEntries;
+    }
+  }
+
+  console.log(output);
+  console.log(expectedOutput);
+
+  assertEquals(String(output), String(expectedOutput));
+
+  return output;
+});
+
+Deno.test(async function createTableQuery(
+  // data: Array<Object> = sampleData,
+  // tableName: string = sampleTableName,
+): Promise<void> {
+  const expectedCreateTableQuery = `
+    CREATE TABLE IF NOT EXISTS people
+    (
+      _id int4 NOT NULL PRIMARY KEY DEFAULT nextval('people__id_seq'::regclass),
+      name varchar NOT NULL,
+      species_id int8 NOT NULL
+    );
+  `;
+
+  let createTableQuery =
+    `CREATE TABLE IF NOT EXISTS ${denogres.Person.table} (`;
+
+  const people: any[] = [
+    {
+      name: "john",
+      _id: 10,
+      species_id: BigInt(2),
+    },
+    {
+      name: "david",
+      _id: 12,
+      species_id: BigInt(2),
+    },
+    {
+      name: "jessica",
+      _id: 13,
+      species_id: BigInt(2),
+    },
+  ];
+
+  let constraints = "";
+
+  const columns: any = denogres.Person.columns;
+
+  const associations = [];
+
+  // type sqlDataTypes = { [key: string]: string };
+
+  for (const column in columns) {
+    // console.log(typeof columns[column].type);
+    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+
+    createTableQuery += `${column} ${columns[column].type}`;
+    for (const constraint in columns[column]) {
+      switch (constraint) {
+        case "association": {
+          associations.push({
+            columnName: column,
+            table: columns[column].association?.table,
+            mappedCol: columns[column].association?.mappedCol,
+          });
+          break;
+        }
+        case "primaryKey": {
+          constraints += " PRIMARY KEY";
+          break;
+        }
+        case "notNull": {
+          constraints += " NOT NULL";
+          break;
+        }
+        case "unique": {
+          constraints += " UNIQUE";
+          break;
+        }
+        case "defaultVal": {
+          constraints += ` DEFAULT ${columns[column].defaultVal}`;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    createTableQuery += `${constraints}, `;
+    constraints = "";
+  }
+
+  createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
+    ");";
+
+  // console.log("EXPECTED QUERY");
+  // console.log(expectedCreateTableQuery);
+
+  // console.log("CREATE TABLE QUERY");
+  // console.log(createTableQuery);
+
+  assertEquals(
+    expectedCreateTableQuery.replace(/\s/gm, ""),
+    createTableQuery.replace(/\s/gm, ""),
+  );
+
+  // console.log(denogres.Person.columns);
+});
+
 Deno.test(
   async function insertQuery(
     data: any = sampleData,
@@ -127,148 +396,3 @@ Deno.test(
 // const people = denogres.Person;
 
 // console.log(await people.select('*').query());
-
-Deno.test(async function createTableQuery(
-  // data: Array<Object> = sampleData,
-  // tableName: string = sampleTableName,
-): Promise<void> {
-  const expectedCreateTableQuery = `
-    CREATE TABLE IF NOT EXISTS people
-    (
-      _id int4 NOT NULL PRIMARY KEY DEFAULT nextval('people__id_seq'::regclass),
-      name varchar NOT NULL,
-      species_id int8 NOT NULL
-    );
-  `;
-
-  let createTableQuery =
-    `CREATE TABLE IF NOT EXISTS ${denogres.Person.table} (`;
-
-  const people: any[] = [
-    {
-      name: "john",
-      _id: 10,
-      species_id: BigInt(2),
-    },
-    {
-      name: "david",
-      _id: 12,
-      species_id: BigInt(2),
-    },
-    {
-      name: "jessica",
-      _id: 13,
-      species_id: BigInt(2),
-    },
-  ];
-
-  let constraints = "";
-
-  const columns: any = denogres.Person.columns;
-
-  const associations = [];
-
-  // type sqlDataTypes = { [key: string]: string };
-
-  for (const column in columns) {
-    const sqlType: string = sqlDataTypes[columns[column].type];
-
-    // console.log(typeof columns[column].type);
-
-    createTableQuery += `${column} ${columns[column].type}`;
-    for (const constraint in columns[column]) {
-      switch (constraint) {
-        case "association": {
-          associations.push({
-            columnName: column,
-            table: columns[column].association?.table,
-            mappedCol: columns[column].association?.mappedCol,
-          });
-          break;
-        }
-        case "primaryKey": {
-          constraints += " PRIMARY KEY";
-          break;
-        }
-        case "notNull": {
-          constraints += " NOT NULL";
-          break;
-        }
-        case "unique": {
-          constraints += " UNIQUE";
-          break;
-        }
-        case "defaultVal": {
-          constraints += ` DEFAULT ${columns[column].defaultVal}`;
-          break;
-        }
-        case "autoIncrement": {
-          constraints +=
-            `DEFAULT nextval('${denogres.Person.table}_${column}_seq'::regclass)`;
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    }
-    createTableQuery += `${constraints}, `;
-    constraints = "";
-  }
-
-  createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
-    ");";
-
-  // console.log("EXPECTED QUERY");
-  // console.log(expectedCreateTableQuery);
-
-  // console.log("CREATE TABLE QUERY");
-  // console.log(createTableQuery);
-
-  assertEquals(
-    expectedCreateTableQuery.replace(/\s/gm, ""),
-    createTableQuery.replace(/\s/gm, ""),
-  );
-
-  // console.log(denogres.Person.columns);
-});
-
-Deno.test(async function denoFormat() {
-  const modelTS = Deno.readTextFileSync("./models/model.ts");
-
-  // console.log(modelTS);
-
-  // const regex = new RegExp(
-  //   /export class \w+ extends Model {((\s*\w+.*)+(\s*},))+(\s*};)/g,
-  // );
-
-  // const regex2 = new RegExp(
-  //   /export class \w+ extends Model {((\s*\w+.*)+(\s*},))+[\s|;|}]*}$/g,
-  // );
-
-  //
-
-  // const models: any = modelTS.match(regex2);
-
-  // console.log(readModel);
-  // console.log(after);
-
-  // console.log("models:", models);
-  // console.log("models length:", models?.length);
-
-  // console.log("models[0]", models[0]);
-
-  // console.log(models);
-  // console.log(models[1]);
-  // console.log(before === readModel);
-
-  const secondMethod = modelTS.replace(/\s*/g, "");
-
-  console.log(modelTS.replace(/\s*/g, ""));
-
-  const test = secondMethod.match(/export class(.*)(,},};})$/g);
-
-  console.log(test);
-
-  // replaceAll(/export enum \w+ {[\n *\w+\,*]+}/g, '') // remove enums for now, will need different logic to parse these
-});
