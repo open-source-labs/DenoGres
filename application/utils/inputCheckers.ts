@@ -1,4 +1,4 @@
-interface IModel {
+export interface IModel {
   [key: string]: any
 }
 

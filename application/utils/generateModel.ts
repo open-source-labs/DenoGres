@@ -4,20 +4,42 @@ import { introspect } from "../../src/functions/introspect.ts";
 import { createClassName } from "../../src/functions/StringFormat.ts";
 import { Model } from "https://deno.land/x/denogresdev/mod.ts";
 
-export const generateModels = async (userUri: string): Promise<object> => {
+// helper func to delete any keys in models that have value of false
+// applies to k-v pairs such as "notNull: false" (i.e. no 'NOT NULL' constraint)
+const deleteFalseKeys = (modelsObj: any) => {
+  for (const key in modelsObj) {
+    if (typeof modelsObj[key] === 'object') {
+      deleteFalseKeys(modelsObj[key])
+    }
+    if (modelsObj[key] === false) {
+      delete modelsObj[key];
+    }
+  }
+  return modelsObj;
+}
+
+// return object containing all model classes given the db uri 
+// if "asText" option set to true, return a stringifiable content-only models object
+export const generateModels = async (userUri: string, options?: { 'asText': boolean }): Promise<any> => {
 
   const [ tableListObj, enumObj ] = await introspect(userUri);
 
-  const modelsList: any = {};
+  let modelsList: any = {};
 
   // iterate over all table objs, create each as a class extending Model
   // insert each into the "denogres" models object
   for (const key in tableListObj) {
     const className = createClassName(key);
-    modelsList[className] = class extends Model{};
+    if (options?.asText) {
+      modelsList[className] = {};
+    } else {
+      modelsList[className] = class extends Model{};
+    }
     modelsList[className].table = key;
     modelsList[className].columns = tableListObj[key].columns;
   }
+
+  modelsList = deleteFalseKeys(modelsList);
 
   /* 
   iterate over all enum objs from db
@@ -41,3 +63,6 @@ export const generateModels = async (userUri: string): Promise<object> => {
   }
   return modelsList;
 };
+
+// const a = await generateModels('postgres://fzggghbk:yuXc_N9fnsXb-g8HFEH_ujg5JB5O4urH@heffalump.db.elephantsql.com:5432/fzggghbk', {asText: true});
+// console.log(JSON.stringify(a));

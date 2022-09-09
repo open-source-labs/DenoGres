@@ -3,6 +3,7 @@ import { IQueryObject } from '../../islands/Console.tsx';
 
 // obtain query object from front-end and update local queries.json
 // TODO: add functionality to save to DB once set up 
+// TODO: will remove this as we are now getting model via db pull
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
 

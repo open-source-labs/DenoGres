@@ -36,6 +36,7 @@ export default function Connections() {
       method: "POST",
       body: JSON.stringify(uriText)
     });
+    // response should be the models obj 
 
     const newConnectionObject: IConnectionObject = {
       _id: nanoid(),
@@ -56,6 +57,7 @@ export default function Connections() {
     // in future this will be a request to db to save connection assoc. w/ user
 
     // must be a better way to do this. maybe can get preact router working?
+    // need to pass uri & models into explorer route
     window.location.href = 'http://localhost:8000/explorer';
   }
 

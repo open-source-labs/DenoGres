@@ -1,13 +1,11 @@
 /** @jsx h */
 import { h } from "preact";
 import { tw } from "@twind";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import Record from "../components/Record.tsx";
 import queriesJson from "../data/queries.json" assert { type: "json" };
 import { nanoid } from "nanoid";
-
-export interface IRecord {};
-
+import { generateModels } from "../utils/generateModel.ts";
 export interface IQueryObject {
   _id: string,
   queryName: string,
@@ -21,8 +19,34 @@ export default function Console() {
   const [queryText, setQueryText] = useState<string>("");
   const [modelText, setModelText] = useState<string>("");
 
-  const [records, setRecords] = useState<IRecord[]>([]);
+  const [records, setRecords] = useState<object[]>([]);
   const [queriesList, setQueriesList] = useState<IQueryObject[]>(queriesJson);
+  const [modelNames, setModelNames] = useState<string[]>([]);
+  const [modelContent, setModelContent] = useState<object[]>([]);
+
+
+  // TODO currently not working: cant just run generateModels, need to POST req to an api route to handle!
+  // const getModels = async (): Promise<any> => {
+  //   const modelsListObject = await generateModels(userUri, { asText: true });
+  //   const modelNamesArr = [];
+  //   const modelContentArr = [];
+  //   for (const key in modelsListObject) {
+  //     modelNamesArr.push(key);
+  //     modelContentArr.push(modelsListObject[key]);
+  //   }
+  //   console.log(modelNamesArr, modelContentArr);
+  //   return [modelNamesArr, modelContentArr];
+  // }
+
+  // useEffect(() => {
+  //   const getModelsToDisplay = async (): Promise<void> => {
+  //     const [ names, content ] = await getModels();
+  //     setModelNames(names);
+  //     setModelContent(content);
+  //   }
+  //   getModelsToDisplay();
+  //   console.log('running init!');
+  // }, []);
 
   // ----EVENT LISTENERS -----
 
@@ -56,6 +80,7 @@ export default function Console() {
     setRecords(data);
   };
 
+  // TODO: WILL REMOVE: this no longer applies as we are getting models from uri pull
   // save user supplied model.ts locally for reference
   const handleModelSave = async (e: MouseEvent) => {
     e.preventDefault();
