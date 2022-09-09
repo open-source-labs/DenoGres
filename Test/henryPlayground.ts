@@ -8,8 +8,6 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 
 // import { parse } from "https://deno.land/std@0.152.0/path/posix.ts";
 
-import { QueryObjectResult } from "https://deno.land/x/postgres@v0.16.1/query/query.ts";
-
 import { enumParser } from "../src/functions/enumParser.ts";
 
 // const cleanedText = modelText
@@ -219,7 +217,7 @@ const enumText = modelText.replaceAll(
   .replaceAll(/\n */g, "");
 // matchAll(/export enum \w+ {[\n *\w+\,*]+}/g) // remove enums for now, will need different logic to parse these
 
-console.log(enumText);
+// console.log(enumText);
 
 // console.log(JSONmodelText);
 
@@ -229,4 +227,52 @@ const testMatch = modelText.match(/export enum \w+ {[\n *\w+\,*]+}/g);
 //matchAll(/export enum \w+ {[\n *\w+\,*]+}/g)
 // const testMatch = JSONmodelText.match(/export enum \s*/gm);
 
-console.log(testMatch);
+// console.log(testMatch);
+
+// const [tables] = await introspect();
+
+// console.log(tables);
+
+// const models = modelParser();
+
+// // console.log(Object)
+
+// console.log(models);
+
+// sync2
+const modelNameSet = new Set();
+const tableNameSet = new Set();
+
+modelNameSet.add("people");
+modelNameSet.add("dog");
+modelNameSet.add("species");
+
+// console.log(modelNameSet);
+
+tableNameSet.add("people");
+tableNameSet.add("species");
+tableNameSet.add("cat");
+
+// console.log(tableNameSet);
+
+const updateList = [];
+const createList = [];
+
+for (const modelName of modelNameSet) {
+  if (tableNameSet.has(modelName)) {
+    updateList.push(modelName);
+    modelNameSet.delete(modelName);
+    tableNameSet.delete(modelName);
+  } else if (!(tableNameSet.has(modelName))) {
+    createList.push(modelName);
+    modelNameSet.delete(modelName);
+  }
+}
+
+// console.log(tableNameSet);
+
+const deleteList = Array.from(tableNameSet);
+
+// console.log(updateList);
+// console.log(deleteList);
+// console.log(createList);
