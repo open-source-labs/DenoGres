@@ -32,6 +32,12 @@ const sampleData: any[] = [
 
 const sampleTableName = "people";
 
+// * Update
+Deno.test(
+  function parseSeed2() {
+  },
+);
+
 Deno.test(function parseSeedSingle() {
   let data = Deno.readTextFileSync("./Test/seedDataTest.ts");
 
@@ -194,8 +200,9 @@ Deno.test(async function parseSeedMultiple() {
     }
   }
 
-  console.log(output);
-  console.log(expectedOutput);
+  // console.log("seed multiple output");
+  // console.log(output);
+  // console.log(expectedOutput);
 
   assertEquals(String(output), String(expectedOutput));
 

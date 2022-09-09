@@ -13,6 +13,8 @@ const parseSeed = (path: string = "./seed.ts") => {
     tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
   }
 
+  // console.log(tableNames);
+
   let tablesData = data.replace(/\s*/g, "");
 
   tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
@@ -23,6 +25,8 @@ const parseSeed = (path: string = "./seed.ts") => {
     tablesData[i] = tablesData[i].match(/\{.*\,\}/)[0];
 
     let tableData = tablesData[i];
+
+    console.log(tablesData[i]);
 
     const regex = /[\{\,\}]/g;
 
@@ -61,7 +65,7 @@ const parseSeed = (path: string = "./seed.ts") => {
   return output;
 };
 
-// console.log(parseSeed());
+console.log(parseSeed());
 // console.log(parseSeed("Test/seed2.ts"));
 
 const getCreateTableQuery = (tableName: string, columns: any) => {
@@ -164,7 +168,7 @@ export default async function seed(path: string = "./seed.ts") {
 
   await Deno.run({
     cmd: ["deno", "fmt", path],
-  });
+  }).status();
 
   const db = await ConnectDb();
   const [dbTables] = await introspect();

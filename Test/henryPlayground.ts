@@ -276,3 +276,9 @@ const deleteList = Array.from(tableNameSet);
 // console.log(updateList);
 // console.log(deleteList);
 // console.log(createList);
+
+Deno.run({
+  cmd: ["deno", "-h"],
+}).status();
+
+// console.log(p.status());
