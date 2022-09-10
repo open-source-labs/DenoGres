@@ -10,6 +10,8 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 
 import { enumParser } from "../src/functions/enumParser.ts";
 
+import seed from "../src/functions/seed.ts";
+
 // const cleanedText = modelText
 //   .replaceAll(
 //     /export interface \w+ *\{[\n* *.*: \w+,*]+\}/g,
@@ -277,8 +279,12 @@ const deleteList = Array.from(tableNameSet);
 // console.log(deleteList);
 // console.log(createList);
 
-Deno.run({
-  cmd: ["deno", "-h"],
-}).status();
+// Deno.run({
+//   cmd: ["deno", "-h"],
+// }).status();
 
 // console.log(p.status());
+
+// await seed();
+
+// console.log(parseSeed());

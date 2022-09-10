@@ -12,20 +12,11 @@ export default async function modelParser2(path: string = "./models/model.ts") {
   const whitespaces = /\s/g;
   let data = Deno.readTextFileSync(path);
 
-  // console.log(data);
-
   data = data.replace(whitespaces, "");
   data = data.replace(/export/g, "\n");
 
-  // console.log(data);
-
   const classes: any = data.match(/class\w+extendsModel.*\s?/g);
-
-  // console.log(classes);
-  // classes[classes.length - 1] += "}";
-
-  console.log(classes[0]);
-  console.log(classes[1]);
+  classes[classes.length - 1] += "\n";
 
   for (const currentClass of classes) {
     const tableName = currentClass.replace(
@@ -41,15 +32,10 @@ export default async function modelParser2(path: string = "./models/model.ts") {
       '"$1":',
     );
 
-    // console.log(tableColumns);
-
     tableColumns = JSON.parse(tableColumns);
 
-    // console.log("parse success");
     output[tableName] = tableColumns;
   }
 
   return output;
 }
-
-console.log(await modelParser2());

@@ -2,8 +2,9 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { modelParser } from "./modelParser.ts";
 import { introspect } from "./introspect.ts";
+import modelParser2 from "./modelParser2.ts";
 
-const parseSeed = (path: string = "./seed.ts") => {
+const parseSeed2 = (path: string = "./seed.ts") => {
   const data: any = Deno.readTextFileSync(resolve(path));
   const output: any = {};
 
@@ -26,7 +27,7 @@ const parseSeed = (path: string = "./seed.ts") => {
 
     let tableData = tablesData[i];
 
-    console.log(tablesData[i]);
+    // console.log(tablesData[i]);
 
     const regex = /[\{\,\}]/g;
 
@@ -65,7 +66,42 @@ const parseSeed = (path: string = "./seed.ts") => {
   return output;
 };
 
-console.log(parseSeed());
+const parseSeed = (path: string = "./seed.ts") => {
+  path = resolve(path);
+
+  const output: any = {};
+
+  let data: any = Deno.readTextFileSync(path);
+
+  const whitespaces = /\s/g;
+
+  data = data.replace(whitespaces, "");
+  data = data.replace(/(const|let|var)/g, "\n");
+
+  const tables: any = data.match(/\n.*/g)?.map((table: any) =>
+    table.slice(1, -1)
+  );
+
+  for (const table of tables) {
+    const tableName = table.replace(/(\w+).*/, "$1");
+    // const tableName = table.match(/\w+/)
+    let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
+
+    tableData = tableData.replace(/\,\}/g, "}");
+    tableData = tableData.replace(/\,\]/g, "]");
+    tableData = tableData.replace(
+      /([\w\_]+)\:/g,
+      '"$1":',
+    );
+
+    tableData = JSON.parse(tableData);
+    output[tableName] = tableData;
+  }
+
+  return output;
+};
+
+// console.log(parseSeed());
 // console.log(parseSeed("Test/seed2.ts"));
 
 const getCreateTableQuery = (tableName: string, columns: any) => {
@@ -77,6 +113,8 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
 
   for (const column in columns) {
     if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+
+    // console.log("columnName", column);
 
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
@@ -113,6 +151,8 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
     createTableQuery += `${constraints}, `;
     constraints = "";
   }
+
+  // console.log('createTableQuery: ', createTableQuery);
 
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
     ");";
@@ -172,20 +212,18 @@ export default async function seed(path: string = "./seed.ts") {
 
   const db = await ConnectDb();
   const [dbTables] = await introspect();
-  const models = modelParser();
+  const models: any = await modelParser2();
 
-  const modelNameSet: Set<string> = new Set();
-  const dbTableNameSet: Set<string> = new Set();
+  const modelNameSet: Set<string> = new Set(Object.keys(models));
+  const dbTableNameSet: Set<string> = new Set(Object.keys(dbTables));
 
-  // console.log(Deno.readTextFileSync(path));
+  // for (const model of models) {
+  //   modelNameSet.add(model.table);
+  // }
 
-  for (const model of models) {
-    modelNameSet.add(model.table);
-  }
-
-  for (const tableName in dbTables) {
-    dbTableNameSet.add(tableName);
-  }
+  // for (const tableName in dbTables) {
+  //   dbTableNameSet.add(tableName);
+  // }
 
   const seedTables = parseSeed(path);
 
@@ -208,20 +246,11 @@ export default async function seed(path: string = "./seed.ts") {
   for (const seedTableName in seedTables) {
     const operation = getOperation(seedTableName, modelNameSet, dbTableNameSet);
 
-    // console.log("models", modelNameSet);
-    // console.log("dbTables", dbTableNameSet);
-
     // console.log(operation);
 
     switch (operation) {
       case "Create + Insert": {
-        let modelColumns;
-        for (const model of models) {
-          if (model.table === seedTableName) {
-            modelColumns = model.columns;
-            break;
-          }
-        }
+        let modelColumns = models[seedTableName];
 
         const createTableQuery = getCreateTableQuery(
           seedTableName,
@@ -256,3 +285,5 @@ export default async function seed(path: string = "./seed.ts") {
 
   DisconnectDb(db);
 }
+
+await seed();
