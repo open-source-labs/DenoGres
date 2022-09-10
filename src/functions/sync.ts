@@ -19,8 +19,28 @@ interface IForeignKey {
   table: string;
 }
 
+// * Added a new interface: for foreign key inside a given table
+interface TableForeignKey {
+  table_name: string;
+  foreign_key: string;
+  pg_get_constraintdef: string;
+}
+
 const conQueryGuard = (record: object): record is IConQuery => {
   return "conname" in record && "table_name" in record;
+};
+
+// * Type Guard for TableForeignKeys
+const isTableForeignKeys = (
+  records: TableForeignKey[] | unknown[],
+): records is TableForeignKey[] => {
+  return records.every((record: any) => {
+    return (
+      "table_name" in record &&
+      "foreign_key" in record &&
+      "pg_get_constraintdef" in record
+    );
+  });
 };
 
 const newColAttr = (column: ModelColumn): string => {
@@ -76,10 +96,10 @@ const createTable = (
 ): string => {
   let queryText = `CREATE TABLE ${table_name}(`;
 
-  console.log("createTable checks", checks);
-  console.log("createTable unique", unique);
-  console.log("createTable primaryKey", primaryKey);
-  console.log("createTable foreignKey", foreignKey);
+  // console.log("createTable checks", checks);
+  // console.log("createTable unique", unique);
+  // console.log("createTable primaryKey", primaryKey);
+  // console.log("createTable foreignKey", foreignKey);
 
   // Add columns to query
   for (const key in columns) {
@@ -131,20 +151,20 @@ export const sync = async (overwrite = false) => {
   // ! Need to Come back to this later
   await enumSync();
 
-  console.log("models\n", models);
-  // console.log("modelObject\n", dbTables);
-  console.log("dbTables\n", dbTables);
+  // console.log("models\n", models);
+  // // console.log("modelObject\n", dbTables);
+  // console.log("dbTables\n", dbTables);
 
-  console.log("list of model checks\n", models.map((model) => model.checks));
-  console.log("list of model unique\n", models.map((model) => model.unique));
-  console.log(
-    "list of model primaryKey\n",
-    models.map((model) => model.primaryKey),
-  );
-  console.log(
-    "list of model foreignKey\n",
-    models.map((model) => model.foreignKey),
-  );
+  // console.log("list of model checks\n", models.map((model) => model.checks));
+  // console.log("list of model unique\n", models.map((model) => model.unique));
+  // console.log(
+  //   "list of model primaryKey\n",
+  //   models.map((model) => model.primaryKey),
+  // );
+  // console.log(
+  //   "list of model foreignKey\n",
+  //   models.map((model) => model.foreignKey),
+  // );
 
   // console.log(
   //   "dog species_id association\n",
@@ -163,12 +183,49 @@ export const sync = async (overwrite = false) => {
 
   const db = await ConnectDb(); // db connection to send off alter and create queries
 
+  // * delete tables not present in model.ts
+  const modelNameList: { [key: string]: string } = {};
+
+  for (const model of models) {
+    modelNameList[model.table] = model.table;
+  }
+
+  // console.log("modelNameList", modelNameList);
+
+  let deleteTableQuery = ``;
+
+  for (const table in dbTables) {
+    if (!(modelNameList[table])) {
+      console.log("Deleting TABLE", table);
+      deleteTableQuery += `
+        DROP TABLE ${table} CASCADE; 
+      `;
+    }
+  }
+
+  await db.queryObject(deleteTableQuery);
+
+  // * Alter Table
   for (const model of models) {
     // console.log("model\n", model);
 
     // SQL statements for dbTables not currently in the database
+    // * Create Table
     if (!dbTables[String(model.table)]) {
       // New Table Added in Model by User
+
+      console.log(
+        "create new table query:",
+        createTable(
+          String(model.table),
+          model.columns,
+          model.checks,
+          model.unique,
+          model.primaryKey,
+          model.foreignKey,
+        ),
+      );
+
       createTableQueries += createTable(
         String(model.table),
         model.columns,
@@ -178,12 +235,174 @@ export const sync = async (overwrite = false) => {
         model.foreignKey,
       );
     } else { // ! Commented Out Portion Start
-      // * Check columnValues
+      // * Table Columns
+      const columnNames = Object.keys(model.columns);
+
+      // * Column Values
       const table = dbTables[String(model.table)];
+
+      // * delete columns not present in model.ts
+      const modelColumnNameList: { [key: string]: string } = {};
+
+      let deleteColumnsQuery = `ALTER TABLE ${model.table} `;
+      let deleteColumn: Boolean = false;
+
+      for (const column in model.columns) {
+        modelColumnNameList[column] = column;
+      }
+
+      /*
+        {
+          name: name,
+          _id: _id
+        }
+      */
+
+      // console.log("modelColumnNameList:", modelColumnNameList);
+
+      for (const dbColumn in table.columns) {
+        if (!(modelColumnNameList[dbColumn])) {
+          // console.log("DELETING COLUMN", dbColumn);
+          deleteColumn = true;
+          deleteColumnsQuery += `DROP COLUMN ${dbColumn} CASCADE, `;
+          // ALTER TABLE people DROP COLUMN _id CASCADE, DROP COLUMN name CASCADE,
+        }
+      }
+
+      if (deleteColumn) {
+        deleteColumnsQuery =
+          deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
+        // ALTER TABLE people DROP COLUMN _id CASCADE, DROP COLUMN name CASCADE;
+
+        console.log("deleteColumnsQuery", deleteColumnsQuery);
+        await db.queryObject(deleteColumnsQuery);
+      }
+
+      // * Query to get all the foreign keys of the current table
+      const tableForeignKeysQuery = `
+        SELECT conrelid::regclass AS table_name, 
+              conname AS foreign_key, 
+              pg_get_constraintdef(oid) 
+        FROM   pg_constraint 
+        WHERE  contype = 'f' and conrelid::regclass::text = '${model.table}' 
+        AND    connamespace = 'public'::regnamespace   
+        ORDER  BY conrelid::regclass::text, contype DESC;  
+      `;
+
+      const tableForeignKeysQueryResult = await db.queryObject(
+        tableForeignKeysQuery,
+      );
 
       // console.log("table\n", table);
 
-      for (const columnName of Object.keys(model.columns)) {
+      /*
+        possible constraints
+
+        type: keyof typeof sqlDataTypes
+        primaryKey?: boolean,
+        notNull?: boolean,
+        unique?: boolean,
+        checks?: string[],
+        defaultVal?: unknown,
+        autoIncrement?: boolean,
+        length?: number,
+        association?: { rel_type?: string, table: string, mappedCol: string}
+      */
+
+      for (const columnName of columnNames) {
+        // * START OF ADD COLUMN QUERY
+        if (!(columnName in table.columns)) {
+          // ? Takes care of autoincrementation by changing the datatype of the current column to "SERIAL"
+          if (model.columns[columnName].autoIncrement) {
+            model.columns[columnName].type = "SERIAL";
+          }
+
+          let addColumnQuery = `
+            ALTER TABLE ${model.table} ADD COLUMN ${columnName} ${
+            model.columns[columnName].type
+          }
+          `;
+
+          // let addColumnQuery = "";
+
+          const associations = [];
+
+          for (const constraint in model.columns[columnName]) {
+            switch (constraint) {
+              case "association": {
+                /*
+                  `
+                  ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+                */
+                associations.push({
+                  columnName: columnName,
+                  // table: model.columns[columnName].table,
+                  // mappedCol: model.columns[columnName].mappedCol,
+                  table: model.columns[columnName].association?.table,
+                  mappedCol: model.columns[columnName].association?.mappedCol,
+                });
+                break;
+              }
+              case "primaryKey": {
+                addColumnQuery += `PRIMARY KEY `;
+                break;
+              }
+              case "notNull": {
+                addColumnQuery += `NOT NULL `;
+                break;
+              }
+              case "unique": {
+                addColumnQuery += `UNIQUE `;
+                break;
+              }
+              case "defaultVal": {
+                addColumnQuery +=
+                  `DEFAULT ${model.columns.columnName.defaultVal} `;
+                break;
+              }
+              // ! Work on these later
+              case "checks": {
+                break;
+              }
+              case "length": {
+                break;
+              }
+              default: {
+                break;
+              }
+            }
+          }
+
+          addColumnQuery += `;`;
+          // ? query looks bit cleaner with code below but isn't necessary
+          // ! NOT MAKING THIS CHANGE addColumnQuery = addColumnQuery.slice(0, addColumnQuery.length - 1) + `;`;
+
+          let associationIndex = 0;
+          for (const association of associations) {
+            const { columnName, table, mappedCol } = association;
+
+            // console.log('association')
+
+            // let addAssociationQuery = `
+            //   ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_fk FOREIGN KEY ("${columnName}") REFERENCES '${table}(${mappedCol}); '
+            // `;
+            // console.log(
+            //   "This is the foreign key query \n",
+            //   addAssociationQuery,
+            // );
+            /*
+              ALTER TABLE dog ADD CONSTRAINT dog_fk FOREIGN KEY ("dog_id") REFERENCES ('species(id)')
+            */
+
+            addColumnQuery += `
+              ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+            `;
+          }
+
+          // console.log("addColumnQuery:", addColumnQuery);
+
+          await db.queryObject(addColumnQuery);
+        }
         // models column object
         const columnValues = model.columns[columnName];
         // New Column added in Model by User
@@ -294,18 +513,33 @@ export const sync = async (overwrite = false) => {
               } else {
                 // No prior primary key just add the update
                 alterTableQueries +=
-                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                  // ? `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pkey PRIMARY KEY (${columnName});`;
+                  `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_pk PRIMARY KEY (${columnName});`;
               }
             }
           }
           // FOREIGN KEY updated
-          // * check foreign key (which can be derived from association property)
+          // * check foreign key
+          // TODO
           if (
             JSON.stringify(columnValues.association) !==
               JSON.stringify(dbColumnValues.association)
           ) {
-            // QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
-            // TO OVERWRITE
+            // * QUERY TO UPDATE FOREIGN KEY - CHECK ON ISSUES WITH FOREIGN KEY ALREADY EXISTS AND NEEDING
+            // * TO OVERWRITE
+
+            // console.log("entered JSON STRINGIFY");
+
+            // console.log('model.table', model.table);
+
+            // console.log("columnValues Association", columnValues.association);
+
+            // console.log(`dbColumnValuesAssociation ${dbColumnValues.association}`);
+            // console.log(
+            //   "dbColumnValuesAssociation",
+            //   dbColumnValues.association,
+            // );
+            // console.log(dbColumnValues.association);
 
             if (!overwrite && columnValues.association === undefined) {
               // remove exisisting foreign key, overwrite false - inform user update cannot be made
@@ -314,32 +548,201 @@ export const sync = async (overwrite = false) => {
               );
             } else if (overwrite && columnValues.association === undefined) {
               // remove exisisting foreign key, overwrite true
-              alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
+              // ? alterTableQueries +=
+              // ?  `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; `;
+
+              // console.log("block 2");
+
+              const tableForeignKeys: TableForeignKey[] | unknown[] =
+                tableForeignKeysQueryResult.rows;
+
+              // console.log(tableForeignKeys);
+
+              // console.log(isTableForeignKeys(tableForeignKeys));
+
+              if (isTableForeignKeys(tableForeignKeys)) {
+                let foreignKeyDefinition;
+                for (const tableForeignKey of tableForeignKeys) {
+                  // console.log(tableForeignKey.pg_get_constraintdef);
+                  foreignKeyDefinition = tableForeignKey.pg_get_constraintdef;
+
+                  // console.log(foreignKeyDefinition);
+                  // console.log(model.table);
+
+                  // console.log(model.columns[columnName].association?.table);
+
+                  // console.log(columnName);
+
+                  // console.log(columnName);
+
+                  // console.log(table.columns[columnName].association?.table);
+
+                  // console.log(table.columns[columnName].association?.mappedCol);
+                  const currentTable = table.columns[columnName].association
+                    ?.table;
+                  const currentMappedCol = table.columns[columnName].association
+                    ?.mappedCol;
+
+                  if (
+                    foreignKeyDefinition.includes(`(${columnName})`) &&
+                    foreignKeyDefinition.includes(
+                      `${currentTable}(${currentMappedCol})`,
+                    )
+                  ) {
+                    const { table_name, foreign_key } = tableForeignKey;
+
+                    alterTableQueries +=
+                      `ALTER TABLE ${table_name} DROP CONSTRAINT ${foreign_key} CASCADE; `;
+                    // TODO ALTER TABLE ${table_name} DROP CONSTRAINT ${foreign_key}
+                    break;
+                  }
+                }
+              }
             } else if (dbColumnValues.association === undefined) {
-              // add new foreign key to column
+              // * add new foreign key to column
+
+              // const foreignKeyIndex = tableForeignKeys.filter(foreignKey => {
+              //   return foreignKey.pg_get_constraintdef.includes(`${columnName}`)
+              // })
+
+              const tableForeignKeys: TableForeignKey[] | unknown[] =
+                tableForeignKeysQueryResult.rows;
+              let foreignKeyIndex: number = 0;
+
+              if (isTableForeignKeys(tableForeignKeys)) {
+                for (const tableForeignKey of tableForeignKeys) {
+                  const start = tableForeignKey.foreign_key.indexOf("_");
+                  const end = tableForeignKey.foreign_key.indexOf("_");
+                  // people_species_id_fkey0
+
+                  if (
+                    tableForeignKey.foreign_key.slice(start + 1, end) ===
+                      columnName
+                  ) {
+                    const currentIndex = Number(
+                      tableForeignKey.foreign_key.replace(/.*fkey(\d+)/g, "$1"),
+                    );
+
+                    if (!isNaN(currentIndex)) {
+                      foreignKeyIndex = Math.max(
+                        currentIndex + 1,
+                        foreignKeyIndex,
+                      );
+                    }
+                  }
+                }
+              }
+
+              // TODO
               alterTableQueries +=
-                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey${foreignKeyIndex} FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+              // ? e.g. people_species_id_fkey11
+
+              // ALTER TABLE ${table_name} ADD CONSTRAINT ${table_name}_${columnName}
             } else if (!overwrite) {
               // update exisisting foreign key overwrite false - inform user update cannot be made
               console.log(
                 `Cannot update foreign key on column ${columnName} on ${model.table} table. Please re-run command with -x flag.`,
               );
-            } else {
-              alterTableQueries +=
-                `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
-                `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+            } else { // ! THIS BLOCK QUESTION
+              // alterTableQueries +=
+              //   `ALTER TABLE ${model.table} DROP CONSTRAINT ${model.table}_${columnName}_fkey; ` +
+              //   `ALTER TABLE ${model.table} ADD CONSTRAINT ${model.table}_${columnName}_fkey FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+
+              // console.log("ENTERED THIS BLOCK");
+
+              const tableForeignKeys: TableForeignKey[] | unknown[] =
+                tableForeignKeysQueryResult.rows;
+              let foreignKeyIndex: number = 0;
+
+              if (isTableForeignKeys(tableForeignKeys)) {
+                for (const tableForeignKey of tableForeignKeys) {
+                  const start = tableForeignKey.foreign_key.indexOf("_");
+                  const end = tableForeignKey.foreign_key.indexOf("_");
+
+                  if (
+                    tableForeignKey.foreign_key.slice(start + 1, end) ===
+                      columnName
+                  ) {
+                    const currentIndex = Number(
+                      tableForeignKey.foreign_key.replace(/.*fkey(\d+)/g, "$1"),
+                    );
+
+                    if (!isNaN(currentIndex)) {
+                      foreignKeyIndex = Math.max(
+                        currentIndex + 1,
+                        foreignKeyIndex,
+                      );
+                    }
+                  }
+                }
+              }
+
+              if (isTableForeignKeys(tableForeignKeys)) {
+                let foreignKeyDefinition;
+
+                for (const tableForeignKey of tableForeignKeys) {
+                  // console.log(tableForeignKey.pg_get_constraintdef);
+                  foreignKeyDefinition = tableForeignKey.pg_get_constraintdef;
+
+                  // console.log('for of loop');
+
+                  // ? console.log(tableForeignKey);
+
+                  // ? console.log(
+                  // ?   "list of foreignKeyDefinitions",
+                  // ?  foreignKeyDefinition,
+                  // ? );
+
+                  // ? console.log(foreignKeyDefinition.includes(`(${columnName})`));
+                  // console.log(foreignKeyDefinition.includes(
+                  //   `${model.columns[columnName].association
+                  // ?     ?.table}(${model.columns[columnName].association
+                  // ?    ?.mappedCol})`,
+                  // ));
+
+                  // ? console.log(table);
+                  // ? console.log("columnName", columnName);
+
+                  // console.log(model.columns[columnName].association
+                  //   ?.table);
+
+                  if (
+                    foreignKeyDefinition.includes(`(${columnName})`) &&
+                    !foreignKeyDefinition.includes(
+                      `${model.columns[columnName].association
+                        ?.table}(${model.columns[columnName].association
+                        ?.mappedCol})`,
+                    )
+                  ) {
+                    const { table_name, foreign_key } = tableForeignKey;
+
+                    console.log("FOREIGN KEY NAME", foreign_key);
+
+                    console.log("table_name", table_name);
+
+                    alterTableQueries +=
+                      `ALTER TABLE ${table_name} DROP CONSTRAINT ${foreign_key} CASCADE; ` +
+                      `ALTER TABLE ${table_name} ADD CONSTRAINT ${table_name}_${columnName}_fkey${foreignKeyIndex} FOREIGN KEY (${columnName}) REFERENCES ${columnValues.association?.table}(${columnValues.association?.mappedCol}); `;
+
+                    break;
+                  }
+                }
+              }
             }
           }
 
           if (alterTableQueries !== ``) {
+            // ? need addColumnQuery to run separately with alterTableQueries because users can add a new column without making any changes to any other column in all the tables (in which case, alterTableQueries won't fire)
+            // ? console.log("alterTableQueries:", alterTableQueries);
+
             await db.queryObject(alterTableQueries);
             alterTableQueries = ``;
           }
         }
       }
       // UNIQUE
-      // * check the list of uniqueValues inside the model/table
+      // TODO (NOT FUNCTIONAL ATM) check the list of uniqueValues inside the model/table
       if (String(table.unique) !== String(model.unique)) { //TESTED
         const toAdd: string[] = [];
         const toRemove: string[] = [];
@@ -410,7 +813,7 @@ export const sync = async (overwrite = false) => {
         }
       }
 
-      // PRIMARY KEY
+      // TODO PRIMARY KEY LIST: NOT FUNCTIONAL ATM
       if (String(table.primaryKey) !== String(model.primaryKey)) {
         // Check if table has existing primary key (required b/c columnName level primary key)
         const pKeys = await db.queryObject(

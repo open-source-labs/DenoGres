@@ -1,12 +1,16 @@
 import { modelParser } from "../src/functions/modelParser.ts";
 
-import { introspect } from "../src/functions/introspect.ts";
+import { getDbData, introspect } from "../src/functions/introspect.ts";
 
 import { sync } from "../src/functions/sync.ts";
 
-// const modelText = Deno.readTextFileSync("./models/model.ts");
+import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 
-// console.log(modelText);
+// import { parse } from "https://deno.land/std@0.152.0/path/posix.ts";
+
+import { QueryObjectResult } from "https://deno.land/x/postgres@v0.16.1/query/query.ts";
+
+import { enumParser } from "../src/functions/enumParser.ts";
 
 // const cleanedText = modelText
 //   .replaceAll(
@@ -14,7 +18,7 @@ import { sync } from "../src/functions/sync.ts";
 //     "",
 //   )
 //   .replaceAll(
-//     "import { Model } from 'https://deno.land/x/denogres/mod.ts'\n",
+//     "import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n",
 //     "",
 //   )
 //   // initial wording
@@ -46,17 +50,183 @@ import { sync } from "../src/functions/sync.ts";
 
 // sync();
 
-await sync(true);
-// await sync();
+// await sync(true);
 
-// const modelArray = modelParser();
+// const models = modelParser();
 
-// const speciesAssociation = modelArray[1].columns.species_id.association;
+// console.log("models\n", models);
+// const associations = [];
 
-// console.log(
-//   "species_id association",
-//   speciesAssociation,
-// );
+// for (const model of models) {
+//   for (const columnName in model.columns) {
+//     // console.log(columnName);
 
-// console.log(speciesAssociation?.table);
-// console.log(speciesAssociation?.mappedCol);
+//     if (model.columns[columnName].association) {
+//       // console.log(model.)
+//       // console.log(model.columns[columnName]);
+
+//       associations.push({
+//         columnName: columnName,
+//         table: model.columns[columnName].association?.table,
+//         mappedCol: model.columns[columnName].association?.mappedCol,
+//       });
+//     }
+//   }
+// }
+
+// TODO Deno.run({ cmd: ["deno", "fmt", resolve("./Test/henryPlayground.ts")] });
+
+// ? Below is testing out the foreign key functionality
+const foreignKeysQuery = `
+  SELECT conrelid::regclass AS table_name, 
+  conname AS foreign_key, 
+  pg_get_constraintdef(oid) 
+  FROM   pg_constraint 
+  WHERE  contype = 'f' 
+  AND    connamespace = 'public'::regnamespace   
+  ORDER  BY conrelid::regclass::text, contype DESC;
+`;
+
+const tableForeignKeysQuery = `
+  SELECT conrelid::regclass AS table_name, 
+        conname AS foreign_key, 
+        pg_get_constraintdef(oid) 
+  FROM   pg_constraint 
+  WHERE  contype = 'f' and conrelid::regclass::text = 'people' 
+  AND    connamespace = 'public'::regnamespace   
+  ORDER  BY conrelid::regclass::text, contype DESC;  
+`;
+
+// interface ForeignKey {
+//   table_name: string;
+//   foreign_key: string;
+//   pg_get_constraintdef: string;
+// }
+
+// interface ForeignKeys extends Array<ForeignKey>{};
+
+// const db = await ConnectDb();
+
+// console.log(await db.queryObject(foreignKeyQuery));
+// const foreignKeys = await db.queryObject(tableForeignKeysQuery);
+
+// console.log(foreignKeys);
+
+// const tableForeignKeys: ForeignKey[] | unknown[] = foreignKeys.rows;
+// let tableForeignKey;
+
+// console.log(tableForeignKeys);
+
+// console.log(tableForeignKeys);
+
+// type foreignKey = Object;
+
+/*
+  table_name: string;
+  foreign_key: string;
+  pg_get_constraintdef: string;
+*/
+
+// let mappedCol = "_id";
+// let table = "species";
+// let columnName = "_id";
+
+// const isForeignKeys = (records: ForeignKey[] | unknown[]): records is ForeignKey[] => {
+//   return records.every((record: any) => {
+//     return (
+//       "table_name" in record &&
+//       "foreign_key" in record &&
+//       "pg_get_constraintdef" in record
+//     );
+//   })
+// }
+
+// if (isForeignKeys(tableForeignKeys)) {
+//   let foreignKeyDefinition;
+//   for (const foreignKey of tableForeignKeys) {
+//     // console.log(foreignKey.pg_get_constraintdef);
+//     foreignKeyDefinition = foreignKey.pg_get_constraintdef;
+
+//     if (foreignKeyDefinition.includes(`(${columnName})`) && foreignKeyDefinition.includes(`${table}(${mappedCol})`)) {
+//       tableForeignKey = foreignKey;
+//       break;
+//     }
+//   }
+// }
+
+// console.log('TABLE FOREIGN KEY FOUND!',tableForeignKey);
+
+// DisconnectDb(db);
+
+// await sync(true);
+
+// const models = modelParser();
+
+// console.log(models);
+
+// let modelNameList = models.map((model) => model.table);
+
+// const modelNameList: {[key: string]: string} = {};
+
+// for (const model of models) {
+//   modelNameList[model.table] = model.table;
+// }
+
+// console.log(modelNameList);
+
+// // console.log(modelNameList);
+
+// const db = await ConnectDb();
+
+// const [dbTables] = await introspect();
+
+// for (const table in dbTables) {
+//   if (!(modelNameList.table)) {
+//     console.log("Deleting", table);
+//   }
+// }
+
+// DisconnectDb(db);
+
+// const test = modelParser();
+
+// console.log(test);
+
+// const [testTable] = await introspect();
+
+// console.log(testTable);
+
+const test = enumParser();
+
+// console.log(test);
+
+const modelText = Deno.readTextFileSync("./models/model.ts");
+
+// console.log(JSON.stringify(modelText));
+
+// const JSONmodelText = JSON.stringify(modelText);
+
+const enumText = modelText.replaceAll(
+  /export interface \w+ {[\n +\w+: \w+]+}/g,
+  "",
+)
+  .replaceAll(
+    "import { Model } from 'https://deno.land/x/denogres/mod.ts'\n",
+    "",
+  )
+  // initial wording
+  .replaceAll(/\/\/ user model definition comes here\n+/g, "")
+  .replaceAll(/\n */g, "");
+// matchAll(/export enum \w+ {[\n *\w+\,*]+}/g) // remove enums for now, will need different logic to parse these
+
+console.log(enumText);
+
+// console.log(JSONmodelText);
+
+// const testMatch = modelText.match(/export enum [\s\S]*\n}\n\n$/);
+const testMatch = modelText.match(/export enum \w+ {[\n *\w+\,*]+}/g);
+
+//matchAll(/export enum \w+ {[\n *\w+\,*]+}/g)
+// const testMatch = JSONmodelText.match(/export enum \s*/gm);
+
+console.log(testMatch);

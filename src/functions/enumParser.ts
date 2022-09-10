@@ -2,7 +2,7 @@ export const enumParser = (): Record<string, unknown[]> => {
     const modelText = Deno.readTextFileSync('./models/model.ts');
 
     const enumText = modelText.replaceAll(/export interface \w+ {[\n +\w+: \w+]+}/g, '').
-            replaceAll("import { Model } from 'https://deno.land/x/denogres/mod.ts'\n", ''). // initial wording
+            replaceAll("import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n", ''). // initial wording
             replaceAll(/\/\/ user model definition comes here\n+/g, '').
             replaceAll(/\n */g, '').
             matchAll(/export enum \w+ {[\n *\w+\,*]+}/g) // remove enums for now, will need different logic to parse these

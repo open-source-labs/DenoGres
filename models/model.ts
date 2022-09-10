@@ -109,10 +109,20 @@ export class Animal extends Model {
       type: 'varchar',
       length: 100,
     },
-    enum_genus: {
-      type: 'enum',
-      enumName: 'genus'
-    },
   }
 }
+
+export enum Genus_name {
+aves,
+canine,
+feline,
+insect,
+}
+
+export enum enum_test {
+  monday,
+  tuesday,
+}
+
+
 
