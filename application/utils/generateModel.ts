@@ -19,7 +19,7 @@ const deleteFalseKeys = (modelsObj: any) => {
 }
 
 // return object containing all model classes given the db uri 
-// if "asText" option set to true, return a stringifiable content-only models object
+// if "asText" option set to true, return a stringifiable text-only models object
 export const generateModels = async (userUri: string, options?: { 'asText': boolean }): Promise<any> => {
 
   const [ tableListObj, enumObj ] = await introspect(userUri);
@@ -59,10 +59,13 @@ export const generateModels = async (userUri: string, options?: { 'asText': bool
         TempEnum[enumObj[key][i]] = i;
       }
     })(TempEnum || (TempEnum = {}));
-    modelsList[enumName] = TempEnum;
+    // for FE rendering, will want to label enums as such
+    if (options?.asText) {
+      modelsList[`${enumName} (ENUM)`] = TempEnum;
+    } else {
+      modelsList[enumName] = TempEnum;
+    }
   }
+  console.log(modelsList);
   return modelsList;
 };
-
-// const a = await generateModels('postgres://fzggghbk:yuXc_N9fnsXb-g8HFEH_ujg5JB5O4urH@heffalump.db.elephantsql.com:5432/fzggghbk', {asText: true});
-// console.log(JSON.stringify(a));

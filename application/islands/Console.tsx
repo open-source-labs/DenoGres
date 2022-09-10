@@ -5,7 +5,6 @@ import { useEffect, useState } from "preact/hooks";
 import Record from "../components/Record.tsx";
 import queriesJson from "../data/queries.json" assert { type: "json" };
 import { nanoid } from "nanoid";
-import { generateModels } from "../utils/generateModel.ts";
 export interface IQueryObject {
   _id: string,
   queryName: string,
@@ -23,30 +22,23 @@ export default function Console() {
   const [queriesList, setQueriesList] = useState<IQueryObject[]>(queriesJson);
   const [modelNames, setModelNames] = useState<string[]>([]);
   const [modelContent, setModelContent] = useState<object[]>([]);
+  const [indexToDisplay, setIndexToDisplay] = useState<number>(-1);
 
+  const getModels = async (): Promise<any> => {
+    const res = await fetch('/api/getModels');
+    const parsed = await res.json();
+    return [ parsed[0], parsed[1] ];
+  };
 
-  // TODO currently not working: cant just run generateModels, need to POST req to an api route to handle!
-  // const getModels = async (): Promise<any> => {
-  //   const modelsListObject = await generateModels(userUri, { asText: true });
-  //   const modelNamesArr = [];
-  //   const modelContentArr = [];
-  //   for (const key in modelsListObject) {
-  //     modelNamesArr.push(key);
-  //     modelContentArr.push(modelsListObject[key]);
-  //   }
-  //   console.log(modelNamesArr, modelContentArr);
-  //   return [modelNamesArr, modelContentArr];
-  // }
-
-  // useEffect(() => {
-  //   const getModelsToDisplay = async (): Promise<void> => {
-  //     const [ names, content ] = await getModels();
-  //     setModelNames(names);
-  //     setModelContent(content);
-  //   }
-  //   getModelsToDisplay();
-  //   console.log('running init!');
-  // }, []);
+  // on first load, make GET request to retrieve models names & content to display
+  useEffect(() => {
+    const getModelsToDisplay = async (): Promise<void> => {
+      const [ names, content ] = await getModels();
+      setModelNames(names);
+      setModelContent(content);
+    }
+    getModelsToDisplay();
+  }, []);
 
   // ----EVENT LISTENERS -----
 
@@ -72,29 +64,28 @@ export default function Console() {
   // Runs query and updates state to render result
   const handleRun = async (e: MouseEvent) => {
     e.preventDefault();
+    const bodyObj = {
+      queryText
+    }
     const res = await fetch('/api/handleQueryRun', {
       method: "POST",
-      body: JSON.stringify(queryText)
+      body: JSON.stringify(bodyObj)
     });
     const data: object[] = await res.json();
+    console.log(modelNames, modelContent);
     setRecords(data);
   };
 
   // TODO: WILL REMOVE: this no longer applies as we are getting models from uri pull
-  // save user supplied model.ts locally for reference
-  const handleModelSave = async (e: MouseEvent) => {
-    e.preventDefault();
-    await fetch('/api/handleModelSave', {
-      method: "POST",
-      body: JSON.stringify(modelText)
-    });
-    setShowModal(false);
-    setModelText('');
-    // after model.ts has been saved, server can return an array of strings 
-    // representing names of models in the file
-    // these can be displayed on the left hand side under "availale models"
-    // stretch: clicking name of model pulls up its schema
-  }
+  // const handleModelSave = async (e: MouseEvent) => {
+  //   e.preventDefault();
+  //   await fetch('/api/handleModelSave', {
+  //     method: "POST",
+  //     body: JSON.stringify(modelText)
+  //   });
+  //   setShowModal(false);
+  //   setModelText('');
+  // }
 
   // map saved queries to display components
   const savedQueries = queriesList.map((ele, idx) => {
@@ -132,6 +123,42 @@ export default function Console() {
     );
   });
 
+    // map retrieved model names to buttons that open modal on mouse enter
+    const activeModelNames = modelNames.map((ele, idx) => {
+      return (
+        <button
+          key={idx}
+          className={tw`bg-deno-blue-100 text-sm shadow-sm p-3 my-1 font-medium tracking-wider text-gray-600 rounded text-left`}
+          type="button"
+          onMouseEnter={() => {
+            setShowModal(true);
+            setIndexToDisplay(idx);
+          }}
+        >
+          {ele}
+        </button>
+      );
+    });
+  
+    // map retrieved model content to an array of records
+    const activeModelContent = modelContent.map((ele) => {
+      let results = [];
+      // const parsedElement = JSON.parse(ele);
+      for (const [key, value] of Object.entries(ele)) {
+        const keyStr = key;
+        const valStr = value;
+        results.push(keyStr + " : " + valStr);
+      }
+  
+      results = results.map((ele) => <li>{ele}</li>);
+  
+      return (
+        <Record>
+          <ul>{results}</ul>
+        </Record>
+      );
+    });
+
   // Tailwind CSS styling - for textArea;
   const textArea =
     tw`bg-gray-50 appearance-none border-1 border-gray-200 rounded p-2 my-2 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-xs font-mono`;
@@ -147,13 +174,7 @@ export default function Console() {
         </div>
         <div className={tw`flex flex-col items-center p-3 h-2/4`}>
           <h2 className={tw`flex-1`}>Active Models</h2>
-          <button
-            type="button"
-            className={tw`bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400`}
-            onClick={() => setShowModal(true)}
-          >
-            Import Model File
-          </button>
+          {activeModelNames}
           {/* <--------Import Model File MODAL--------> */}
           {showModal
             ? (
@@ -171,7 +192,7 @@ export default function Console() {
                         className={tw`flex items-start justify-between p-5 rounded-t`}
                       >
                         <h2 className={tw`text-xl font-semibold`}>
-                          Import Model File
+                          {modelNames[indexToDisplay]}
                         </h2>
                         <button
                           className={tw`p-1 ml-auto bg-transparent border-0 text-black opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none`}
@@ -180,30 +201,24 @@ export default function Console() {
                         </button>
                       </div>
                       {/*body*/}
-                      <div className={tw`relative px-6 flex-auto`}>
+                      {/* <div className={tw`relative px-6 flex-auto`}>
                         <textarea
                           className={textArea}
                           onInput={(e) => {
                             setModelText(e.currentTarget.value);
                           }}
-                          value={modelText}
+                          value={JSON.stringify(modelContent[indexToDisplay])}
                           id="queryInput"
                           name="queryInput"
                           rows={20}
                           cols={70}
                         />
-                      </div>
+                      </div> */}
+                      {activeModelContent[indexToDisplay]}
                       {/*footer*/}
                       <div
                         className={tw`flex items-center justify-end p-6 border-solid border-slate-200 rounded-b`}
                       >
-                        <button
-                          className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
-                          type="button"
-                          onClick={handleModelSave}
-                        >
-                          Save
-                        </button>
                         <button
                           className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
                           type="button"

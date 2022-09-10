@@ -2,7 +2,6 @@
 import { h } from "preact";
 import { tw } from "@twind";
 import { useState } from "preact/hooks";
-
 import connectionsJson from "../data/connections.json" assert { type: "json" };
 import { nanoid } from "nanoid";
 
@@ -29,14 +28,18 @@ export default function Connections() {
 
   // <------------ EVENT LISTENERS ------------>
 
+  // on clicking connect, save connection details (currently to local file) 
+  // and post to handleQueryRun in order to cache that uri string for further queries
   const handleUriSaveAndRedirect = async (e: MouseEvent) => {
     e.preventDefault();
     const uriText: string = `postgres://${username}:${password}@${address}:${port}/${defaultDB}`;
-    await fetch('/api/writeUriToFile', {
+    const bodyObj = {
+      uri: uriText
+    };
+    await fetch('/api/handleQueryRun', {
       method: "POST",
-      body: JSON.stringify(uriText)
+      body: JSON.stringify(bodyObj)
     });
-    // response should be the models obj 
 
     const newConnectionObject: IConnectionObject = {
       _id: nanoid(),
@@ -140,15 +143,15 @@ export default function Connections() {
         >
         </input>
         <label className={labelStyle}>HostName/Address :</label>
-        <input className={inputStyle} value={address}></input>
+        <input className={inputStyle} value={address} onInput={(e) => setAddress(e.currentTarget.value)}></input>
         <label className={labelStyle}>Port Number:</label>
-        <input className={inputStyle} value={port}></input>
+        <input className={inputStyle} value={port} onInput={(e) => setPort(e.currentTarget.value)}></input>
         <label className={labelStyle}>Default DB:</label>
-        <input className={inputStyle} value={defaultDB}></input>
+        <input className={inputStyle} value={defaultDB} onInput={(e) => setDefaultDB(e.currentTarget.value)}></input>
         <label className={labelStyle}>UserName:</label>
-        <input className={inputStyle} value={username}></input>
+        <input className={inputStyle} value={username} onInput={(e) => setUsername(e.currentTarget.value)}></input>
         <label className={labelStyle}>Password:</label>
-        <input className={inputStyle} value={password} type="password"></input>
+        <input className={inputStyle} value={password} type="password" onInput={(e) => setPassword(e.currentTarget.value)}></input>
         <div className={tw`flex flex-row py-5`}>
           <button
             type="button"
