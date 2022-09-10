@@ -139,23 +139,34 @@ export default function Console() {
         </button>
       );
     });
-  
+    // TODO: better formatting for rendering! also modal dimensions
     // map retrieved model content to an array of records
     const activeModelContent = modelContent.map((ele) => {
-      let results = [];
-      // const parsedElement = JSON.parse(ele);
-      for (const [key, value] of Object.entries(ele)) {
-        const keyStr = key;
-        const valStr = value;
-        results.push(keyStr + " : " + valStr);
-      }
-  
+      let results: any[] = [];
+
+      (function generateTextRows (arr, obj, level = 0) {
+        for (const [key, value] of Object.entries(obj)) {
+          if (typeof value === 'object') {
+            level++;
+            arr.push('  '.repeat(level ? level - 1 : 0) + String(key) + ' : {');
+            arr.push(...generateTextRows([], value, level));
+            arr.push('  '.repeat(level ? level - 1 : 0) + '}');
+          } else {
+            arr.push('  '.repeat(level) + String(key) + ' : ' + String(value));
+          }
+        }
+        console.log(arr);
+        return arr;
+      })(results, ele);
+
       results = results.map((ele) => <li>{ele}</li>);
   
       return (
-        <Record>
+        <div
+          className={tw`bg-gray-100 m-1 p-2 text-gray-700 text-xs font-mono rounded`}
+        >
           <ul>{results}</ul>
-        </Record>
+        </div>
       );
     });
 

@@ -50,11 +50,12 @@ export default function Connections() {
       defaultdb: defaultDB,
       password
     };
-    setConnectList([...connectList, newConnectionObject]);
-    await fetch('/api/handleConnectionSave', {
-      method: "POST",
-      body: JSON.stringify(newConnectionObject)
-    });
+    // TODO: reenable saving for deployment / once ext db has been set up
+    // setConnectList([...connectList, newConnectionObject]);
+    // await fetch('/api/handleConnectionSave', {
+    //   method: "POST",
+    //   body: JSON.stringify(newConnectionObject)
+    // });
 
     // can add logic to save connection to list on clicking "connect"
     // in future this will be a request to db to save connection assoc. w/ user

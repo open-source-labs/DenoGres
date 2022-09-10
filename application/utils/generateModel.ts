@@ -19,7 +19,7 @@ const deleteFalseKeys = (modelsObj: any) => {
 }
 
 // return object containing all model classes given the db uri 
-// if "asText" option set to true, return a stringifiable text-only models object
+// if "asText" option set to true, return a stringifiable models object for FE to render
 export const generateModels = async (userUri: string, options?: { 'asText': boolean }): Promise<any> => {
 
   const [ tableListObj, enumObj ] = await introspect(userUri);
@@ -55,8 +55,12 @@ export const generateModels = async (userUri: string, options?: { 'asText': bool
     let TempEnum: any;
     (function (TempEnum) {
       for (let i = 0; i < enumObj[key].length; i++) {
-        TempEnum[i] = enumObj[key][i];
         TempEnum[enumObj[key][i]] = i;
+        // for FE rendering as text, only need {0: sad, 1: ok} not the reverse ({sad: 0, ok: 1})
+        if (options?.asText) {
+          continue;
+        }
+        TempEnum[i] = enumObj[key][i];
       }
     })(TempEnum || (TempEnum = {}));
     // for FE rendering, will want to label enums as such

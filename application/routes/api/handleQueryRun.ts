@@ -22,7 +22,7 @@ export const handler: Handlers = {
     // otherwise receive query string from req body; retrieve uri from cache
     const userUri = queryCache.dbUri;
     const queryStr = reqBodyObj.queryText;
-    console.log('retrieved uri: ', queryCache);
+    // console.log('retrieved uri: ', queryCache.dbUri);
 
     // cache model object on first run then subsequently retrieve from cache
     let denogresModels: IModel;
