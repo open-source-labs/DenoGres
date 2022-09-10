@@ -16,7 +16,14 @@ export default async function modelParser2(path: string = "./models/model.ts") {
   data = data.replace(/export/g, "\n");
 
   const classes: any = data.match(/class\w+extendsModel.*\s?/g);
-  classes[classes.length - 1] += "\n";
+
+  const lastClass = classes[classes.length - 1];
+
+  if (lastClass[lastClass.length - 1] !== "\n") {
+    classes[classes.length - 1] += "\n";
+  }
+
+  // let count = 0;
 
   for (const currentClass of classes) {
     const tableName = currentClass.replace(
@@ -33,6 +40,8 @@ export default async function modelParser2(path: string = "./models/model.ts") {
     );
 
     tableColumns = JSON.parse(tableColumns);
+
+    // console.log(`${tableName} success ${++count}`);
 
     output[tableName] = tableColumns;
   }

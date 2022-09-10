@@ -288,3 +288,43 @@ const deleteList = Array.from(tableNameSet);
 // await seed();
 
 // console.log(parseSeed());
+
+let userInput;
+let properUserInput = true;
+
+while (!properUserInput) {
+  userInput = prompt(`delete this table? [yes/no]`);
+
+  const formattedInput = userInput?.toLowerCase().replace(/\s/g, "");
+
+  switch (formattedInput) {
+    case "yes": {
+      console.log("great!");
+      properUserInput = true;
+      break;
+    }
+    case "no": {
+      console.log("oh whale");
+      properUserInput = true;
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+// console.log("you passed!");
+
+// if (userInput === "yes") {
+//   console.log("hello world");
+// }
+
+// const input = prompt(
+//   `Are you sure you want to delete this table? [yes/no]\nTo avoid all prompts, please re-run your command with the -x flag.`,
+// );
+let test20 = "hello";
+
+true ? test20 += " world" : null;
+
+console.log(test20);
