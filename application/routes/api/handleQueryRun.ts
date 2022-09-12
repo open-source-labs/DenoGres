@@ -18,6 +18,7 @@ export const handler: Handlers = {
     if (reqBodyObj.isLogOut) {
       for (const key in queryCache) {
         delete queryCache[key];
+        return new Response(null, { status: 200 });
       }
     }
 
@@ -28,12 +29,30 @@ export const handler: Handlers = {
       try {
         queryCache['modelObj'] = await generateModels(queryCache.dbUri);
       } catch (err) {
+        delete queryCache.dbUri;
         return new Response(
           JSON.stringify([{ Error: `Failed to retrieve database models. Please check your database credentials.`}]),
           { status: 400 }
         );
       }
       return new Response('Successfully cached connection URI & database models.', { status: 200 });
+    }
+
+    if (reqBodyObj.getTextModels) {
+      console.log('GETTING MODELS')
+      console.log('query uri?:', queryCache.dbUri);
+      try {
+        const modelsListObject = await generateModels(queryCache.dbUri, { asText: true });
+        const modelNamesArr = [];
+        const modelContentArr = [];
+        for (const key in modelsListObject) {
+          modelNamesArr.push(key);
+          modelContentArr.push(modelsListObject[key]);
+        }
+        return new Response(JSON.stringify([modelNamesArr, modelContentArr]));
+      } catch (err) {
+        return new Response(JSON.stringify([{ Error: `${err}`}]), { status: 400 });
+      }
     }
 
     // otherwise receive query string from req body; retrieve uri & models from cache

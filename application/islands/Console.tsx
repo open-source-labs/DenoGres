@@ -29,7 +29,13 @@ export default function Console() {
   const [indexToDisplay, setIndexToDisplay] = useState<number>(-1);
 
   const getModels = async (): Promise<any> => {
-    const res = await fetch('/api/getModels');
+    const res = await fetch('/api/handleQueryRun', {
+      method: "POST",
+      body: JSON.stringify({ getTextModels: true })
+    });
+    if (res.status === 400) {
+      return;
+    }
     const parsed = await res.json();
     return [ parsed[0], parsed[1] ];
   };
@@ -76,7 +82,7 @@ export default function Console() {
       body: JSON.stringify(bodyObj)
     });
     const data: object[] = await res.json();
-    console.log(modelNames, modelContent);
+    // console.log(modelNames, modelContent);
     setRecords(data);
   };
 

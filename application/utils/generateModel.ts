@@ -20,7 +20,13 @@ const deleteFalseKeys = (modelsObj: any) => {
 
 // return object containing all model classes given the db uri 
 // if "asText" option set to true, return a stringifiable models object for FE to render
-export const generateModels = async (userUri?: string, options?: { 'asText': boolean }): Promise<any> => {
+export const generateModels = async (userUri: string, options?: { 'asText': boolean }): Promise<any> => {
+
+  // introspect by default would attempt to load URI from env if not provided
+  // here we explicitly check for missing URI and throw error
+  if (!userUri) {
+    return new Error('Please provide valid database URI to obtain models.');
+  }
 
   const [ tableListObj, enumObj ] = await introspect(userUri);
 
@@ -70,6 +76,6 @@ export const generateModels = async (userUri?: string, options?: { 'asText': boo
       modelsList[enumName] = TempEnum;
     }
   }
-  console.log(modelsList);
+  // console.log(modelsList);
   return modelsList;
 };
