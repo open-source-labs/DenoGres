@@ -91,8 +91,8 @@ const enumElType = (record: object): record is IEnumEl => {
 
 // Introspection Function
 // ? const getDbData = async () => {
-export const getDbData = async () => {
-  const db = await ConnectDb();
+export const getDbData = async (uri?: string) => {
+  const db = await ConnectDb(uri);
 
   const tableList = await db.queryObject(tableListQuery);
   const columnList = await db.queryObject(columnInfoQuery);
@@ -110,8 +110,8 @@ export const getDbData = async () => {
 };
 // Add enums to tablelist obj, OR Create a new seperate object for all the enums that THAT database has in it.
 // When you hit an enum that youre building out in dbpull, you can just query off of that object
-export const introspect = async (): Promise<[ITableListObj, IEnumObj]> => {
-  const { tableList, columnList, constraintList, enumList } = await getDbData();
+export const introspect = async (uri?:string): Promise<[ITableListObj, IEnumObj]> => {
+  const { tableList, columnList, constraintList, enumList } = await getDbData(uri);
   // convert table list to an object
   const tableListObj: ITableListObj = {};
 
