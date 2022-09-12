@@ -3,47 +3,55 @@ import { writeQueryText } from "../../utils/queryTextWriter.ts";
 import { checkInput, extractType, IError, IModel } from '../../utils/inputCheckers.ts';
 import { generateModels } from "../../utils/generateModel.ts";
 
+
 const queryCache: any = {};
 
 export const handler: Handlers = {
   async POST(req: Request, ctx: HandlerContext): Promise<Response> {
-    // TODO: test uri connection to ensure uri is valid (currently db would throw error at the end)
-    // possibly check FE UI to see if it makes sense to auto-test when clicking 'Connect'
-    // versus manual "test connection" button!
-    const reqBodyObj: any = await req.json();
-    
-    // if request body contains db uri (from connections route), cache it and return
+
+    const reqBodyObj = await req.json();
+    // TODO: stretch: validate JWT before caching anything (uri / model); redirect if missing/inauthentic
+
+    // if request is to log out user, clear cache here
+    // using a loop to delete every k-v pair on cache; 
+    // alternatively could declare with 'let' and reassign to empty
+    if (reqBodyObj.isLogOut) {
+      for (const key in queryCache) {
+        delete queryCache[key];
+      }
+    }
+
+    // if request body contains db uri, validate by attempting to retrieve models
+    // if successful, cache both uri and models
     if ('uri' in reqBodyObj) {
       queryCache['dbUri'] = reqBodyObj.uri;
-      // console.log('caching uri:', queryCache);
-      return new Response ('Successfully cached connection URI.');
+      try {
+        queryCache['modelObj'] = await generateModels(queryCache.dbUri);
+      } catch (err) {
+        return new Response(
+          JSON.stringify([{ Error: `Failed to retrieve database models. Please check your database credentials.`}]),
+          { status: 400 }
+        );
+      }
+      return new Response('Successfully cached connection URI & database models.', { status: 200 });
     }
 
-    // otherwise receive query string from req body; retrieve uri from cache
-    const userUri = queryCache.dbUri;
+    // otherwise receive query string from req body; retrieve uri & models from cache
     const queryStr = reqBodyObj.queryText;
-    // console.log('retrieved uri: ', queryCache.dbUri);
+    const userUri = queryCache.dbUri;
+    const denogresModels = queryCache.modelObj;
 
-    // cache model object on first run then subsequently retrieve from cache
-    let denogresModels: IModel;
-    if (!('modelObj' in queryCache)) {
-      denogresModels = await generateModels(userUri);
-      queryCache['modelObj'] = denogresModels;
-    } else {
-      denogresModels = queryCache.modelObj;
-    }
-    // console.log('cached model:', queryCache);
     // handle missing uri (user did not connect before sending query request)
     if (!userUri) {
       return new Response(JSON.stringify([{ Error: `
         Missing database connection. Please be sure to connect before submitting queries.
-      `}]));
+      `}]), { status: 400 });
     }
     
     // handle query string errors 
     const errorObj: IError | null = checkInput(queryStr, denogresModels);
     if (errorObj) {
-      return new Response(JSON.stringify([errorObj]));
+      return new Response(JSON.stringify([errorObj]), { status: 400 });
     }
 
     // extract type of query (e.g. select, edit, delete)
@@ -67,22 +75,22 @@ export const handler: Handlers = {
       if (queryType === 'insert') {
         return new Response(JSON.stringify([{ Success: `
           Inserted record into database.
-        `}]));
+        `}]), { status: 200 });
       }
       if (queryType === 'edit') {
         return new Response(JSON.stringify([{ Success: `
           Updated record(s) in database.
-        `}]));
+        `}]), { status: 200 });
       }
       if (queryType === 'delete') {
         return new Response(JSON.stringify([{ Success: `
           Deleted record(s) from database.
-        `}]));
+        `}]), { status: 200 });
       }
 
       return new Response(response);
     } catch (err) {
-      return new Response(JSON.stringify([{ Error: `${err}`}]));
+      return new Response(JSON.stringify([{ Error: `${err}`}]), { status: 400 });
     }
 
   },

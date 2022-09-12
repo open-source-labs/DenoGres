@@ -20,7 +20,7 @@ const deleteFalseKeys = (modelsObj: any) => {
 
 // return object containing all model classes given the db uri 
 // if "asText" option set to true, return a stringifiable models object for FE to render
-export const generateModels = async (userUri: string, options?: { 'asText': boolean }): Promise<any> => {
+export const generateModels = async (userUri?: string, options?: { 'asText': boolean }): Promise<any> => {
 
   const [ tableListObj, enumObj ] = await introspect(userUri);
 

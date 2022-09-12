@@ -25,6 +25,8 @@ export default function Connections() {
   const [username, setUsername] = useState<string>("");
   const [defaultDB, setDefaultDB] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<any[]>([]);
 
   // <------------ EVENT LISTENERS ------------>
 
@@ -36,10 +38,17 @@ export default function Connections() {
     const bodyObj = {
       uri: uriText
     };
-    await fetch('/api/handleQueryRun', {
+    const response = await fetch('/api/handleQueryRun', {
       method: "POST",
       body: JSON.stringify(bodyObj)
     });
+    if (response.status === 400) {
+      const error = await response.json();
+      console.log(error);
+      await setErrorMessage(error);
+      await displayErrorModal();
+      return;
+    }
 
     const newConnectionObject: IConnectionObject = {
       _id: nanoid(),
@@ -63,7 +72,11 @@ export default function Connections() {
     // must be a better way to do this. maybe can get preact router working?
     // need to pass uri & models into explorer route
     window.location.href = 'http://localhost:8000/explorer';
-  }
+  };
+
+  const displayErrorModal = async () => {
+    await setShowErrorModal(true);
+  };
 
   // <------------ LIST OF CONNECTIONS ------------>
   function connectionsList() {
@@ -195,6 +208,42 @@ export default function Connections() {
           </div>
         </div>
       </div>
+      {showErrorModal
+            ? (
+              <div>
+                <div
+                  className={tw`justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-non`}
+                >
+                  <div className={tw`relative w-auto my-6 mx-auto max-w-3xl`}>
+                    {/*content*/}
+                    <div
+                      className={tw`border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none`}
+                    >
+                      {/*header*/}
+                      <div
+                        className={tw`flex items-start justify-between p-5 rounded-t`}
+                      >
+                      </div>
+                      <p>{errorMessage[0].Error}</p>
+                      <div
+                        className={tw`flex items-center justify-end p-6 border-solid border-slate-200 rounded-b`}
+                      >
+                        <button
+                          className={tw`bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300`}
+                          type="button"
+                          onClick={() => {
+                            setShowErrorModal(false);
+                          }}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+            : null}
     </div>
   );
 }

@@ -11,12 +11,16 @@ export interface IQueryObject {
   queryText: string
 };
 
+interface IModelDisplayRowObject {
+  level: number,
+  content: string
+}
+
 export default function Console() {
   //TODO: Currently state here is set as dummy data
   const [showModal, setShowModal] = useState<boolean>(false);
   const [queryName, setQueryName] = useState<string>("");
   const [queryText, setQueryText] = useState<string>("");
-  const [modelText, setModelText] = useState<string>("");
 
   const [records, setRecords] = useState<object[]>([]);
   const [queriesList, setQueriesList] = useState<IQueryObject[]>(queriesJson);
@@ -76,17 +80,6 @@ export default function Console() {
     setRecords(data);
   };
 
-  // TODO: WILL REMOVE: this no longer applies as we are getting models from uri pull
-  // const handleModelSave = async (e: MouseEvent) => {
-  //   e.preventDefault();
-  //   await fetch('/api/handleModelSave', {
-  //     method: "POST",
-  //     body: JSON.stringify(modelText)
-  //   });
-  //   setShowModal(false);
-  //   setModelText('');
-  // }
-
   // map saved queries to display components
   const savedQueries = queriesList.map((ele, idx) => {
     return (
@@ -139,27 +132,45 @@ export default function Console() {
         </button>
       );
     });
-    // TODO: better formatting for rendering! also modal dimensions
+
+    // TODO:  modal dimensions & styling
     // map retrieved model content to an array of records
     const activeModelContent = modelContent.map((ele) => {
       let results: any[] = [];
 
-      (function generateTextRows (arr, obj, level = 0) {
+      // IIFE to generate arrays of objects representing each row to be rendered
+      // each object has level (num) indicating indentation, and content (string)
+      (function generateTextRowObjs (arr, obj, level = 0, recurse = false): IModelDisplayRowObject[] {
         for (const [key, value] of Object.entries(obj)) {
           if (typeof value === 'object') {
+            // if value is obj, add key name and curly braces on current indentation level
+            // and recursively call function at level + 1
+            // n.b. need to 'backtrack' and reset to prev. indent level
+            arr.push({ level, content: `${String(key)} : {`});
             level++;
-            arr.push('  '.repeat(level ? level - 1 : 0) + String(key) + ' : {');
-            arr.push(...generateTextRows([], value, level));
-            arr.push('  '.repeat(level ? level - 1 : 0) + '}');
+            arr.push(...generateTextRowObjs([], value, level, true));
+            level--;
+            arr.push({ level, content: '}'});
           } else {
-            arr.push('  '.repeat(level) + String(key) + ' : ' + String(value));
+            // else if value is primitive, check if we are in a recursive call
+            // if so, need to add 1 indent level to k-v string
+            if (recurse) {
+              level++;
+              arr.push({ level, content: `${String(key)} : ${String(value)}`});
+              level--;
+            } else {
+              arr.push({ level, content: `${String(key)} : ${String(value)}`});
+            }
           }
         }
-        console.log(arr);
         return arr;
       })(results, ele);
 
-      results = results.map((ele) => <li>{ele}</li>);
+      // map results to JSX elements with proper left-margin 
+      results = results.map((ele) => {
+        const leftMarginClass = `mx-${ele.level}`;
+        return <li className={tw`${leftMarginClass}`}>{ele.content}</li>
+      });
   
       return (
         <div

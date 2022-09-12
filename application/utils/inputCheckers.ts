@@ -37,7 +37,7 @@ const METHODS: IMethodsDict = {
 };
 
 // check if first term in string is same as name of a valid model (i.e. ES6 class) in current db
-const isValidModel = (modelName: string | undefined, models: IModel): boolean => {
+const isValidModel = (modelName: string | undefined, models: IModel | undefined): boolean => {
   const modelsDict: IModelDict = {};
   for (const key in models) {
     if (models[key] instanceof Function) {
@@ -68,7 +68,7 @@ export const extractType = (queryStr: string): string => {
 }
 
 // check input query string for errors
-export const checkInput = (queryStr: string, modelsObj: IModel): IError | null => {
+export const checkInput = (queryStr: string, modelsObj?: IModel): IError | null => {
   const termsArray: string[] = separateQueryTerms(queryStr);
   const modelName: string | undefined = termsArray.shift();
 
