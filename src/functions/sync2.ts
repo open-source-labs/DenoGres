@@ -2,7 +2,6 @@ import { introspect } from "./introspect.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { enumSync } from "./enumSync.ts";
 import modelParser2 from "./modelParser2.ts";
-import { join } from "https://deno.land/std@0.141.0/path/win32.ts";
 import { getCreateTableQuery } from "./seed.ts";
 
 const getDeleteTablesQuery = (
@@ -185,6 +184,33 @@ const getCreateColumnsQuery = (
   return createColumnsQuery;
 };
 
+const getUpdateColumnsQuery = async (
+  tableName: string,
+  updateColumnList: string[],
+  models: any,
+  overwrite: Boolean,
+) => {
+  const db = await ConnectDb();
+
+  const tableForeignKeysQuery = `
+    SELECT conrelid::regclass AS table_name, 
+          conname AS foreign_key, 
+          pg_get_constraintdef(oid) 
+    FROM   pg_constraint 
+    WHERE  contype = 'f' and conrelid::regclass::text = '${tableName}' 
+    AND    connamespace = 'public'::regnamespace   
+    ORDER  BY conrelid::regclass::text, contype DESC;  
+  `;
+
+  const tableForeignKeysQueryResult = await db.queryObject(
+    tableForeignKeysQuery,
+  );
+
+  let updateColumnsQuery = `ALTER TABLE ${tableName} `;
+
+  DisconnectDb(db);
+};
+
 const getUpdateTablesQuery = (
   updateTablesList: string[],
   models: any,
@@ -234,7 +260,12 @@ const getUpdateTablesQuery = (
     );
     createColumnsQuery.length ? updateTablesQuery += createColumnsQuery : null;
 
-    // const updateColumnsQuery = getUpdateColumnsQuery(tableName, updateColumnList, models);
+    const updateColumnsQuery = getUpdateColumnsQuery(
+      tableName,
+      updateColumnList,
+      models,
+      overwrite,
+    );
   }
 
   return updateTablesQuery;
