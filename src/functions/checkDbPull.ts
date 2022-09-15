@@ -1,7 +1,7 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
 
 //* Creating timestamp for folders
-const createCurrentDate = () : string => {
+export const createCurrentDate = () : string => {
     const currentDate: string = new Date().toISOString()
     .replace(/[-:.Z]/g, '')     // replace T with a space
     .replace(/[T]/g, '_');
@@ -9,7 +9,7 @@ const createCurrentDate = () : string => {
 }
 
 //* Date and time for txt file.
-const dateNow = () : Date => {
+export const dateNow = () : Date => {
     const time : number = new Date().getTime();
     const myDate: Date = new Date(time);
     return myDate;
@@ -33,5 +33,5 @@ export function checkDbPull(): void {
     }
 
 
-export const todayDate = today;
-export const permDate = dateFolder;
+export const todayDate = today; //* date used to compare when modelBuild was created in human readable format.
+export const permDate = dateFolder; //* date that is the timestamp for the folder when it was created.
