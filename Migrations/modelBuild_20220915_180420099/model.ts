@@ -1,4 +1,4 @@
-import { Model } from 'https://deno.land/x/denogres/mod.ts'
+import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
 // user model definition comes here
 
 
@@ -85,7 +85,6 @@ export interface Animal {
   weight_measure: string
   species: string
   country: string
-  habitat: string
 }
 
 export class Animal extends Model {
@@ -110,10 +109,6 @@ export class Animal extends Model {
       type: 'varchar',
       length: 100,
     },
-    habitat: {
-      type: 'varchar',
-      length: 100,
-    }
   }
 }
 
