@@ -1,5 +1,5 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
-
+import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
 //* Creating timestamp for folders
 export const createCurrentDate = () : string => {
     const currentDate: string = new Date().toISOString()
@@ -26,10 +26,15 @@ export function checkDbPull(): void {
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
         const modelBefore = Deno.readTextFileSync(resolve('./models/model.ts'));
         console.log("the checkDbPullfunction worked!", modelBefore);
-        //* Creating files and directory in Migrations 
-        Deno.mkdirSync(`./Migrations/modelBuild_${dateFolder}`);
-        Deno.writeTextFileSync(`./Migrations/modelBuild_${dateFolder}/build_model.ts`, modelBefore);
-        Deno.writeTextFile(`./Migrations/modelBuild_${dateFolder}/migration_log.txt`, info);
+         //* Checking directory exist to write safely
+        ensureDir('./Migrations')
+        //* Creating files and directory in Migrations
+        .then(() => {
+            Deno.mkdirSync(`./Migrations/modelBuild_${dateFolder}`);
+            Deno.writeTextFileSync(`./Migrations/modelBuild_${dateFolder}/build_model.ts`, modelBefore);
+            Deno.writeTextFileSync(`./Migrations/modelBuild_${dateFolder}/build_model.txt`, modelBefore);
+            Deno.writeTextFile(`./Migrations/modelBuild_${dateFolder}/migration_log.txt`, info, );
+        })
     }
 
 
