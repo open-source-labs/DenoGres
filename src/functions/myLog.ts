@@ -6,16 +6,30 @@
  * * (3) - Save the unique id and user comment to a log file
  */
 import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts"
-import { createCurrentDate } from "./checkDbPull.ts";
-import { todayDate } from "./checkDbPull.ts";
+// import { createCurrentDate } from "./checkDbPull.ts";
+// import { todayDate } from "./checkDbPull.ts";
 import { today, dateFolder } from './checkDbPull.ts'
+import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
+
+
+export async function promptString(question: string) {
+    console.log(question);
+    for await (const line of readLines(Deno.stdin)){
+        return line;
+    }
+}
+const input = await promptString("What is your comment? ");
 
 //* Within this function we want to pass in the users comment and have it fire off. 
-export function uniqueLog(comment: any): void {
+export function uniqueLog(): void {
     console.log("Unique log is running.");
-    const uniqueId = createCurrentDate();
-    const info = `The model you created on ${today} is stored in the directory './Migrations/log/${dateFolder}'\n ${comment}\n`;
+    console.log(input);
+    // const uniqueId = createCurrentDate();
+    const info = `The model you created on ${today} is stored in the directory './Migrations/log/${dateFolder}'\n ${input}\n`;
     const beforeSyncModel = Deno.readTextFileSync('./models/model.ts');
-    Deno.writeTextFileSync(resolve('./Migrations/log/migration_log.txt'), `${info} \n`, { append: true }); //* adds onto the text file instead of creating it again.
-    console.log(beforeSyncModel);
+
+    //? Messing up right here when I use resolve to resolve path, direct path works, maybe because resolve is async??
+    Deno.writeTextFileSync('./Migrations/log/migration_log.txt', `${info}\n`, { append: true }); //* adds onto the text file instead of creating it again.
+    // console.log(beforeSyncModel);
+    console.log(info);
 }

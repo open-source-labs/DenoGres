@@ -1,6 +1,6 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
 import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
-import { promptString } from './checkDbSync.ts';
+// import { promptString } from './checkDbSync.ts';
 import { uniqueLog } from './myLog.ts';
 
 
@@ -25,8 +25,7 @@ const dateFolder = createCurrentDate();
 
 //* Function checks if db-pull was invoked.
 export function checkDbPull(): void {
-    // const input = await promptString('Initial db-pull comment: ');
-    // uniqueLog(input);
+    uniqueLog();
     const info = `This model was created when the command --db-pull was invoked on ${today}.
     \n This model is a reference to the shape of your SQL Database on ${today}. 
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
