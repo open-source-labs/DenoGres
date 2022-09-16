@@ -5,22 +5,14 @@ import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
 import { uniqueLog } from './myLog.ts';
 
 //* creating dates
-const dateFolder = createCurrentDate();
-const today = dateNow();
+const dateFolderSync = createCurrentDate();
+const todaySync = dateNow();
 
-//* Get user comment
-export async function promptString(question: string) {
-    console.log(question);
-    for await (const line of readLines(Deno.stdin)){
-        return line;
-    }
-}
 
-export async function checkDbSync(): Promise<void> {
-    const input = await promptString("Enter Model Changes: ");
-    uniqueLog(input);
-    const info = `This model was created when the command --db-sync was invoked on ${today}.
-    \n This model is a reference to the shape of your SQL Database on ${today}. 
+export function checkDbSync(): void {
+    uniqueLog('db-sync');
+    const info = `This model was created when the command --db-sync was invoked on ${todaySync}.
+    \n This model is a reference to the shape of your SQL Database on ${todaySync}. 
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
     const modelAfter = Deno.readTextFileSync(resolve('./models/model.ts'));
     console.log("the checkDbSync function worked!");
@@ -28,11 +20,12 @@ export async function checkDbSync(): Promise<void> {
     ensureDir('./Migrations')
     //* Creating files and directory in Migrations
     .then(() => {
-        Deno.mkdirSync(`./Migrations/syncedModel_${dateFolder}`);
-        Deno.writeTextFileSync(`./Migrations/syncedModel_${dateFolder}/synced_build.ts`, modelAfter);
-        Deno.writeTextFileSync(`./Migrations/syncedModel_${dateFolder}/synced_build.txt`, modelAfter);
-        Deno.writeTextFile(`./Migrations/syncedModel_${dateFolder}/model_changes.txt`, info);
+        Deno.mkdirSync(`./Migrations/syncedModel_${dateFolderSync}`);
+        Deno.writeTextFileSync(`./Migrations/syncedModel_${dateFolderSync}/synced_build.ts`, modelAfter);
+        Deno.writeTextFileSync(`./Migrations/syncedModel_${dateFolderSync}/synced_build.txt`, modelAfter);
+        Deno.writeTextFile(`./Migrations/syncedModel_${dateFolderSync}/model_changes.txt`, info);
     })
 
 }
+export {todaySync, dateFolderSync};
 
