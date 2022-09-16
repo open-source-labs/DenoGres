@@ -35,8 +35,8 @@ export const enumSync = async () => {
         if(typeof el === 'object' && el !== null && enumRowGuard(el)){
             dbEnumObj[el.enum_name] = {enum_schema: el.enum_schema, enum_value: el.enum_value.split(/, */)};
             // console.log('This is the new dbEnumObj value: ', dbEnumObj[el.enum_name]);
-            console.log('stringified el', JSON.stringify(el));
-            console.log('stringified modelEnum', JSON.stringify(modelEnum));
+            // console.log('stringified el', JSON.stringify(el));
+            // console.log('stringified modelEnum', JSON.stringify(modelEnum));
 
             //* database enum doesn't exist in model - remove database enum
             if(!modelEnum[el.enum_name]) { // TESTED
@@ -46,7 +46,7 @@ export const enumSync = async () => {
                 //* If the enum object and the values from modelEnum do not align
                 if(JSON.stringify(el) !== JSON.stringify(modelEnum[el.enum_name])) {
                     // if the db and model do not align determine what needs to change
-                    console.log('Stringify Failed');
+                    // console.log('Stringify Failed');
                 }
             }
         }

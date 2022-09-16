@@ -142,7 +142,7 @@ const alterTableError = (err: Error) => {
 };
 
 export const sync = async (overwrite = false) => {
-  checkDbSync();
+  await checkDbSync();
   const [dbTables] = await introspect();
 
   const models = modelParser();
