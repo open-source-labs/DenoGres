@@ -7,10 +7,12 @@ import { uniqueLog } from './myLog.ts';
 //* creating dates
 const dateFolderSync = createCurrentDate();
 const todaySync = dateNow();
+// let dbSyncBool = false;
 
 
 export function checkDbSync(): void {
     uniqueLog('db-sync');
+    // dbSyncBool = true;
     const info = `This model was created when the command --db-sync was invoked on ${todaySync}.
     \n This model is a reference to the shape of your SQL Database on ${todaySync}. 
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
@@ -25,7 +27,7 @@ export function checkDbSync(): void {
         Deno.writeTextFileSync(`./Migrations/syncedModel_${dateFolderSync}/synced_build.txt`, modelAfter);
         Deno.writeTextFile(`./Migrations/syncedModel_${dateFolderSync}/model_changes.txt`, info);
     })
-
 }
+
 export {todaySync, dateFolderSync};
 
