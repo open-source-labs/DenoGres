@@ -23,10 +23,18 @@ export class Model {
       primaryKey?: boolean;
       notNull?: boolean;
       unique?: boolean;
-      checks?: string[];
+      checks?: any; // used to be string[]
       defaultVal?: string | number | boolean | Date;
       autoIncrement?: boolean;
-      association?: { rel_type?: string; table: string; mappedCol: string };
+      association?: any;
+      // { // used to be {rel_type?: string, table: string, mappedCol: string}
+      //   rel_type?: string;
+      //   table?: string;
+      //   mappedCol?: string;
+      //   constraintName: string;
+      //   mappedTable: string;
+      //   mappedColumn: string;
+      // };
       length?: number;
       enumName?: string;
     };
@@ -290,7 +298,7 @@ export class Model {
   //BELONGS TO
   // create foreign key on this model (if not exist)
   static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
-    let foreignKey_ColumnName: string;
+    let foreignKey_ColumnName: any; // used to be typed string
     let mappingTarget_ColumnName: string;
     let associationQuery = "";
     let rel_type = options?.associationName

@@ -1,61 +1,39 @@
 import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
-import { modelParser } from "./modelParser.ts";
+// TODO import { modelParser } from "./modelParser.ts";
 import { introspect } from "./introspect.ts";
+import modelParser2 from "./modelParser2.ts";
 
 const parseSeed = (path: string = "./seed.ts") => {
-  const data: any = Deno.readTextFileSync(resolve(path));
+  path = resolve(path);
+
   const output: any = {};
 
-  const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
+  let data: any = Deno.readTextFileSync(path);
 
-  for (let i = 0; i < tableNames.length; i++) {
-    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
-  }
+  const whitespaces = /\s/g;
 
-  let tablesData = data.replace(/\s*/g, "");
+  data = data.replace(whitespaces, "");
+  data = data.replace(/(const|let|var)/g, "\n");
 
-  tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
+  const tables: any = data.match(/\n.*/g)?.map((table: any) =>
+    table.slice(1, -1)
+  );
 
-  tablesData = tablesData.split(" ");
+  for (const table of tables) {
+    const tableName = table.replace(/(\w+).*/, "$1");
+    // const tableName = table.match(/\w+/)
+    let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
 
-  for (let i = 0; i < tablesData.length; i++) {
-    tablesData[i] = tablesData[i].match(/\{.*\,\}/)[0];
+    tableData = tableData.replace(/\,\}/g, "}");
+    tableData = tableData.replace(/\,\]/g, "]");
+    tableData = tableData.replace(
+      /([\w\_]+)\:/g,
+      '"$1":',
+    );
 
-    let tableData = tablesData[i];
-
-    const regex = /[\{\,\}]/g;
-
-    tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
-
-    tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
-
-    for (let i = 0; i < tableData.length; i++) {
-      tableData[i] = tableData[i].split(" ");
-      for (let j = 0; j < tableData[i].length; j++) {
-        tableData[i][j] = tableData[i][j].split(":");
-      }
-    }
-
-    const tableEntries = [];
-    let columnData: any;
-
-    for (const entry of tableData) {
-      columnData = {};
-      for (const column of entry) {
-        const [columnName, columnValue] = column;
-        if (columnValue.includes("BigInt")) {
-          columnData[columnName] = BigInt(
-            columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
-          );
-        } else columnData[columnName] = JSON.parse(columnValue);
-      }
-      tableEntries.push(columnData);
-    }
-
-    for (const tableName of tableNames) {
-      output[tableName] = tableEntries;
-    }
+    tableData = JSON.parse(tableData);
+    output[tableName] = tableData;
   }
 
   return output;
@@ -73,6 +51,8 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
 
   for (const column in columns) {
     if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+
+    // console.log("columnName", column);
 
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
@@ -109,6 +89,8 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
     createTableQuery += `${constraints}, `;
     constraints = "";
   }
+
+  // console.log('createTableQuery: ', createTableQuery);
 
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
     ");";
@@ -164,24 +146,22 @@ export default async function seed(path: string = "./seed.ts") {
 
   await Deno.run({
     cmd: ["deno", "fmt", path],
-  });
+  }).status();
 
   const db = await ConnectDb();
   const [dbTables] = await introspect();
-  const models = modelParser();
+  const models: any = await modelParser2();
 
-  const modelNameSet: Set<string> = new Set();
-  const dbTableNameSet: Set<string> = new Set();
+  const modelNameSet: Set<string> = new Set(Object.keys(models));
+  const dbTableNameSet: Set<string> = new Set(Object.keys(dbTables));
 
-  // console.log(Deno.readTextFileSync(path));
+  // for (const model of models) {
+  //   modelNameSet.add(model.table);
+  // }
 
-  for (const model of models) {
-    modelNameSet.add(model.table);
-  }
-
-  for (const tableName in dbTables) {
-    dbTableNameSet.add(tableName);
-  }
+  // for (const tableName in dbTables) {
+  //   dbTableNameSet.add(tableName);
+  // }
 
   const seedTables = parseSeed(path);
 
@@ -204,20 +184,11 @@ export default async function seed(path: string = "./seed.ts") {
   for (const seedTableName in seedTables) {
     const operation = getOperation(seedTableName, modelNameSet, dbTableNameSet);
 
-    // console.log("models", modelNameSet);
-    // console.log("dbTables", dbTableNameSet);
-
     // console.log(operation);
 
     switch (operation) {
       case "Create + Insert": {
-        let modelColumns;
-        for (const model of models) {
-          if (model.table === seedTableName) {
-            modelColumns = model.columns;
-            break;
-          }
-        }
+        let modelColumns = models[seedTableName];
 
         const createTableQuery = getCreateTableQuery(
           seedTableName,
@@ -252,3 +223,68 @@ export default async function seed(path: string = "./seed.ts") {
 
   DisconnectDb(db);
 }
+
+// * Previous parseSeed Function
+// const parseSeed2 = (path: string = "./seed.ts") => {
+//   const data: any = Deno.readTextFileSync(resolve(path));
+//   const output: any = {};
+
+//   const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
+
+//   for (let i = 0; i < tableNames.length; i++) {
+//     tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
+//   }
+
+//   // console.log(tableNames);
+
+//   let tablesData = data.replace(/\s*/g, "");
+
+//   tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
+
+//   tablesData = tablesData.split(" ");
+
+//   for (let i = 0; i < tablesData.length; i++) {
+//     tablesData[i] = tablesData[i].match(/\{.*\,\}/)[0];
+
+//     let tableData = tablesData[i];
+
+//     // console.log(tablesData[i]);
+
+//     const regex = /[\{\,\}]/g;
+
+//     tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+
+//     tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
+
+//     for (let i = 0; i < tableData.length; i++) {
+//       tableData[i] = tableData[i].split(" ");
+//       for (let j = 0; j < tableData[i].length; j++) {
+//         tableData[i][j] = tableData[i][j].split(":");
+//       }
+//     }
+
+//     const tableEntries = [];
+//     let columnData: any;
+
+//     for (const entry of tableData) {
+//       columnData = {};
+//       for (const column of entry) {
+//         const [columnName, columnValue] = column;
+//         if (columnValue.includes("BigInt")) {
+//           columnData[columnName] = BigInt(
+//             columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
+//           );
+//         } else columnData[columnName] = JSON.parse(columnValue);
+//       }
+//       tableEntries.push(columnData);
+//     }
+
+//     for (const tableName of tableNames) {
+//       output[tableName] = tableEntries;
+//     }
+//   }
+
+//   return output;
+// };
+
+await seed();

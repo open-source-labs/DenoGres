@@ -6,6 +6,8 @@ import { sync } from "./src/functions/sync.ts";
 import { dbPull } from "./src/functions/dbPull.ts";
 import seed from "./src/functions/seed.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
+import sync2 from "./src/functions/sync2.ts";
+import { dbPull2 } from "./src/functions/dbPull2.ts";
 
 switch (Deno.args[0]) {
   case "--init":
@@ -25,13 +27,13 @@ switch (Deno.args[0]) {
     if (envVar.DATABASE_URI === "") {
       console.log("Please enter a valid DATABASE_URI value in .env");
     } else {
-      dbPull();
+      dbPull2();
     }
     break;
   }
   case "--db-sync": {
-    Deno.args[1] === "-x" ? sync(true) : sync(true);
-    Deno.args[1] === "-log" ? sync(true) : sync(true); //* adding for dbSync log
+    Deno.args[1] === "-x" ? sync2(true) : sync2();
+    Deno.args[1] === "-log" ? sync2(true) : sync2(); //* adding for dbSync log
 
     // -CASCADE ? DROP CASCADE
     // ! COME BACK LATER TO FIX OVERWRITE
