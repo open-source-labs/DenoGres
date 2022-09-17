@@ -1,9 +1,12 @@
 import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
 import { createClassName } from '../functions/StringFormat.ts'
 import { introspect } from './introspect.ts'
+import { checkDbPull } from './checkDbPull.ts';
 
+export let wasFired:boolean;
 
 export async function dbPull() {
+    checkDbPull();//* Added this in for migration log
     const [tableListObj, enumObj] = await introspect();
 
     let autoCreatedModels = `import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n// user model definition comes here\n\n`;
@@ -97,4 +100,6 @@ export async function dbPull() {
     // Create the model.ts file
     Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 }
+
+
 

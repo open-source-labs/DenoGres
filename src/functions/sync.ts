@@ -3,6 +3,7 @@ import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { primaryKeyQuery, tableUniqueQuery } from "../queries/introspection.ts";
 import { ModelColumn, ModelInfo, modelParser } from "./modelParser.ts";
 import { enumSync } from "./enumSync.ts";
+import { checkDbSync } from "./checkDbSync.ts"
 
 // take the data from the model.ts file and reverse engineer it
 // essentially make it look like the query results
@@ -141,6 +142,7 @@ const alterTableError = (err: Error) => {
 };
 
 export const sync = async (overwrite = false) => {
+  await checkDbSync();
   const [dbTables] = await introspect();
 
   const models = modelParser();
@@ -149,7 +151,7 @@ export const sync = async (overwrite = false) => {
   let alterTableQueries = ``;
 
   // ! Need to Come back to this later
-  // await enumSync();
+  await enumSync();
 
   // console.log("models\n", models);
   // // console.log("modelObject\n", dbTables);
