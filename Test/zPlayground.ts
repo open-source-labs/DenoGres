@@ -4,12 +4,15 @@ import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 import {checkDbPull} from "../src/functions/checkDbPull.ts";
 import sync2 from "../src/functions/sync2.ts"
 import seed from "../src/functions/seed.ts"
+import {checkDbSync} from "../src/functions/checkDbSync.ts"
 
 // await checkDbPull();
 
-// await sync2();
+sync2();
 
-await seed();
+// await seed();
+
+// checkDbSync()
 
 
 // await dbPull2();
