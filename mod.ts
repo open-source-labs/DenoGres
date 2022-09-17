@@ -1,20 +1,27 @@
+/* This module contains the denoGres commands that are compiled when typed in a command line */
 import { config, parse } from "./deps.ts";
-
 import "https://deno.land/x/dotenv/load.ts";
-
 import { init } from "./src/functions/init.ts";
 import { sync } from "./src/functions/sync.ts";
 import { dbPull } from "./src/functions/dbPull.ts";
 import seed from "./src/functions/seed.ts";
+import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 
 switch (Deno.args[0]) {
   case "--init":
-    init();
+    init(); // This function is imported on line 5, It creates a models folder, and a env file.
     break;
+  case "--log": {
+    // declare a constatnt
+    const myLog = Deno.readFileSync(
+      resolve("./Migrations/log/migration_log.txt"),
+    );
+    console.log(myLog);
+    break;
+  }
 
   case "--db-pull": { // introspection begins
-    const envVar = parse(await Deno.readTextFile("./.env")); // Get DB_URI
-
+    const envVar = parse(await Deno.readTextFile("./.env")); // Gets the DB_URI
     if (envVar.DATABASE_URI === "") {
       console.log("Please enter a valid DATABASE_URI value in .env");
     } else {
@@ -24,6 +31,8 @@ switch (Deno.args[0]) {
   }
   case "--db-sync": {
     Deno.args[1] === "-x" ? sync(true) : sync(true);
+    Deno.args[1] === "-log" ? sync(true) : sync(true); //* adding for dbSync log
+
     // -CASCADE ? DROP CASCADE
     // ! COME BACK LATER TO FIX OVERWRITE
     break;
@@ -41,6 +50,9 @@ switch (Deno.args[0]) {
         "-A",
         "https://deno.land/x/denogresdev/webview_script.ts",
       ],
+      // FOR DEVELOPMENT
+      // "webview_script.ts",
+      // FOR PRODUCTION
     });
     await app.status();
     break;
@@ -49,9 +61,15 @@ switch (Deno.args[0]) {
     await Deno.args[1] === undefined ? seed() : seed(Deno.args[1]);
     break;
   }
+  // case "--log": {
+  //   //* Check if -c flag was passed in for comment
+  //   Deno.args[1] === "-c" ? console.log(denoLog()) : 'Please enter a comment with the -c flag';
+  //   break;
+  // }
   default:
 }
 
+// This is the message that details what the commands do
 function displayHelpMsg() {
   return `flags:
 --init: set-up DenoGres required files

@@ -1,3 +1,4 @@
+// Checks if directory exists, if not its created
 import { ensureDir } from "../../deps.ts";
 
 export function init() {
@@ -12,6 +13,7 @@ DATABASE_URI=" "
 # (for test mode)
 TEST_DB_URI=" "
 `
+    // Check if root exists, then returns a promise wheich writes the file path, and the file content to the file path.
     ensureDir(envFilePath).then(() => {
     Deno.writeTextFile(envFilePath + ".env", envFileContent);
     // + add .env in gitignor file (if no gitignore file, make one)
