@@ -39,9 +39,6 @@ switch (Deno.args[0]) {
         "deno",
         "run",
         "-A",
-        // FOR DEVELOPMENT
-        // "webview_script.ts",
-        // FOR PRODUCTION
         "https://deno.land/x/denogresdev/webview_script.ts",
       ],
     });
