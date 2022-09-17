@@ -11,15 +11,16 @@ interface IEnumRow {
 const enumRowGuard = (record: object): record is IEnumRow => {
     return 'enum_schema' in record && 'enum_name' in record && 'enum_value' in record;
 }
-
+// ! This is the main function to worry about
 export const enumSync = async () => {
     let enumCreateAlter = ``;
 
-    const modelEnum = enumParser();
-    const db = await ConnectDb();
+    const modelEnum = enumParser(); //* This runs through the model.ts file and returns an object with all enum types as keys, and their values as array of strings
+    const db = await ConnectDb(); 
 
-    const results = await db.queryObject(enumQuery);
+    const results = await db.queryObject(enumQuery); 
     const dbEnum = results.rows;
+    // console.log('This is dbEnum', dbEnum);//* returns an array of objects with each object being an enumerable that matches the shape of IEnumRow
 
     interface IEnumObj {
         enum_schema: string,
@@ -28,17 +29,24 @@ export const enumSync = async () => {
 
     const dbEnumObj: Record<string, IEnumObj> = {};
 
+    //* Goes through the dbEnum array and creates an object with enum_schema and enum_value as keys and their respective names as values. 
+    //* ie enum_name: species, enum_value: canine, feline
     dbEnum.forEach(el => {
         if(typeof el === 'object' && el !== null && enumRowGuard(el)){
             dbEnumObj[el.enum_name] = {enum_schema: el.enum_schema, enum_value: el.enum_value.split(/, */)};
+            // console.log('This is the new dbEnumObj value: ', dbEnumObj[el.enum_name]);
+            // console.log('stringified el', JSON.stringify(el));
+            // console.log('stringified modelEnum', JSON.stringify(modelEnum));
 
+            //* database enum doesn't exist in model - remove database enum
             if(!modelEnum[el.enum_name]) { // TESTED
-                // database enum doesn't exist in model - remove database enum
                 enumCreateAlter += `DROP type ${el.enum_name}; `
-            } else {
-
+            } 
+            else {
+                //* If the enum object and the values from modelEnum do not align
                 if(JSON.stringify(el) !== JSON.stringify(modelEnum[el.enum_name])) {
                     // if the db and model do not align determine what needs to change
+                    // console.log('Stringify Failed');
                 }
             }
         }
