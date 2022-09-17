@@ -42,7 +42,7 @@ const parseSeed = (path: string = "./seed.ts") => {
 // console.log(parseSeed());
 // console.log(parseSeed("Test/seed2.ts"));
 
-export const getCreateTableQuery = (tableName: string, columns: any) => {
+const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
   let constraints = "";

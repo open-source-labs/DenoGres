@@ -2,7 +2,9 @@ import { introspect } from "./introspect.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
 // import { enumSync } from "./enumSync.ts";
 import modelParser2 from "./modelParser2.ts";
-import { getCreateTableQuery } from "./seed.ts";
+// import { getCreateTableQuery } from "./seed.ts";
+import { enumSync } from "./enumSync.ts";
+import { checkDbSync } from "./checkDbSync.ts";
 
 // interface TableForeignKey {
 //   table_name: string;
@@ -21,6 +23,75 @@ import { getCreateTableQuery } from "./seed.ts";
 //     );
 //   });
 // };
+
+const getCreateTableQuery = (tableName: string, columns: any) => {
+  let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
+
+  let constraints = "";
+
+  const associations = [];
+
+  for (const column in columns) {
+    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+
+    // console.log("columnName", column);
+
+    createTableQuery += `${column} ${columns[column].type}`;
+    for (const constraint in columns[column]) {
+      switch (constraint) {
+        case "association": {
+          associations.push({
+            columnName: column,
+            table: columns[column].association?.table,
+            mappedCol: columns[column].association?.mappedCol,
+          });
+          break;
+        }
+        case "primaryKey": {
+          constraints += " PRIMARY KEY";
+          break;
+        }
+        case "notNull": {
+          constraints += " NOT NULL";
+          break;
+        }
+        case "unique": {
+          constraints += " UNIQUE";
+          break;
+        }
+        case "defaultVal": {
+          constraints += ` DEFAULT ${columns[column].defaultVal}`;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    createTableQuery += `${constraints}, `;
+    constraints = "";
+  }
+
+  // console.log('createTableQuery: ', createTableQuery);
+
+  createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
+    ");";
+
+  let associationsQuery = ``;
+  let associationIndex = 0;
+
+  for (const association of associations) {
+    const { columnName, table, mappedCol } = association;
+
+    associationsQuery += `
+      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+    `;
+  }
+
+  createTableQuery += associationsQuery;
+
+  return createTableQuery;
+};
 
 const getDeleteTablesQuery = (
   deleteTablesList: string[],
@@ -490,6 +561,8 @@ const getUpdateTablesQuery = async (
 };
 
 export default async function sync2(overwrite = false) {
+  await checkDbSync();
+
   if (!overwrite) {
     console.log(
       "To avoid all potential prompts, please consider running your command with the -x flag.",
@@ -504,7 +577,7 @@ export default async function sync2(overwrite = false) {
   const models = await modelParser2();
 
   // ! Need to Come back to this later
-  // await enumSync();
+  await enumSync();
 
   const modelTableNames: Set<string> = new Set(Object.keys(models));
   const dbTableNames: Set<string> = new Set(Object.keys(dbTables));
