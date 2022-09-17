@@ -46,4 +46,4 @@ export function checkDbPull(): void {
 // export const todayDate = today; //* date used to compare when modelBuild was created in human readable format.
 // export const permDate = dateFolder; //* date that is the timestamp for the folder when it was created.
 
-export {today, dateFolder}
+export {today, dateFolder};

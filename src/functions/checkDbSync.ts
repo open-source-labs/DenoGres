@@ -1,13 +1,31 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
-import { createCurrentDate, dateNow } from './checkDbPull.ts';
 import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
 import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
 import { uniqueLog } from './myLog.ts';
 
+
+//* Have to declare these date functions in both files, otherwise I end up with issues.
+export const createCurrentDate = () : string => {
+    const currentDate: string = new Date().toISOString()
+    .replace(/[-:.Z]/g, '')     // replace T with a space
+    .replace(/[T]/g, '_');
+    return currentDate;
+}
+
+//* Date and time for txt file.
+export const dateNow = () : Date => {
+    const time : number = new Date().getTime();
+    const myDate: Date = new Date(time);
+    return myDate;
+}
+
+
 //* creating dates
 const dateFolderSync = createCurrentDate();
 const todaySync = dateNow();
-// let dbSyncBool = false;
+console.log(dateFolderSync);
+console.log(todaySync);
+
 
 
 export function checkDbSync(): void {
