@@ -1,4 +1,4 @@
-interface IModel {
+export interface IModel {
   [key: string]: any
 }
 
@@ -36,8 +36,8 @@ const METHODS: IMethodsDict = {
   sum: true,
 };
 
-// check if first term in string is valid model in current db
-const isValidModel = (modelName: string | undefined, models: IModel): boolean => {
+// check if first term in string is same as name of a valid model (i.e. ES6 class) in current db
+const isValidModel = (modelName: string | undefined, models: IModel | undefined): boolean => {
   const modelsDict: IModelDict = {};
   for (const key in models) {
     if (models[key] instanceof Function) {
@@ -62,19 +62,17 @@ const separateQueryTerms = (queryStr: string): string[] => {
   return queryStr.replace(/\(.*?\)/g, '').replace(/;$/, '').split('.');
 }
 
-// extract the main CRUD method invoked in this query 
+// extract the main CRUD method invoked in this query (e.g. 'select' in ['Person', 'select', 'query'])
 export const extractType = (queryStr: string): string => {
   return separateQueryTerms(queryStr)[1];
 }
 
 // check input query string for errors
-export const checkInput = async (queryStr: string): Promise<IError | null> => {
-  const importPath: string = '../user/model.ts';
-  const models = await import(importPath);
+export const checkInput = (queryStr: string, modelsObj?: IModel): IError | null => {
   const termsArray: string[] = separateQueryTerms(queryStr);
-  console.log(termsArray);
   const modelName: string | undefined = termsArray.shift();
-  if (!isValidModel(modelName, models)) {
+
+  if (!isValidModel(modelName, modelsObj)) {
     return { Error: 'Model does not exist in database instance.'};
   }
   if (!allMethodsAreValid(termsArray, METHODS)) {

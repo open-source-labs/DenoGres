@@ -307,8 +307,7 @@ Deno.test(
     tableName: string = sampleTableName,
   ): Promise<void> {
     // const db = await ConnectDb(
-    //   // * starwars
-    //   // "postgres://obdwuryp:EcSMdYz0mPXGgiQSD4_8vLEYPjkHOJ5e@heffalump.db.elephantsql.com/obdwuryp",
+
     // );
 
     const expectedInsertQuery = `
