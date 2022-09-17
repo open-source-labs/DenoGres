@@ -25,7 +25,7 @@ import { checkDbSync } from "./checkDbSync.ts";
 // };
 
 export default async function sync2(overwrite = false) {
-  await checkDbSync();
+  // await checkDbSync();
 
   if (!overwrite) {
     console.log(
@@ -40,7 +40,6 @@ export default async function sync2(overwrite = false) {
 
   const models = await modelParser2();
 
-  // ! Need to Come back to this later
   await enumSync();
 
   const modelTableNames: Set<string> = new Set(Object.keys(models));

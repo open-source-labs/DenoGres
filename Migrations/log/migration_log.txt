@@ -16,3 +16,12 @@ This model was created with db-pull and was created on Fri Sep 16 2022 19:15:38 
 This model was created with db-sync and was created on Fri Sep 16 2022 19:16:41 GMT-0700 (Pacific Daylight Time). It's currently stored in the directory './Migrations/syncedModel/_20220917_021641550'
  This is the synced version. 
 
+This model was created with db-sync and was created on Sat Sep 17 2022 09:05:16 GMT-0700 (Pacific Daylight Time). It's currently stored in the directory './Migrations/syncedModel/_20220917_160516970'
+ 
+
+This model was created with db-sync and was created on Sat Sep 17 2022 09:05:42 GMT-0700 (Pacific Daylight Time). It's currently stored in the directory './Migrations/syncedModel/_20220917_160542449'
+ 
+
+This model was created with db-sync and was created on Sat Sep 17 2022 09:05:52 GMT-0700 (Pacific Daylight Time). It's currently stored in the directory './Migrations/syncedModel/_20220917_160552132'
+ 
+

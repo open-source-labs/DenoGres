@@ -1,135 +1,100 @@
-import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
+import { Model } from "https://deno.land/x/denogresdev/mod.ts";
 // user model definition comes here
 
-
 export interface Species {
-  average_height: string
-  average_lifespan: string
-  hair_colors: string
-  skin_colors: string
-  eye_colors: string
-  _id: number
-  name: string
-  classification: string
+  average_lifespan: string;
+  hair_colors: string;
+  skin_colors: string;
+  _id: number;
+  language: string;
+  homeworld_id: bigint;
+  eye_colors: string;
+  name: string;
+  classification: string;
+  average_height: string;
 }
 
 export class Species extends Model {
-  static table = 'species';
+  static table = "species";
   static columns = {
-    average_height: {
-      type: 'varchar',
-    },
     average_lifespan: {
-      type: 'varchar',
+      type: "varchar",
     },
     hair_colors: {
-      type: 'varchar',
+      type: "varchar",
     },
     skin_colors: {
-      type: 'varchar',
-    },
-    eye_colors: {
-      type: 'varchar',
+      type: "varchar",
     },
     _id: {
-      type: 'int4',
+      type: "int4",
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
     },
+    language: {
+      type: "varchar",
+    },
+    homeworld_id: {
+      type: "int8",
+    },
+    eye_colors: {
+      type: "varchar",
+    },
     name: {
-      type: 'varchar',
+      type: "varchar",
       notNull: true,
     },
     classification: {
-      type: 'varchar',
+      type: "varchar",
     },
-  }
+    average_height: {
+      type: "varchar",
+    },
+  };
 }
 
-
 export interface Person {
-  species_id: bigint
-  _id: number
-  name: string
+  _id: number;
+  name: string;
+  species_id: bigint;
+  current_mood: keyof typeof Mood;
 }
 
 export class Person extends Model {
-  static table = 'people';
+  static table = "people";
   static columns = {
-    species_id: {
-      type: 'int8',
-      notNull: true,
-      association: {
-        table: 'species',
-        mappedCol: '_id',
-      }
-    },
     _id: {
-      type: 'int4',
+      type: "int4",
       notNull: true,
       primaryKey: true,
       autoIncrement: true,
     },
     name: {
-      type: 'varchar',
+      type: "varchar",
       notNull: true,
     },
-  }
+    species_id: {
+      type: "int8",
+      notNull: true,
+      association: {
+        table: "species",
+        mappedCol: "_id",
+      },
+    },
+    current_mood: {
+      type: "enum",
+      enumName: "mood",
+    },
+    current_mood2: {
+      type: "enum",
+      enumName: "mood",
+    },
+  };
 }
 
-
-export interface Animal {
-  animal: string
-  weight: number
-  weight_measure: string
-  species: string
-  country: string
-  color: string
+export enum Mood {
+  sad,
+  ok,
+  happy,
 }
-
-export class Animal extends Model {
-  static table = 'animals';
-  static columns = {
-    animal: {
-      type: 'varchar',
-      length: 100,
-    },
-    weight: {
-      type: 'int2',
-    },
-    weight_measure: {
-      type: 'varchar',
-      length: 100,
-    },
-    species: {
-      type: 'varchar',
-      length: 100,
-    },
-    country: {
-      type: 'varchar',
-      length: 100,
-    },
-    color: {
-      type: 'varchar',
-    },
-  }
-}
-
-export enum Enum_test {
-monday,
-tuesday,
-wednesday,
-thursday,
-friday,
-saturday,
-sunday,
-}
-
-export enum Genus_name {
-aves,
-canine,
-feline,
-insect,
-}
-
