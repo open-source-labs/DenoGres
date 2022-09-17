@@ -74,29 +74,29 @@ export default async function sync2(overwrite = false) {
       // dbColumn.type = dbColumn.type || null;
       // dbColumn.notNull = dbColumn.no
 
-      if (column.checks && dbColumn.checks) {
-        if (
-          JSON.stringify(Object.keys(column.checks).sort()) !==
-            JSON.stringify(Object.keys(dbColumn.checks).sort())
-        ) {
-          return true;
-        }
+      // if (column.checks && dbColumn.checks) {
+      //   if (
+      //     JSON.stringify(Object.keys(column.checks).sort()) !==
+      //       JSON.stringify(Object.keys(dbColumn.checks).sort())
+      //   ) {
+      //     return true;
+      //   }
 
-        if (
-          JSON.stringify(Object.keys(column.checks).sort()).replace(
-            /\s/g,
-            "",
-          ) !==
-            JSON.stringify(Object.keys(dbColumn.checks).sort()).replace(
-              /\s/g,
-              "",
-            )
-        ) {
-          return true;
-        }
+      //   if (
+      //     JSON.stringify(Object.keys(column.checks).sort()).replace(
+      //       /\s/g,
+      //       "",
+      //     ) !==
+      //       JSON.stringify(Object.keys(dbColumn.checks).sort()).replace(
+      //         /\s/g,
+      //         "",
+      //       )
+      //   ) {
+      //     return true;
+      //   }
 
-        console.log("check fine");
-      }
+      //   console.log("check fine");
+      // }
 
       // console.log(column.type);
       // console.log(dbColumn.type);
@@ -195,9 +195,9 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
           });
           break;
         }
-        case "checks": {
-          checks = columns[column].checks;
-        }
+        // case "checks": {
+        //   checks = columns[column].checks;
+        // }
         case "primaryKey": {
           constraints += " PRIMARY KEY";
           break;
@@ -355,10 +355,12 @@ const getDeleteColumnsQuery = (
     }
   }
 
+  // const originalLength = deleteColumnsQuery.length;
+
   deleteColumnsQuery =
     deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
 
-  return deleteColumnsQuery !== `ALTER TABLE ${tableName} `
+  return deleteColumnsQuery.length > originalLength
     ? deleteColumnsQuery
     : "";
 };
