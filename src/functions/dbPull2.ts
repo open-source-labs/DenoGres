@@ -58,7 +58,7 @@ export async function dbPull2() {
       if (columnObj.unique) classCode += `      unique: true,\n`;
       if (columnObj.checks) {
         // classCode += `      check: [${columnObj.checks}],\n`;
-        classCode += `      checks: ${String(columnObj.checks)},\n`;
+        classCode += `      checks: ${JSON.stringify(columnObj.checks)},\n`;
 
         // console.log(columnObj.checks);
       }

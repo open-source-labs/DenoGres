@@ -287,4 +287,4 @@ export default async function seed(path: string = "./seed.ts") {
 //   return output;
 // };
 
-await seed();
+// await seed();

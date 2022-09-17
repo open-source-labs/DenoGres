@@ -14,11 +14,15 @@ DATABASE_URI=" "
 TEST_DB_URI=" "
 `
     // Check if root exists, then returns a promise wheich writes the file path, and the file content to the file path.
+
     ensureDir(envFilePath).then(() => {
     Deno.writeTextFile(envFilePath + ".env", envFileContent);
     // + add .env in gitignor file (if no gitignore file, make one)
     console.log('.env file created')
     })
+
+    const migrationFilePath = "./Migrations/log/";
+    ensureDir(migrationFilePath)
 
 // create moodel folder in root directory
 // inside the model folder, create model.ts file with boilerplate code
