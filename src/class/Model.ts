@@ -261,12 +261,27 @@ export class Model {
   }
 
   // execute query in database
-  static async query(uri?: string): Promise<unknown[]> {
+  static async query(uri?: string): Promise<unknown[] | undefined> {
+    // Old code - doesn't include try catch block which ends up causing connections to remain open within a DB
+    // const db = await ConnectDb(uri);
+    // const queryResult = await db.queryObject(this.sql);
+    // this.sql = "";
+    // await DisconnectDb(db);
+    // return queryResult.rows;
+
     const db = await ConnectDb(uri);
-    const queryResult = await db.queryObject(this.sql);
+
+    let queryResult;
+
+    // include try catch block to ensure that the SQL string gets cleared, db gets disconnected
+    try {
+      queryResult = await db.queryObject(this.sql);
+    } catch (err) {
+      console.log(err);
+    }
     this.sql = "";
     await DisconnectDb(db);
-    return queryResult.rows;
+    return (queryResult) ? queryResult.rows : undefined;
   }
 
   // same method with query but returning one instance

@@ -1,1 +1,0 @@
-[{"_id":"JN-TxlCytp7sHkOU95wkS","queryName":"Standee Attendees","queryText":"Person.select('*').query();"},{"_id":"I-aQMPpeZCVHBCWkp5psJ","queryName":"Another Query","queryText":"Species.select('*').limit(2).query();"}]

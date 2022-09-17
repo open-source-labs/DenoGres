@@ -1,4 +1,4 @@
-import { SizeHint, Webview } from "https://deno.land/x/webview/mod.ts";
+import { SizeHint, Webview } from "../deps.ts";
 
 const webview = new Webview();
 
@@ -9,5 +9,5 @@ webview.size = {
 };
 
 webview.title = "Denogres 2.0";
-webview.navigate("http://localhost:8000");
+webview.navigate("https://denogres.deno.dev/gui");
 webview.run();
