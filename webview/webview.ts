@@ -1,4 +1,6 @@
-import { SizeHint, Webview } from "../deps.ts";
+// import { SizeHint, Webview } from "../deps.ts";
+import { SizeHint, Webview } from "https://deno.land/x/webview@0.7.4/mod.ts"; //webview.ts
+
 
 const webview = new Webview();
 
