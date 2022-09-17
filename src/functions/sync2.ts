@@ -1,8 +1,6 @@
-import { introspect } from "./introspect.ts";
+import { introspect2 } from "./introspect2.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
-// import { enumSync } from "./enumSync.ts";
 import modelParser2 from "./modelParser2.ts";
-// import { getCreateTableQuery } from "./seed.ts";
 import { enumSync } from "./enumSync.ts";
 import { checkDbSync } from "./checkDbSync.ts";
 
@@ -25,7 +23,7 @@ import { checkDbSync } from "./checkDbSync.ts";
 // };
 
 export default async function sync2(overwrite = false) {
-  // await checkDbSync();
+  await checkDbSync();
 
   if (!overwrite) {
     console.log(
@@ -35,10 +33,12 @@ export default async function sync2(overwrite = false) {
 
   let masterQuery = ``;
 
-  const [dbTables] = await introspect();
+  const [dbTables] = await introspect2();
   const db = await ConnectDb();
 
   const models = await modelParser2();
+
+  // console.log('models', models);
 
   await enumSync();
 
@@ -49,6 +49,9 @@ export default async function sync2(overwrite = false) {
   const updateTablesList = [];
 
   const checkUpdateColumns = (modelColumns: any, dbColumns: any) => {
+    // console.log('modelColumns', Object.keys(modelColumns));
+    // console.log('dbColumns', dbColumns);
+
     for (const columnName in dbColumns) {
       if (!(modelColumns[columnName])) return true;
     }
@@ -57,10 +60,46 @@ export default async function sync2(overwrite = false) {
       const column = modelColumns[columnName];
       const dbColumn = dbColumns[columnName];
 
+      // console.log(columnName);
+      // console.log(column, '\n');
+      // console.log(column.checks);
+      // console.log(dbColumn.checks);
+      // console.log(Boolean(column.checks));
+      // console.log(Boolean(dbColumn.checks));
+
+      // console.log(Boolean(column.checks) && Boolean(dbColumn.checks));
+
       if (!dbColumn) return true;
 
       // dbColumn.type = dbColumn.type || null;
       // dbColumn.notNull = dbColumn.no
+
+      if (column.checks && dbColumn.checks) {
+        if (
+          JSON.stringify(Object.keys(column.checks).sort()) !==
+            JSON.stringify(Object.keys(dbColumn.checks).sort())
+        ) {
+          return true;
+        }
+
+        if (
+          JSON.stringify(Object.keys(column.checks).sort()).replace(
+            /\s/g,
+            "",
+          ) !==
+            JSON.stringify(Object.keys(dbColumn.checks).sort()).replace(
+              /\s/g,
+              "",
+            )
+        ) {
+          return true;
+        }
+
+        console.log("check fine");
+      }
+
+      // console.log(column.type);
+      // console.log(dbColumn.type);
 
       if (column.type !== dbColumn.type) return true;
       if (Boolean(column.notNull) !== Boolean(dbColumn.notNull)) return true;
@@ -80,12 +119,21 @@ export default async function sync2(overwrite = false) {
       ) {
         return true;
       }
+
+      // console.log('columnName', columnName);
+      // console.log(columnName);
+      // console.log(column);
+      // console.log(dbColumn);
+
+      // console.log('columnChecks', column.checks);
+      // console.log('dbColumnChecks', dbColumn.checks);
     }
 
     return false;
   };
 
   for (const tableName of modelTableNames) {
+    console.log("\n", tableName);
     if (!(dbTableNames.has(tableName))) {
       createTablesList.push(tableName);
       modelTableNames.delete(tableName);
@@ -128,6 +176,8 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
 
   const associations = [];
 
+  let checks;
+
   for (const column in columns) {
     if (columns[column].autoIncrement) columns[column].type = "SERIAL";
 
@@ -139,10 +189,14 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
         case "association": {
           associations.push({
             columnName: column,
-            table: columns[column].association?.table,
-            mappedCol: columns[column].association?.mappedCol,
+            constraintName: columns[column].association?.constraintName,
+            mappedTable: columns[column].association?.mappedTable,
+            mappedColumn: columns[column].association?.mappedColumn,
           });
           break;
+        }
+        case "checks": {
+          checks = columns[column].checks;
         }
         case "primaryKey": {
           constraints += " PRIMARY KEY";
@@ -178,12 +232,23 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
   let associationIndex = 0;
 
   for (const association of associations) {
-    const { columnName, table, mappedCol } = association;
+    const { columnName, mappedTable, mappedColumn } = association;
 
     associationsQuery += `
-      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
+      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${mappedTable}(${mappedColumn});
     `;
   }
+
+  // if (checks) {
+  //   let checksQuery = ``;
+  //   let checksIndex = 0;
+
+  //   for (const check in checks) {
+  //     const columnName = checks[check].slice(1, checks[check].indexOf(' '));
+
+  //     checksQuery += `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_`
+  //   }
+  // }
 
   createTableQuery += associationsQuery;
 
@@ -348,10 +413,10 @@ const getCreateColumnsQuery = (
           createColumnQuery += `DEFAULT ${model[columnName].defaultVal} `;
           break;
         }
-        // ! Work on these later
         case "checks": {
           break;
         }
+        // ! Work on these later
         case "length": {
           break;
         }
@@ -479,7 +544,7 @@ const getUpdateColumnsQuery = async (
         case "association": {
           const association = {
             mappedTable: modelColumn.association.table || null,
-            mappedColumn: modelColumn.association.mappedCol || null,
+            mappedColumn: modelColumn.association.mappedColumn || null,
           };
 
           let foreignKeyIndex: number = 0;
@@ -662,5 +727,3 @@ const getUpdateTablesQuery = async (
 
   return updateTablesQuery;
 };
-
-await sync2(true);
