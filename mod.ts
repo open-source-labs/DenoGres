@@ -49,9 +49,12 @@ switch (Deno.args[0]) {
       cmd: [
         "deno",
         "run",
-        "-A",
-        "https://deno.land/x/denogresdev/webview_script.ts",
+        "-Ar",
+        "--unstable",
+        "./webview/webview.ts",
       ],
+      // "app": "deno run -Ar --unstable ./webview/webview.ts",
+
       // FOR DEVELOPMENT
       // "webview_script.ts",
       // FOR PRODUCTION
