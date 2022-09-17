@@ -5,12 +5,19 @@ import { init } from "./src/functions/init.ts";
 import { sync } from "./src/functions/sync.ts";
 import { dbPull } from "./src/functions/dbPull.ts";
 import seed from "./src/functions/seed.ts";
+import { resolve } from 'https://deno.land/std@0.141.0/path/win32.ts';
 
 
 switch(Deno.args[0]) {
     case '--init':
         init(); // This function is imported on line 5, It creates a models folder, and a env file.
         break;
+    case '--log': {
+          // declare a constatnt
+          const myLog = Deno.readFileSync(resolve('./Migrations/log/migration_log.txt'));
+          console.log(myLog);
+          break;
+            }
 
     case '--db-pull': {// introspection begins
         const envVar = parse(await Deno.readTextFile('./.env')); // Gets the DB_URI
@@ -24,6 +31,8 @@ switch(Deno.args[0]) {
       }
       case "--db-sync": {
         Deno.args[1] === "-x" ? sync(true) : sync(true);
+        Deno.args[1] === "-log" ? sync(true) : sync(true); //* adding for dbSync log
+
         // -CASCADE ? DROP CASCADE
         // ! COME BACK LATER TO FIX OVERWRITE
         break;

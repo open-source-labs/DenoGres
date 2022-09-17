@@ -85,6 +85,7 @@ export interface Animal {
   weight_measure: string
   species: string
   country: string
+  color: string
 }
 
 export class Animal extends Model {
@@ -109,6 +110,9 @@ export class Animal extends Model {
       type: 'varchar',
       length: 100,
     },
+    color: {
+      type: 'varchar',
+    },
   }
 }
 
@@ -118,6 +122,8 @@ tuesday,
 wednesday,
 thursday,
 friday,
+saturday,
+sunday,
 }
 
 export enum Genus_name {
