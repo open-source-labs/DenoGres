@@ -1,8 +1,26 @@
 import { introspect } from "./introspect.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
-import { enumSync } from "./enumSync.ts";
+// import { enumSync } from "./enumSync.ts";
 import modelParser2 from "./modelParser2.ts";
 import { getCreateTableQuery } from "./seed.ts";
+
+// interface TableForeignKey {
+//   table_name: string;
+//   foreign_key: string;
+//   pg_get_constraintdef: string;
+// }
+
+// const isTableForeignKeys = (
+//   records: TableForeignKey[] | unknown[],
+// ): records is TableForeignKey[] => {
+//   return records.every((record: any) => {
+//     return (
+//       "table_name" in record &&
+//       "foreign_key" in record &&
+//       "pg_get_constraintdef" in record
+//     );
+//   });
+// };
 
 const getDeleteTablesQuery = (
   deleteTablesList: string[],
@@ -51,7 +69,7 @@ const getCreateTablesQuery = (createTablesList: string[], models: any) => {
   let getCreateTablesQuery = ``;
 
   for (const tableName of createTablesList) {
-    const columns = models?.tableName;
+    const columns = models[tableName];
     getCreateTablesQuery += getCreateTableQuery(tableName, columns);
   }
 
@@ -64,6 +82,7 @@ const getDeleteColumnsQuery = (
   overwrite: Boolean,
 ) => {
   let deleteColumnsQuery = `ALTER TABLE ${tableName} `;
+  const originalLength = deleteColumnsQuery.length;
 
   if (overwrite) {
     for (const columnName of deleteColumnsList) {
@@ -73,7 +92,7 @@ const getDeleteColumnsQuery = (
     deleteColumnsQuery =
       deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
 
-    return deleteColumnsQuery;
+    return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : "";
   }
 
   for (const columnName of deleteColumnsList) {
@@ -106,36 +125,38 @@ const getDeleteColumnsQuery = (
   deleteColumnsQuery =
     deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
 
-  return deleteColumnsQuery;
+  return deleteColumnsQuery !== `ALTER TABLE ${tableName} `
+    ? deleteColumnsQuery
+    : "";
 };
 
 const getCreateColumnsQuery = (
   tableName: string,
   createColumnList: string[],
-  models: any,
+  model: any,
 ) => {
   let createColumnsQuery = ``;
 
   for (const columnName of createColumnList) {
-    if (models[columnName].autoIncrement) {
-      models[columnName].type = "SERIAL";
+    if (model[columnName].autoIncrement !== undefined) {
+      model[columnName].type = "SERIAL";
     }
 
     let createColumnQuery =
       `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${
-        models[columnName].type
+        model[columnName].type
       } `;
 
     const associations = [];
 
-    for (const constraint in models[columnName]) {
+    for (const constraint in model[columnName]) {
       switch (constraint) {
         case "association": {
           associations.push({
             tableName: tableName,
             columnName: columnName,
-            mappedTable: models[columnName].association?.table,
-            mappedColumn: models[columnName].association?.mappedCol,
+            mappedTable: model[columnName].association?.table,
+            mappedColumn: model[columnName].association?.mappedCol,
           });
           break;
         }
@@ -152,7 +173,7 @@ const getCreateColumnsQuery = (
           break;
         }
         case "defaultVal": {
-          createColumnQuery += `DEFAULT ${models[columnName].defaultVal} `;
+          createColumnQuery += `DEFAULT ${model[columnName].defaultVal} `;
           break;
         }
         // ! Work on these later
@@ -188,30 +209,191 @@ const getUpdateColumnsQuery = async (
   tableName: string,
   updateColumnList: string[],
   models: any,
-  overwrite: Boolean,
 ) => {
   const db = await ConnectDb();
 
-  const tableForeignKeysQuery = `
-    SELECT conrelid::regclass AS table_name, 
-          conname AS foreign_key, 
-          pg_get_constraintdef(oid) 
-    FROM   pg_constraint 
-    WHERE  contype = 'f' and conrelid::regclass::text = '${tableName}' 
-    AND    connamespace = 'public'::regnamespace   
-    ORDER  BY conrelid::regclass::text, contype DESC;  
-  `;
+  const constraintsListQuery =
+    `SELECT tables.schemaname, class.relname AS table_name, 
+  pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
+  FROM pg_class class
+  INNER JOIN pg_tables tables on class.relname = tables.tablename
+  INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
+  AND class.relname = '${tableName}';`;
 
-  const tableForeignKeysQueryResult = await db.queryObject(
-    tableForeignKeysQuery,
-  );
+  const constraintsListQueryObject = await db.queryObject(constraintsListQuery);
 
-  let updateColumnsQuery = `ALTER TABLE ${tableName} `;
+  const constraintsList: any = constraintsListQueryObject.rows;
 
-  DisconnectDb(db);
+  const tableConstraints: any = {};
+
+  for (const constraint of constraintsList) {
+    const { contype, conname, condef } = constraint;
+
+    const start = constraint.condef.indexOf("(");
+    const end = constraint.condef.indexOf(")");
+    const columnName = constraint.condef.slice(start + 1, end);
+
+    if (!tableConstraints[columnName]) tableConstraints[columnName] = {};
+    if (!tableConstraints[columnName][contype]) {
+      tableConstraints[columnName][contype] = [];
+    }
+
+    switch (contype) {
+      case "f": {
+        tableConstraints[columnName][contype].push({ conname, condef });
+        break;
+      }
+      case "p": {
+        tableConstraints[columnName][contype] = conname;
+        break;
+      }
+      default: {
+        tableConstraints[columnName][contype].push(conname);
+        break;
+      }
+    }
+  }
+
+  let updateColumnsQuery = ``;
+
+  for (const columnName of updateColumnList) {
+    const modelColumn = models[tableName][columnName];
+    // const dbColumn = dbTables[tableName][columnName].columns[columnName];
+    const columnConstraints = tableConstraints[columnName];
+
+    if (!(modelColumn.notNull)) {
+      updateColumnsQuery +=
+        `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP NOT NULL; `;
+    }
+
+    if (!(modelColumn.unique) && columnConstraints && columnConstraints.u) {
+      for (const unique of columnConstraints.u) {
+        updateColumnsQuery +=
+          `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
+      }
+    }
+    if (!(modelColumn.defaultVal)) {
+      updateColumnsQuery +=
+        `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP DEFAULT; `;
+    }
+
+    if (
+      !(modelColumn.primaryKey) && columnConstraints && columnConstraints.p
+    ) {
+      updateColumnsQuery +=
+        `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p}; `;
+    }
+
+    // const association = {
+    //   mappedTable: modelColumn.association.table || null,
+    //   mappedColumn: modelColumn.association.mappedCol || null,
+    // };
+
+    // ! Delete all associations?
+    if (
+      !(modelColumn.association) && columnConstraints && columnConstraints.f
+    ) {
+      for (const foreignKey of columnConstraints.f) {
+        if (foreignKey.condef.includes(`(${columnName})`)) {
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
+        }
+      }
+    }
+
+    for (const constraint in modelColumn) {
+      switch (constraint) {
+        case "association": {
+          const association = {
+            mappedTable: modelColumn.association.table || null,
+            mappedColumn: modelColumn.association.mappedCol || null,
+          };
+
+          let foreignKeyIndex: number = 0;
+          let existingForeignKey = false;
+          let existingForeignKeyIndex: number = 0;
+
+          if (columnConstraints) {
+            for (const foreignKey of columnConstraints.f) {
+              const currentIndex = Number(
+                foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
+              );
+
+              if (!isNaN(currentIndex)) {
+                foreignKeyIndex = Math.max(
+                  currentIndex + 1,
+                  foreignKeyIndex,
+                );
+              }
+
+              if (
+                foreignKey.condef.includes(`(${columnName})`) &&
+                foreignKey.condef.includes(
+                  `${association.mappedTable}(${association.mappedColumn})`,
+                )
+              ) {
+                if (!existingForeignKey) {
+                  existingForeignKey = true;
+                  existingForeignKeyIndex = Number(
+                    foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
+                  );
+                }
+                updateColumnsQuery +=
+                  `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
+              }
+            }
+          }
+
+          if (existingForeignKey) {
+            foreignKeyIndex = existingForeignKeyIndex;
+          }
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${foreignKeyIndex} FOREIGN KEY (${columnName}) REFERENCES ${association.mappedTable}(${association.mappedColumn}); `;
+          break;
+        }
+        case "primaryKey": {
+          if (columnConstraints.p) {
+            updateColumnsQuery +=
+              `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p} CASCADE; `;
+          }
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${modelColumn.primaryKey}); `;
+          break;
+        }
+        case "notNull": {
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} SET NOT NULL; `;
+          break;
+        }
+        case "unique": {
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${tableName}_${columnName}_unique; ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_unique UNIQUE(${columnName}); `;
+          break;
+        }
+        case "defaultVal": {
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} ALTER COLUMN "${columnName}" SET DEFAULT '${modelColumn.defaultVal}'; `;
+          break;
+        }
+        // ! Work on these later
+        case "checks": {
+          break;
+        }
+        case "length": {
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+  }
+  await DisconnectDb(db);
+
+  return updateColumnsQuery;
 };
 
-const getUpdateTablesQuery = (
+const getUpdateTablesQuery = async (
   updateTablesList: string[],
   models: any,
   dbTables: any,
@@ -223,28 +405,70 @@ const getUpdateTablesQuery = (
     const modelColumns = models[tableName];
     const dbColumns = dbTables[tableName].columns;
 
-    const createColumnList = [];
-    const updateColumnList = [];
+    const createColumnsList = [];
+    const updateColumnsList = [];
 
     const modelColumnNames = new Set(Object.keys(modelColumns));
     const dbColumnNames = new Set(Object.keys(dbColumns));
 
+    const constraintsChecker = (modelConstraints: any, dbConstraints: any) => {
+      if (modelConstraints.type !== dbConstraints.type) return true;
+      if (
+        Boolean(modelConstraints.notNull) !== Boolean(dbConstraints.notNull)
+      ) {
+        return true;
+      }
+      if (Boolean(modelConstraints.unique) !== Boolean(dbConstraints.unique)) {
+        return true;
+      }
+      if (
+        Boolean(modelConstraints.primaryKey) !==
+          Boolean(dbConstraints.primaryKey)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(modelConstraints.defaultVal) !==
+          JSON.stringify(dbConstraints.defaultVal)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(modelConstraints.association) !==
+          JSON.stringify(dbConstraints.association)
+      ) {
+        return true;
+      }
+
+      return false;
+    };
+
     for (const columnName of modelColumnNames) {
       if (dbColumnNames.has(columnName)) {
         if (
-          String(modelColumns[columnName]) !== String(dbColumns[columnName])
+          constraintsChecker(
+            models[tableName][columnName],
+            dbColumns[columnName],
+          )
         ) {
-          updateColumnList.push(columnName);
+          updateColumnsList.push(columnName);
         }
-        modelColumnNames.delete(tableName);
-        dbColumnNames.delete(tableName);
-      } else if (!(dbColumnNames.has(tableName))) {
-        createColumnList.push(tableName);
-        modelColumnNames.delete(tableName);
+        modelColumnNames.delete(columnName);
+        dbColumnNames.delete(columnName);
+      } else if (!(dbColumnNames.has(columnName))) {
+        createColumnsList.push(columnName);
+        modelColumnNames.delete(columnName);
       }
     }
 
     const deleteColumnsList = Array.from(dbColumnNames);
+
+    const createColumnsQuery = getCreateColumnsQuery(
+      tableName,
+      createColumnsList,
+      models[tableName],
+    );
+    createColumnsQuery.length ? updateTablesQuery += createColumnsQuery : null;
 
     const deleteColumnsQuery = getDeleteColumnsQuery(
       tableName,
@@ -253,19 +477,13 @@ const getUpdateTablesQuery = (
     );
     deleteColumnsQuery.length ? updateTablesQuery += deleteColumnsQuery : null;
 
-    const createColumnsQuery = getCreateColumnsQuery(
+    const updateColumnsQuery: any = await getUpdateColumnsQuery(
       tableName,
-      createColumnList,
+      updateColumnsList,
       models,
     );
-    createColumnsQuery.length ? updateTablesQuery += createColumnsQuery : null;
 
-    const updateColumnsQuery = getUpdateColumnsQuery(
-      tableName,
-      updateColumnList,
-      models,
-      overwrite,
-    );
+    updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
   }
 
   return updateTablesQuery;
@@ -294,38 +512,77 @@ export default async function sync2(overwrite = false) {
   const createTablesList = [];
   const updateTablesList = [];
 
+  const checkUpdateColumns = (modelColumns: any, dbColumns: any) => {
+    for (const columnName in dbColumns) {
+      if (!(modelColumns[columnName])) return true;
+    }
+
+    for (const columnName in modelColumns) {
+      const column = modelColumns[columnName];
+      const dbColumn = dbColumns[columnName];
+
+      if (!dbColumn) return true;
+
+      // dbColumn.type = dbColumn.type || null;
+      // dbColumn.notNull = dbColumn.no
+
+      if (column.type !== dbColumn.type) return true;
+      if (Boolean(column.notNull) !== Boolean(dbColumn.notNull)) return true;
+      if (Boolean(column.unique) !== Boolean(dbColumn.unique)) return true;
+      if (Boolean(column.primaryKey) !== Boolean(dbColumn.primaryKey)) {
+        return true;
+      }
+      if (
+        JSON.stringify(column.defaultVal) !==
+          JSON.stringify(dbColumn.defaultVal)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(column.association) !==
+          JSON.stringify(dbColumn.association)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   for (const tableName of modelTableNames) {
-    if (dbTableNames.has(tableName)) {
-      if (String(models[tableName]) !== String(dbTables[tableName].columns)) {
+    if (!(dbTableNames.has(tableName))) {
+      createTablesList.push(tableName);
+      modelTableNames.delete(tableName);
+    } else {
+      if (checkUpdateColumns(models[tableName], dbTables[tableName].columns)) {
         updateTablesList.push(tableName);
       }
       modelTableNames.delete(tableName);
       dbTableNames.delete(tableName);
-    } else if (!(dbTableNames.has(tableName))) {
-      createTablesList.push(tableName);
-      modelTableNames.delete(tableName);
     }
   }
 
   const deleteTablesList = Array.from(dbTableNames);
 
   const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
-  deleteTablesQuery.length ? masterQuery += deleteTablesQuery : null;
+  deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
 
   const createTablesQuery = getCreateTablesQuery(createTablesList, models);
-  createTablesQuery.length ? masterQuery += createTablesQuery : null;
+  createTablesQuery.length ? masterQuery += await createTablesQuery : null;
 
-  const updateTablesQuery = getUpdateTablesQuery(
+  const updateTablesQuery: any = await getUpdateTablesQuery(
     updateTablesList,
     models,
     dbTables,
     overwrite,
   );
-  updateTablesQuery.length ? masterQuery += updateTablesQuery : null;
+  updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
+
+  // console.log("masterQuery:", await masterQuery);
 
   await db.queryObject(masterQuery);
 
   DisconnectDb(db);
 }
 
-await sync2();
+await sync2(true);

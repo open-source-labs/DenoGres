@@ -10,7 +10,15 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 
 import { enumParser } from "../src/functions/enumParser.ts";
 
+import { dbPull } from "../src/functions/dbPull.ts";
+
 import seed from "../src/functions/seed.ts";
+
+import modelParser2 from "../src/functions/modelParser2.ts";
+
+// import { introspect } from "../src/functions/introspect.ts";
+
+// await dbPull();
 
 // const cleanedText = modelText
 //   .replaceAll(
@@ -289,30 +297,30 @@ const deleteList = Array.from(tableNameSet);
 
 // console.log(parseSeed());
 
-let userInput;
-let properUserInput = false;
+// let userInput;
+// let properUserInput = false;
 
-while (!properUserInput) {
-  userInput = prompt(`delete this table? [y/n]`);
+// while (!properUserInput) {
+//   userInput = prompt(`delete this table? [y/n]`);
 
-  const formattedInput = userInput?.toLowerCase().replace(/\s/g, "");
+//   const formattedInput = userInput?.toLowerCase().replace(/\s/g, "");
 
-  switch (formattedInput) {
-    case "y": {
-      console.log("great!");
-      properUserInput = true;
-      break;
-    }
-    case "n": {
-      console.log("oh whale");
-      properUserInput = true;
-      break;
-    }
-    default: {
-      break;
-    }
-  }
-}
+//   switch (formattedInput) {
+//     case "y": {
+//       console.log("great!");
+//       properUserInput = true;
+//       break;
+//     }
+//     case "n": {
+//       console.log("oh whale");
+//       properUserInput = true;
+//       break;
+//     }
+//     default: {
+//       break;
+//     }
+//   }
+// }
 
 // console.log("you passed!");
 
@@ -328,3 +336,111 @@ while (!properUserInput) {
 // true ? test20 += " world" : null;
 
 // console.log(test20);
+
+// const db = await ConnectDb();
+
+const testQuery2 = `SELECT conrelid::regclass AS table_name,
+conname AS primary_key, 
+pg_get_constraintdef(oid) 
+FROM   pg_constraint 
+WHERE  contype = 'p' 
+AND    connamespace = 'public'::regnamespace   
+ORDER  BY conrelid::regclass::text, contype DESC; `;
+const testQuery = `SELECT conrelid::regclass AS table_name, 
+conname AS primary_key, 
+pg_get_constraintdef(oid) 
+FROM   pg_constraint 
+WHERE  contype = 'p' 
+AND    connamespace = 'public'::regnamespace  
+AND    conrelid::regclass::text = 'cat'  
+ORDER  BY conrelid::regclass::text, contype DESC; `;
+
+const constraintsQuery = `SELECT con.*
+FROM pg_catalog.pg_constraint con
+    INNER JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+    INNER JOIN pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
+    WHERE nsp.nspname = 'public'
+         AND rel.relname = 'people';`;
+const constraintsQuery2 = `SELECT con.*
+FROM pg_catalog.pg_constraint con
+    INNER JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid
+    INNER JOIN pg_catalog.pg_namespace nsp ON nsp.oid = connamespace
+    WHERE nsp.nspname = 'public'
+         AND rel.relname = 'dog';`;
+
+const cQuery3 = `SELECT conname
+FROM pg_constraint
+WHERE conrelid =
+    (SELECT oid 
+    FROM pg_class
+    WHERE relname LIKE 'dog');`;
+
+const cQuery7 = `SELECT tables.schemaname, class.relname AS table_name, 
+pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
+FROM pg_class class
+INNER JOIN pg_tables tables on class.relname = tables.tablename
+INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
+AND class.relname = 'people';`;
+
+// const testQueryObject = await db.queryObject(cQuery7);
+
+// console.log(testQueryObject.rows);
+
+// const constraints: any = testQueryObject.rows;
+
+// console.log(constraints);
+
+// const output: any = {};
+
+// for (const constraint of constraints) {
+//   const { contype, conname, condef } = constraint;
+
+//   const start = constraint.condef.indexOf("(");
+//   const end = constraint.condef.indexOf(")");
+//   const columnName = constraint.condef.slice(start + 1, end);
+
+//   if (!output[columnName]) output[columnName] = {};
+//   if (!output[columnName][contype]) output[columnName][contype] = [];
+
+//   switch (contype) {
+//     case "f": {
+//       output[columnName][contype].push({ name: conname, definition: condef });
+//       break;
+//     }
+//     case "p": {
+//       output[columnName][contype] = conname;
+//       break;
+//     }
+//     default: {
+//       output[columnName][contype].push(conname);
+//       break;
+//     }
+//   }
+
+//   // if (!output[columnName][contype]) {
+//   //   // console.log(output);
+//   //   constraintInfo = [{constraintName: conname, constraintDefinition: condef}];
+//   // } else {
+//   //   constraintInfo.push({constraintName: conname, constraintDefinition: condef});
+//   // }
+// }
+
+// console.log(output);
+
+// for (const constraint of constraints) {
+// }
+
+// DisconnectDb(db);
+
+// console.log(await enumParser());
+
+// console.log(await introspect());
+
+// const introspected = await introspect();
+
+// console.log(introspected);
+// console.log(introspected[0].people.columns.species_id);
+
+console.log(await modelParser2());
+
+// console.log(enumParser());
