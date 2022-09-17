@@ -33,7 +33,7 @@ switch (Deno.args[0]) {
   }
   case "--db-sync": {
     Deno.args[1] === "-x" ? sync2(true) : sync2();
-    Deno.args[1] === "-log" ? sync2(true) : sync2(); //* adding for dbSync log
+    // Deno.args[1] === "-log" ? sync2(true) : sync2(); //* adding for dbSync log
 
     // -CASCADE ? DROP CASCADE
     // ! COME BACK LATER TO FIX OVERWRITE
