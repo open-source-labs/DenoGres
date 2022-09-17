@@ -51,7 +51,7 @@ switch (Deno.args[0]) {
         "run",
         "-Ar",
         "--unstable",
-        "./webview/webview.ts",
+        "https://deno.land/x/denogresdev/webview/webview.ts",
       ],
       // "app": "deno run -Ar --unstable ./webview/webview.ts",
 
