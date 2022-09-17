@@ -9,5 +9,5 @@ webview.size = {
 };
 
 webview.title = "Denogres 2.0";
-webview.navigate("https://denogresdev-2.deno.dev/gui");
+webview.navigate("https://denogres.deno.dev/gui");
 webview.run();
