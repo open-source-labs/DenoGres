@@ -15,8 +15,8 @@ switch (Deno.args[0]) {
     break;
   case "--log": {
     // declare a constatnt
-    const myLog = Deno.readFileSync(
-      resolve("./Migrations/log/migration_log.txt"),
+    const myLog = Deno.readTextFileSync(
+      "./Migrations/log/migration_log.txt",
     );
     console.log(myLog);
     break;
