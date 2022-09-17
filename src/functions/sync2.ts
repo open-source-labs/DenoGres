@@ -24,6 +24,104 @@ import { checkDbSync } from "./checkDbSync.ts";
 //   });
 // };
 
+export default async function sync2(overwrite = false) {
+  await checkDbSync();
+
+  if (!overwrite) {
+    console.log(
+      "To avoid all potential prompts, please consider running your command with the -x flag.",
+    );
+  }
+
+  let masterQuery = ``;
+
+  const [dbTables] = await introspect();
+  const db = await ConnectDb();
+
+  const models = await modelParser2();
+
+  // ! Need to Come back to this later
+  await enumSync();
+
+  const modelTableNames: Set<string> = new Set(Object.keys(models));
+  const dbTableNames: Set<string> = new Set(Object.keys(dbTables));
+
+  const createTablesList = [];
+  const updateTablesList = [];
+
+  const checkUpdateColumns = (modelColumns: any, dbColumns: any) => {
+    for (const columnName in dbColumns) {
+      if (!(modelColumns[columnName])) return true;
+    }
+
+    for (const columnName in modelColumns) {
+      const column = modelColumns[columnName];
+      const dbColumn = dbColumns[columnName];
+
+      if (!dbColumn) return true;
+
+      // dbColumn.type = dbColumn.type || null;
+      // dbColumn.notNull = dbColumn.no
+
+      if (column.type !== dbColumn.type) return true;
+      if (Boolean(column.notNull) !== Boolean(dbColumn.notNull)) return true;
+      if (Boolean(column.unique) !== Boolean(dbColumn.unique)) return true;
+      if (Boolean(column.primaryKey) !== Boolean(dbColumn.primaryKey)) {
+        return true;
+      }
+      if (
+        JSON.stringify(column.defaultVal) !==
+          JSON.stringify(dbColumn.defaultVal)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(column.association) !==
+          JSON.stringify(dbColumn.association)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  for (const tableName of modelTableNames) {
+    if (!(dbTableNames.has(tableName))) {
+      createTablesList.push(tableName);
+      modelTableNames.delete(tableName);
+    } else {
+      if (checkUpdateColumns(models[tableName], dbTables[tableName].columns)) {
+        updateTablesList.push(tableName);
+      }
+      modelTableNames.delete(tableName);
+      dbTableNames.delete(tableName);
+    }
+  }
+
+  const deleteTablesList = Array.from(dbTableNames);
+
+  const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
+  deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
+
+  const createTablesQuery = getCreateTablesQuery(createTablesList, models);
+  createTablesQuery.length ? masterQuery += await createTablesQuery : null;
+
+  const updateTablesQuery: any = await getUpdateTablesQuery(
+    updateTablesList,
+    models,
+    dbTables,
+    overwrite,
+  );
+  updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
+
+  console.log("masterQuery:", await masterQuery);
+
+  await db.queryObject(masterQuery);
+
+  DisconnectDb(db);
+}
+
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
@@ -213,6 +311,10 @@ const getCreateColumnsQuery = (
       model[columnName].type = "SERIAL";
     }
 
+    if (model[columnName].type === "enum") {
+      model[columnName].type = model[columnName].enumName;
+    }
+
     let createColumnQuery =
       `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${
         model[columnName].type
@@ -280,6 +382,7 @@ const getUpdateColumnsQuery = async (
   tableName: string,
   updateColumnList: string[],
   models: any,
+  dbTables: any,
 ) => {
   const db = await ConnectDb();
 
@@ -329,10 +432,10 @@ const getUpdateColumnsQuery = async (
 
   for (const columnName of updateColumnList) {
     const modelColumn = models[tableName][columnName];
-    // const dbColumn = dbTables[tableName][columnName].columns[columnName];
+    const dbColumn = dbTables[tableName].columns[columnName];
     const columnConstraints = tableConstraints[columnName];
 
-    if (!(modelColumn.notNull)) {
+    if (!(modelColumn.notNull) && dbTables.notNull) {
       updateColumnsQuery +=
         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP NOT NULL; `;
     }
@@ -343,7 +446,7 @@ const getUpdateColumnsQuery = async (
           `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
       }
     }
-    if (!(modelColumn.defaultVal)) {
+    if (!(modelColumn.defaultVal) && dbColumn.defaultVal) {
       updateColumnsQuery +=
         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP DEFAULT; `;
     }
@@ -552,6 +655,7 @@ const getUpdateTablesQuery = async (
       tableName,
       updateColumnsList,
       models,
+      dbTables,
     );
 
     updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
@@ -559,103 +663,5 @@ const getUpdateTablesQuery = async (
 
   return updateTablesQuery;
 };
-
-export default async function sync2(overwrite = false) {
-  await checkDbSync();
-
-  if (!overwrite) {
-    console.log(
-      "To avoid all potential prompts, please consider running your command with the -x flag.",
-    );
-  }
-
-  let masterQuery = ``;
-
-  const [dbTables] = await introspect();
-  const db = await ConnectDb();
-
-  const models = await modelParser2();
-
-  // ! Need to Come back to this later
-  await enumSync();
-
-  const modelTableNames: Set<string> = new Set(Object.keys(models));
-  const dbTableNames: Set<string> = new Set(Object.keys(dbTables));
-
-  const createTablesList = [];
-  const updateTablesList = [];
-
-  const checkUpdateColumns = (modelColumns: any, dbColumns: any) => {
-    for (const columnName in dbColumns) {
-      if (!(modelColumns[columnName])) return true;
-    }
-
-    for (const columnName in modelColumns) {
-      const column = modelColumns[columnName];
-      const dbColumn = dbColumns[columnName];
-
-      if (!dbColumn) return true;
-
-      // dbColumn.type = dbColumn.type || null;
-      // dbColumn.notNull = dbColumn.no
-
-      if (column.type !== dbColumn.type) return true;
-      if (Boolean(column.notNull) !== Boolean(dbColumn.notNull)) return true;
-      if (Boolean(column.unique) !== Boolean(dbColumn.unique)) return true;
-      if (Boolean(column.primaryKey) !== Boolean(dbColumn.primaryKey)) {
-        return true;
-      }
-      if (
-        JSON.stringify(column.defaultVal) !==
-          JSON.stringify(dbColumn.defaultVal)
-      ) {
-        return true;
-      }
-      if (
-        JSON.stringify(column.association) !==
-          JSON.stringify(dbColumn.association)
-      ) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  for (const tableName of modelTableNames) {
-    if (!(dbTableNames.has(tableName))) {
-      createTablesList.push(tableName);
-      modelTableNames.delete(tableName);
-    } else {
-      if (checkUpdateColumns(models[tableName], dbTables[tableName].columns)) {
-        updateTablesList.push(tableName);
-      }
-      modelTableNames.delete(tableName);
-      dbTableNames.delete(tableName);
-    }
-  }
-
-  const deleteTablesList = Array.from(dbTableNames);
-
-  const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
-  deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
-
-  const createTablesQuery = getCreateTablesQuery(createTablesList, models);
-  createTablesQuery.length ? masterQuery += await createTablesQuery : null;
-
-  const updateTablesQuery: any = await getUpdateTablesQuery(
-    updateTablesList,
-    models,
-    dbTables,
-    overwrite,
-  );
-  updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
-
-  // console.log("masterQuery:", await masterQuery);
-
-  await db.queryObject(masterQuery);
-
-  DisconnectDb(db);
-}
 
 await sync2(true);
