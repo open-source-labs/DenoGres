@@ -133,12 +133,12 @@ export default async function sync2(overwrite = false) {
   };
 
   for (const tableName of modelTableNames) {
-    console.log("\n", tableName);
+    // console.log("\n", tableName);
     if (!(dbTableNames.has(tableName))) {
       createTablesList.push(tableName);
       modelTableNames.delete(tableName);
     } else {
-      if (checkUpdateColumns(models[tableName], dbTables[tableName].columns)) {
+      if (checkUpdateColumns(models[tableName], dbTables[tableName])) {
         updateTablesList.push(tableName);
       }
       modelTableNames.delete(tableName);
@@ -360,9 +360,7 @@ const getDeleteColumnsQuery = (
   deleteColumnsQuery =
     deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
 
-  return deleteColumnsQuery.length > originalLength
-    ? deleteColumnsQuery
-    : "";
+  return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : "";
 };
 
 const getCreateColumnsQuery = (
@@ -498,7 +496,21 @@ const getUpdateColumnsQuery = async (
 
   for (const columnName of updateColumnList) {
     const modelColumn = models[tableName][columnName];
-    const dbColumn = dbTables[tableName].columns[columnName];
+    const dbColumn = dbTables[tableName][columnName];
+
+    // console.log('tableCons');
+    // console.log(tableConstraints);
+    // console.log(tableConstraints);
+
+    // console.log(columnName);
+    // console.log(object);
+
+    // console.log("modelColumn");
+    // console.log(modelColumn);
+
+    // console.log("dbColumn");
+    // console.log(dbColumn);
+
     const columnConstraints = tableConstraints[columnName];
 
     if (!(modelColumn.notNull) && dbTables.notNull) {
@@ -506,19 +518,26 @@ const getUpdateColumnsQuery = async (
         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP NOT NULL; `;
     }
 
-    if (!(modelColumn.unique) && columnConstraints && columnConstraints.u) {
-      for (const unique of columnConstraints.u) {
-        updateColumnsQuery +=
-          `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
-      }
-    }
     if (!(modelColumn.defaultVal) && dbColumn.defaultVal) {
       updateColumnsQuery +=
         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP DEFAULT; `;
     }
 
+    console.log(columnConstraints);
+
+    if (!columnConstraints) continue;
+
+    if (!(modelColumn.unique) && columnConstraints.u) {
+      for (const unique of columnConstraints.u) {
+        updateColumnsQuery +=
+          `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
+      }
+    }
+
+    console.log(columnConstraints);
+
     if (
-      !(modelColumn.primaryKey) && columnConstraints && columnConstraints.p
+      !(modelColumn.primaryKey) && columnConstraints.p
     ) {
       updateColumnsQuery +=
         `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p}; `;
@@ -597,7 +616,7 @@ const getUpdateColumnsQuery = async (
               `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p} CASCADE; `;
           }
           updateColumnsQuery +=
-            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${modelColumn.primaryKey}); `;
+            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${columnName}); `; // !
           break;
         }
         case "notNull": {
