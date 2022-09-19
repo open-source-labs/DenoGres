@@ -7,7 +7,7 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 export let wasFired: boolean;
 
 export async function dbPull2() {
-  // checkDbPull(); //* Added this in for migration log
+  checkDbPull(); //* Added this in for migration log
   const [tableListObj, enumObj] = await introspect2();
 
   let autoCreatedModels =

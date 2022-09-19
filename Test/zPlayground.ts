@@ -8,9 +8,9 @@ import { checkDbSync } from "../src/functions/checkDbSync.ts";
 import { introspect2 } from "../src/functions/introspect2.ts";
 import modelParser2 from "../src/functions/modelParser2.ts";
 
-sync2(true);
-
 // await dbPull2();
+
+sync2(true);
 
 // const [dbTables] = await introspect2();
 
@@ -22,12 +22,14 @@ sync2(true);
 // console.log(`\ndbTABLES`);
 // console.log(dbTables);
 
+// const removeWhitespaces = (string: string) => string.replace(/\s/g, '');
+
 // console.log(JSON.stringify(models));
 
 // console.log();
 // console.log(JSON.stringify(dbTables));
 
-// console.log(JSON.stringify(models) === JSON.stringify(dbTables));
+// console.log(JSON.stringify(models) === removeWhitespaces(JSON.stringify(dbTables)));
 
 // console.log(JSON.parse('false'));
 

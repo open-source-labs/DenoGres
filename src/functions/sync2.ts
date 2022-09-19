@@ -25,6 +25,10 @@ import { checkDbSync } from "./checkDbSync.ts";
 const removeWhitespaces = (string: string) => string.replace(/\s/g, "");
 
 const objectLooselyEquals = (modelObject: any, dbObject: any) => {
+  // if (typeof modelObject !== "object" || typeof dbObject !== "object") {
+  //   return false;
+  // }
+
   return JSON.stringify(Object.keys(modelObject).sort()) ===
       JSON.stringify(Object.keys(dbObject).sort()) &&
     removeWhitespaces(JSON.stringify(Object.values(modelObject).sort())) ===
@@ -32,7 +36,7 @@ const objectLooselyEquals = (modelObject: any, dbObject: any) => {
 };
 
 export default async function sync2(overwrite = false) {
-  // await checkDbSync();
+  await checkDbSync();
 
   if (!overwrite) {
     console.log(
@@ -445,7 +449,7 @@ const getCreateColumnsQuery = (
 
 const getUpdateColumnsQuery = async (
   tableName: string,
-  updateColumnList: string[],
+  updateColumnsList: string[],
   models: any,
   dbTables: any,
 ) => {
@@ -543,18 +547,11 @@ const getUpdateColumnsQuery = async (
 
   let primaryKeyAssignment = false;
 
-  for (const columnName of updateColumnList) {
+  for (const columnName of updateColumnsList) {
     const modelColumn = models[tableName][columnName];
     const dbColumn = dbTables[tableName][columnName];
 
     const columnConstraints = tableConstraints[columnName];
-
-    if (modelColumn.checks) {
-      console.log(modelColumn.checks);
-    }
-    if (dbColumn.checks) {
-      console.log(dbColumn.checks);
-    }
 
     if (
       (modelColumn.notNull === undefined || modelColumn.notNull === false) &&
@@ -636,36 +633,149 @@ const getUpdateColumnsQuery = async (
 
       updateColumnsQuery +=
         `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${name} CASCADE; `;
-    } else if (
-      !objectLooselyEquals(modelColumn.association, dbColumn.association)
-    ) {
-      const { name, mappedTable, mappedColumn } = modelColumn.association;
-
-      const dbAssociation = dbColumn.association;
-
-      updateColumnsQuery +=
-        `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${dbAssociation.name} CASCADE; ALTER TABLE ${tableName} ADD CONSTRAINT ${name} FOREIGN KEY (${columnName}) REFERENCES ${mappedTable}(${mappedColumn}); `;
     }
 
+    // else if (
+    //   !objectLooselyEquals(modelColumn.association, dbColumn.association)
+    // ) {
+    //   const { name, mappedTable, mappedColumn } = modelColumn.association;
+
+    //   const dbAssociation = dbColumn.association;
+
+    //   updateColumnsQuery +=
+    //     `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${dbAssociation.name} CASCADE; ALTER TABLE ${tableName} ADD CONSTRAINT ${name} FOREIGN KEY (${columnName}) REFERENCES ${mappedTable}(${mappedColumn}); `;
+    // }
 
     // if (!objectLooselyEquals(modelColumn.checks, dbColumn.checks)) {
 
     //   console.log(modelColumn.checks);
     // }
 
-    if (!columnConstraints) continue;
+    // console.log("MODEL CHECKS", modelColumn.checks);
+    // console.log("DB CHECKS", dbColumn.checks);
 
-    for (const foreignKey of columnConstraints.f) {
-      if (
-        modelColumn.mappedTable === foreignKey.mappedTable &&
-        modelColumn.mappedColumn === foreignKey.mappedColumn
-      ) {
+    const modelChecks = modelColumn.checks;
+    const dbChecks = dbColumn.checks;
+
+    if (modelChecks) {
+      // console.log("MODEL CHECK");
+      for (const checkName in modelChecks) {
+        if (!dbChecks) {
+          let checkQuery =
+            `ALTER TABLE ${tableName} ADD CONSTRAINT "${checkName}" CHECK (`;
+          for (const definition of modelChecks[checkName]) {
+            // console.log('DEF', definition);
+
+            const arrayRegex = /\[.*\]/;
+            if (arrayRegex.test(definition)) {
+              const newDefinition = definition.replace("=", " in ")
+                .replace("[", "(")
+                .replace("]", ")");
+
+              checkQuery += `${newDefinition} AND `;
+            } else {
+              checkQuery += `${definition} AND `;
+            }
+          }
+          checkQuery = checkQuery.slice(0, -5) + "); ";
+
+          updateColumnsQuery += checkQuery;
+        }
+
+        if (dbChecks && !dbChecks[checkName]) {
+          for (const column in tableConstraints) {
+            const currentCheck = tableConstraints[column].c;
+
+            if (currentCheck && currentCheck[checkName]) {
+              updateColumnsQuery +=
+                `ALTER TABLE ${tableName} DROP CONSTRAINT ${checkName} CASCADE; `;
+            }
+          }
+
+          let checkQuery =
+            `ALTER TABLE ${tableName} ADD CONSTRAINT "${checkName}" CHECK (`;
+          for (const definition of modelChecks[checkName]) {
+            // console.log('DEF', definition);
+
+            const arrayRegex = /\[.*\]/;
+            if (arrayRegex.test(definition)) {
+              const newDefinition = definition.replace("=", " in ")
+                .replace("[", "(")
+                .replace("]", ")");
+
+              checkQuery += `${newDefinition} AND `;
+            } else {
+              checkQuery += `${definition} AND `;
+            }
+          }
+          checkQuery = checkQuery.slice(0, -5) + "); ";
+
+          updateColumnsQuery += checkQuery;
+        }
+      }
+    }
+
+    if (dbChecks) {
+      // console.log("DB CHECKS");
+      for (const checkName in dbChecks) {
+        if (modelChecks && !modelChecks[checkName]) {
+          updateColumnsQuery +=
+            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${checkName}; `;
+        }
+      }
+    }
+
+    if (modelChecks && dbChecks) {
+      // console.log("double");
+      for (const checkName in modelChecks) {
         if (
-          foreignKey.mappedTable !== dbColumn.mappedTable &&
-          foreignKey.mappedColumn !== dbColumn.mappedColumn
+          (modelChecks[checkName] &&
+            dbChecks[checkName]) &&
+          !objectLooselyEquals(modelChecks[checkName], dbChecks[checkName])
         ) {
           updateColumnsQuery +=
-            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.name} CASCADE; `;
+            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${checkName}; `;
+
+          let checkQuery =
+            `ALTER TABLE ${tableName} ADD CONSTRAINT "${checkName}" CHECK (`;
+          for (const definition of modelChecks[checkName]) {
+            // console.log('DEF', definition);
+
+            const arrayRegex = /\[.*\]/;
+            if (arrayRegex.test(definition)) {
+              const newDefinition = definition.replace("=", " in ").replace(
+                "[",
+                "(",
+              )
+                .replace("]", ")");
+
+              checkQuery += `${newDefinition} AND `;
+            } else {
+              checkQuery += `${definition} AND `;
+            }
+          }
+          checkQuery = checkQuery.slice(0, -5) + "); ";
+
+          updateColumnsQuery += checkQuery;
+        }
+      }
+    }
+
+    if (!columnConstraints) continue;
+
+    if (columnConstraints.f) {
+      for (const foreignKey of columnConstraints.f) {
+        if (
+          modelColumn.mappedTable === foreignKey.mappedTable &&
+          modelColumn.mappedColumn === foreignKey.mappedColumn
+        ) {
+          if (
+            foreignKey.mappedTable !== dbColumn.mappedTable &&
+            foreignKey.mappedColumn !== dbColumn.mappedColumn
+          ) {
+            updateColumnsQuery +=
+              `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.name} CASCADE; `;
+          }
         }
       }
     }
@@ -733,7 +843,23 @@ const getUpdateTablesQuery = async (
         return true;
       }
 
-      if (!objectLooselyEquals(modelConstraints.checks, dbConstraints.checks)) return true;
+      if (
+        (modelConstraints.checks && !dbConstraints.checks) ||
+        (!modelConstraints.checks && dbConstraints.checks)
+      ) {
+        return true;
+      }
+
+      if (modelConstraints.checks && dbConstraints.checks) {
+        const modelChecks = modelConstraints.checks;
+        const dbChecks = dbConstraints.checks;
+
+        if (
+          !objectLooselyEquals(modelChecks, dbChecks)
+        ) {
+          return true;
+        }
+      }
 
       return false;
     };
@@ -798,229 +924,229 @@ const getUpdateTablesQuery = async (
   return updateTablesQuery;
 };
 
-const getUpdateColumnsQuery2 = async (
-  tableName: string,
-  updateColumnList: string[],
-  models: any,
-  dbTables: any,
-) => {
-  const db = await ConnectDb();
+// const getUpdateColumnsQuery2 = async (
+//   tableName: string,
+//   updateColumnsList: string[],
+//   models: any,
+//   dbTables: any,
+// ) => {
+//   const db = await ConnectDb();
 
-  const constraintsListQuery =
-    `SELECT tables.schemaname, class.relname AS table_name, 
-  pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
-  FROM pg_class class
-  INNER JOIN pg_tables tables on class.relname = tables.tablename
-  INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
-  AND class.relname = '${tableName}';`;
+//   const constraintsListQuery =
+//     `SELECT tables.schemaname, class.relname AS table_name,
+//   pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
+//   FROM pg_class class
+//   INNER JOIN pg_tables tables on class.relname = tables.tablename
+//   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
+//   AND class.relname = '${tableName}';`;
 
-  const constraintsListQueryObject = await db.queryObject(constraintsListQuery);
+//   const constraintsListQueryObject = await db.queryObject(constraintsListQuery);
 
-  const constraintsList: any = constraintsListQueryObject.rows;
+//   const constraintsList: any = constraintsListQueryObject.rows;
 
-  // console.log("CONS LIST", constraintsList);
+//   // console.log("CONS LIST", constraintsList);
 
-  const tableConstraints: any = {};
+//   const tableConstraints: any = {};
 
-  for (const constraint of constraintsList) {
-    const { contype, conname, condef } = constraint;
-    let columnName;
+//   for (const constraint of constraintsList) {
+//     const { contype, conname, condef } = constraint;
+//     let columnName;
 
-    if (contype === "c") {
-      columnName = condef.match(/\w+/g)[1];
-    } else {
-      const start = constraint.condef.indexOf("(");
-      const end = constraint.condef.indexOf(")");
-      columnName = constraint.condef.slice(start + 1, end);
-    }
+//     if (contype === "c") {
+//       columnName = condef.match(/\w+/g)[1];
+//     } else {
+//       const start = constraint.condef.indexOf("(");
+//       const end = constraint.condef.indexOf(")");
+//       columnName = constraint.condef.slice(start + 1, end);
+//     }
 
-    if (!tableConstraints[columnName]) tableConstraints[columnName] = {};
-    if (!tableConstraints[columnName][contype]) {
-      tableConstraints[columnName][contype] = [];
-    }
+//     if (!tableConstraints[columnName]) tableConstraints[columnName] = {};
+//     if (!tableConstraints[columnName][contype]) {
+//       tableConstraints[columnName][contype] = [];
+//     }
 
-    switch (contype) {
-      case "f": {
-        tableConstraints[columnName][contype].push({ conname, condef });
-        break;
-      }
-      case "p": {
-        tableConstraints[columnName][contype] = conname;
-        break;
-      }
-      case "c": {
-        tableConstraints[columnName][contype].push({ conname, condef });
-        break;
-      }
-      default: {
-        tableConstraints[columnName][contype].push(conname);
-        break;
-      }
-    }
-  }
+//     switch (contype) {
+//       case "f": {
+//         tableConstraints[columnName][contype].push({ conname, condef });
+//         break;
+//       }
+//       case "p": {
+//         tableConstraints[columnName][contype] = conname;
+//         break;
+//       }
+//       case "c": {
+//         tableConstraints[columnName][contype].push({ conname, condef });
+//         break;
+//       }
+//       default: {
+//         tableConstraints[columnName][contype].push(conname);
+//         break;
+//       }
+//     }
+//   }
 
-  let updateColumnsQuery = ``;
+//   let updateColumnsQuery = ``;
 
-  // console.log("TABLE CONSTRAINTS", tableConstraints);
+//   // console.log("TABLE CONSTRAINTS", tableConstraints);
 
-  for (const columnName of updateColumnList) {
-    const modelColumn = models[tableName][columnName];
-    const dbColumn = dbTables[tableName][columnName];
+//   for (const columnName of updateColumnsList) {
+//     const modelColumn = models[tableName][columnName];
+//     const dbColumn = dbTables[tableName][columnName];
 
-    const columnConstraints = tableConstraints[columnName];
+//     const columnConstraints = tableConstraints[columnName];
 
-    // console.log(modelColumn);
-    // console.log(dbColumn);
+//     // console.log(modelColumn);
+//     // console.log(dbColumn);
 
-    // console.log(modelColumn.notNull);
-    // console.log(dbColumn.notNull);
+//     // console.log(modelColumn.notNull);
+//     // console.log(dbColumn.notNull);
 
-    if (
-      (modelColumn.notNull === undefined || modelColumn.notNull === true) &&
-      dbColumn.notNull === false
-    ) {
-      updateColumnsQuery +=
-        `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP NOT NULL; `;
-    }
+//     if (
+//       (modelColumn.notNull === undefined || modelColumn.notNull === true) &&
+//       dbColumn.notNull === false
+//     ) {
+//       updateColumnsQuery +=
+//         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP NOT NULL; `;
+//     }
 
-    if (
-      (modelColumn.defaultVal === undefined) &&
-      dbColumn.defaultVal !== undefined
-    ) {
-      updateColumnsQuery +=
-        `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP DEFAULT; `;
-    }
+//     if (
+//       (modelColumn.defaultVal === undefined) &&
+//       dbColumn.defaultVal !== undefined
+//     ) {
+//       updateColumnsQuery +=
+//         `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} DROP DEFAULT; `;
+//     }
 
-    // console.log(columnConstraints);
+//     // console.log(columnConstraints);
 
-    if (!columnConstraints) continue;
+//     if (!columnConstraints) continue;
 
-    // console.log(columnConstraints);
+//     // console.log(columnConstraints);
 
-    if (
-      (modelColumn.unique === undefined || modelColumn.unique === false) &&
-      columnConstraints.u
-    ) {
-      for (const unique of columnConstraints.u) {
-        updateColumnsQuery +=
-          `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
-      }
-    }
+//     if (
+//       (modelColumn.unique === undefined || modelColumn.unique === false) &&
+//       columnConstraints.u
+//     ) {
+//       for (const unique of columnConstraints.u) {
+//         updateColumnsQuery +=
+//           `ALTER TABLE ${tableName} DROP CONSTRAINT ${unique}; `;
+//       }
+//     }
 
-    // console.log(columnConstraints);
+//     // console.log(columnConstraints);
 
-    if (
-      !(modelColumn.primaryKey) && columnConstraints.p
-    ) {
-      updateColumnsQuery +=
-        `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p}; `;
-    }
+//     if (
+//       !(modelColumn.primaryKey) && columnConstraints.p
+//     ) {
+//       updateColumnsQuery +=
+//         `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p}; `;
+//     }
 
-    // const association = {
-    //   mappedTable: modelColumn.association.table || null,
-    //   mappedColumn: modelColumn.association.mappedCol || null,
-    // };
+//     // const association = {
+//     //   mappedTable: modelColumn.association.table || null,
+//     //   mappedColumn: modelColumn.association.mappedCol || null,
+//     // };
 
-    // ! Delete all associations?
-    if (
-      !(modelColumn.association) && columnConstraints && columnConstraints.f
-    ) {
-      for (const foreignKey of columnConstraints.f) {
-        if (foreignKey.condef.includes(`(${columnName})`)) {
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
-        }
-      }
-    }
+//     // ! Delete all associations?
+//     if (
+//       !(modelColumn.association) && columnConstraints && columnConstraints.f
+//     ) {
+//       for (const foreignKey of columnConstraints.f) {
+//         if (foreignKey.condef.includes(`(${columnName})`)) {
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
+//         }
+//       }
+//     }
 
-    for (const constraint in modelColumn) {
-      switch (constraint) {
-        case "association": {
-          const association = {
-            mappedTable: modelColumn.association.table || null,
-            mappedColumn: modelColumn.association.mappedColumn || null,
-          };
+//     for (const constraint in modelColumn) {
+//       switch (constraint) {
+//         case "association": {
+//           const association = {
+//             mappedTable: modelColumn.association.table || null,
+//             mappedColumn: modelColumn.association.mappedColumn || null,
+//           };
 
-          let foreignKeyIndex: number = 0;
-          let existingForeignKey = false;
-          let existingForeignKeyIndex: number = 0;
+//           let foreignKeyIndex: number = 0;
+//           let existingForeignKey = false;
+//           let existingForeignKeyIndex: number = 0;
 
-          if (columnConstraints) {
-            for (const foreignKey of columnConstraints.f) {
-              const currentIndex = Number(
-                foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
-              );
+//           if (columnConstraints) {
+//             for (const foreignKey of columnConstraints.f) {
+//               const currentIndex = Number(
+//                 foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
+//               );
 
-              if (!isNaN(currentIndex)) {
-                foreignKeyIndex = Math.max(
-                  currentIndex + 1,
-                  foreignKeyIndex,
-                );
-              }
+//               if (!isNaN(currentIndex)) {
+//                 foreignKeyIndex = Math.max(
+//                   currentIndex + 1,
+//                   foreignKeyIndex,
+//                 );
+//               }
 
-              if (
-                foreignKey.condef.includes(`(${columnName})`) &&
-                foreignKey.condef.includes(
-                  `${association.mappedTable}(${association.mappedColumn})`,
-                )
-              ) {
-                if (!existingForeignKey) {
-                  existingForeignKey = true;
-                  existingForeignKeyIndex = Number(
-                    foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
-                  );
-                }
-                updateColumnsQuery +=
-                  `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
-              }
-            }
-          }
+//               if (
+//                 foreignKey.condef.includes(`(${columnName})`) &&
+//                 foreignKey.condef.includes(
+//                   `${association.mappedTable}(${association.mappedColumn})`,
+//                 )
+//               ) {
+//                 if (!existingForeignKey) {
+//                   existingForeignKey = true;
+//                   existingForeignKeyIndex = Number(
+//                     foreignKey.conname.replace(/.*fkey(\d+)/g, "$1"),
+//                   );
+//                 }
+//                 updateColumnsQuery +=
+//                   `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${foreignKey.conname} CASCADE; `;
+//               }
+//             }
+//           }
 
-          if (existingForeignKey) {
-            foreignKeyIndex = existingForeignKeyIndex;
-          }
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${foreignKeyIndex} FOREIGN KEY (${columnName}) REFERENCES ${association.mappedTable}(${association.mappedColumn}); `;
-          break;
-        }
-        case "primaryKey": {
-          if (columnConstraints.p) {
-            updateColumnsQuery +=
-              `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p} CASCADE; `;
-          }
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${columnName}); `; // !
-          break;
-        }
-        case "notNull": {
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} SET NOT NULL; `;
-          break;
-        }
-        case "unique": {
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${tableName}_${columnName}_unique; ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_unique UNIQUE(${columnName}); `;
-          break;
-        }
-        case "defaultVal": {
-          updateColumnsQuery +=
-            `ALTER TABLE ${tableName} ALTER COLUMN "${columnName}" SET DEFAULT '${modelColumn.defaultVal}'; `;
-          break;
-        }
-        // ! Work on these later
-        case "checks": {
-          break;
-        }
-        case "length": {
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    }
-  }
-  await DisconnectDb(db);
+//           if (existingForeignKey) {
+//             foreignKeyIndex = existingForeignKeyIndex;
+//           }
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${foreignKeyIndex} FOREIGN KEY (${columnName}) REFERENCES ${association.mappedTable}(${association.mappedColumn}); `;
+//           break;
+//         }
+//         case "primaryKey": {
+//           if (columnConstraints.p) {
+//             updateColumnsQuery +=
+//               `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${columnConstraints.p} CASCADE; `;
+//           }
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${columnName}); `; // !
+//           break;
+//         }
+//         case "notNull": {
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} ALTER COLUMN ${columnName} SET NOT NULL; `;
+//           break;
+//         }
+//         case "unique": {
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${tableName}_${columnName}_unique; ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_unique UNIQUE(${columnName}); `;
+//           break;
+//         }
+//         case "defaultVal": {
+//           updateColumnsQuery +=
+//             `ALTER TABLE ${tableName} ALTER COLUMN "${columnName}" SET DEFAULT '${modelColumn.defaultVal}'; `;
+//           break;
+//         }
+//         // ! Work on these later
+//         case "checks": {
+//           break;
+//         }
+//         case "length": {
+//           break;
+//         }
+//         default: {
+//           break;
+//         }
+//       }
+//     }
+//   }
+//   await DisconnectDb(db);
 
-  return updateColumnsQuery;
-};
+//   return updateColumnsQuery;
+// };
