@@ -3,8 +3,7 @@
 import { readLines } from "https://deno.land/std@0.141.0/io/buffer.ts";
 import { promptString } from "./myLog.ts";
 import { resolve } from "https://deno.land/std@0.155.0/path/win32.ts";
-import { existsSync } from "https://deno.land/std@0.156.0/fs/mod.ts?s=existsSync";
-import sync2 from "./sync2.ts"
+import sync from "./sync.ts"
 
 
 /** This function will do the following
@@ -23,7 +22,7 @@ export async function restoreModel() {
             console.log(restoreModel);
             //* Restore the model and dbSync.
             Deno.writeFileSync(resolve('./models/model.ts'), restoreModel); // resolve file paths just in case
-            sync2();
+            sync();
         }
       } 
 
