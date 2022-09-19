@@ -2,144 +2,7 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
 // TODO import { modelParser } from "./modelParser.ts";
 import { introspect } from "./introspect.ts";
-import modelParser2 from "./modelParser2.ts";
-
-const parseSeed = (path: string = "./seed.ts") => {
-  path = resolve(path);
-
-  const output: any = {};
-
-  let data: any = Deno.readTextFileSync(path);
-
-  const whitespaces = /\s/g;
-
-  data = data.replace(whitespaces, "");
-  data = data.replace(/(const|let|var)/g, "\n");
-
-  const tables: any = data.match(/\n.*/g)?.map((table: any) =>
-    table.slice(1, -1)
-  );
-
-  for (const table of tables) {
-    const tableName = table.replace(/(\w+).*/, "$1");
-    // const tableName = table.match(/\w+/)
-    let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
-
-    tableData = tableData.replace(/\,\}/g, "}");
-    tableData = tableData.replace(/\,\]/g, "]");
-    tableData = tableData.replace(
-      /([\w\_]+)\:/g,
-      '"$1":',
-    );
-
-    tableData = JSON.parse(tableData);
-    output[tableName] = tableData;
-  }
-
-  return output;
-};
-
-// console.log(parseSeed());
-// console.log(parseSeed("Test/seed2.ts"));
-
-const getCreateTableQuery = (tableName: string, columns: any) => {
-  let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
-
-  let constraints = "";
-
-  const associations = [];
-
-  for (const column in columns) {
-    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
-
-    // console.log("columnName", column);
-
-    createTableQuery += `${column} ${columns[column].type}`;
-    for (const constraint in columns[column]) {
-      switch (constraint) {
-        case "association": {
-          associations.push({
-            columnName: column,
-            table: columns[column].association?.table,
-            mappedCol: columns[column].association?.mappedCol,
-          });
-          break;
-        }
-        case "primaryKey": {
-          constraints += " PRIMARY KEY";
-          break;
-        }
-        case "notNull": {
-          constraints += " NOT NULL";
-          break;
-        }
-        case "unique": {
-          constraints += " UNIQUE";
-          break;
-        }
-        case "defaultVal": {
-          constraints += ` DEFAULT ${columns[column].defaultVal}`;
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    }
-    createTableQuery += `${constraints}, `;
-    constraints = "";
-  }
-
-  // console.log('createTableQuery: ', createTableQuery);
-
-  createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
-    ");";
-
-  let associationsQuery = ``;
-  let associationIndex = 0;
-
-  for (const association of associations) {
-    const { columnName, table, mappedCol } = association;
-
-    associationsQuery += `
-      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${table}(${mappedCol});
-    `;
-  }
-
-  createTableQuery += associationsQuery;
-
-  return createTableQuery;
-};
-
-const getInsertQuery = (data: any, tableName: string) => {
-  let columns = "";
-
-  for (const column in data[0]) {
-    columns += `${column}, `;
-  }
-
-  columns = columns.slice(0, columns.length - 2);
-
-  let insertQuery = `INSERT INTO ${tableName} (${columns}) VALUES `;
-
-  let value;
-  let values = "";
-
-  for (const datum of data) {
-    value = "(";
-    for (const key in datum) {
-      value += `'${datum[key]}', `;
-    }
-    value = value.slice(0, value.length - 2) + "), ";
-    values += value;
-  }
-
-  values = values.slice(0, values.length - 2) + ";";
-
-  insertQuery += values;
-
-  return insertQuery;
-};
+import modelParser from "./modelParser.ts";
 
 export default async function seed(path: string = "./seed.ts") {
   path = resolve(path);
@@ -150,18 +13,10 @@ export default async function seed(path: string = "./seed.ts") {
 
   const db = await ConnectDb();
   const [dbTables] = await introspect();
-  const models: any = await modelParser2();
+  const models: any = await modelParser();
 
   const modelNameSet: Set<string> = new Set(Object.keys(models));
   const dbTableNameSet: Set<string> = new Set(Object.keys(dbTables));
-
-  // for (const model of models) {
-  //   modelNameSet.add(model.table);
-  // }
-
-  // for (const tableName in dbTables) {
-  //   dbTableNameSet.add(tableName);
-  // }
 
   const seedTables = parseSeed(path);
 
@@ -183,8 +38,6 @@ export default async function seed(path: string = "./seed.ts") {
 
   for (const seedTableName in seedTables) {
     const operation = getOperation(seedTableName, modelNameSet, dbTableNameSet);
-
-    // console.log(operation);
 
     switch (operation) {
       case "Create + Insert": {
@@ -224,67 +77,166 @@ export default async function seed(path: string = "./seed.ts") {
   DisconnectDb(db);
 }
 
-// * Previous parseSeed Function
-// const parseSeed2 = (path: string = "./seed.ts") => {
-//   const data: any = Deno.readTextFileSync(resolve(path));
-//   const output: any = {};
+const parseSeed = (path: string = "./seed.ts") => {
+  path = resolve(path);
 
-//   const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
+  const output: any = {};
 
-//   for (let i = 0; i < tableNames.length; i++) {
-//     tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
-//   }
+  let data: any = Deno.readTextFileSync(path);
 
-//   // console.log(tableNames);
+  const whitespaces = /\s/g;
 
-//   let tablesData = data.replace(/\s*/g, "");
+  data = data.replace(whitespaces, "");
+  data = data.replace(/(const|let|var)/g, "\n");
 
-//   tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
+  const tables: any = data.match(/\n.*/g)?.map((table: any) =>
+    table.slice(1, -1)
+  );
 
-//   tablesData = tablesData.split(" ");
+  for (const table of tables) {
+    const tableName = table.replace(/(\w+).*/, "$1");
+    let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
 
-//   for (let i = 0; i < tablesData.length; i++) {
-//     tablesData[i] = tablesData[i].match(/\{.*\,\}/)[0];
+    tableData = tableData.replace(/\,\}/g, "}");
+    tableData = tableData.replace(/\,\]/g, "]");
+    tableData = tableData.replace(
+      /([\w\_]+)\:/g,
+      '"$1":',
+    );
 
-//     let tableData = tablesData[i];
+    tableData = JSON.parse(tableData);
+    output[tableName] = tableData;
+  }
 
-//     // console.log(tablesData[i]);
+  return output;
+};
 
-//     const regex = /[\{\,\}]/g;
+const getCreateTableQuery = (tableName: string, columns: any) => {
+  let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
-//     tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+  let constraints = "";
 
-//     tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
+  const associations = [];
 
-//     for (let i = 0; i < tableData.length; i++) {
-//       tableData[i] = tableData[i].split(" ");
-//       for (let j = 0; j < tableData[i].length; j++) {
-//         tableData[i][j] = tableData[i][j].split(":");
-//       }
-//     }
+  const checks: any = [];
 
-//     const tableEntries = [];
-//     let columnData: any;
+  for (const column in columns) {
+    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
 
-//     for (const entry of tableData) {
-//       columnData = {};
-//       for (const column of entry) {
-//         const [columnName, columnValue] = column;
-//         if (columnValue.includes("BigInt")) {
-//           columnData[columnName] = BigInt(
-//             columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
-//           );
-//         } else columnData[columnName] = JSON.parse(columnValue);
-//       }
-//       tableEntries.push(columnData);
-//     }
+    createTableQuery += `${column} ${columns[column].type}`;
+    for (const constraint in columns[column]) {
+      switch (constraint) {
+        case "association": {
+          associations.push({
+            columnName: column,
+            mappedTable: columns[column].association?.mappedTable,
+            mappedColumn: columns[column].association?.mappedColumn,
+          });
+          break;
+        }
+        case "checks": {
+          checks.push(columns[column].checks);
+        }
+        case "primaryKey": {
+          if (columns[column].primaryKey === true) {
+            constraints += " PRIMARY KEY";
+          }
+          break;
+        }
+        case "notNull": {
+          if (columns[column].notNull === true) {
+            constraints += " NOT NULL";
+          }
+          break;
+        }
+        case "unique": {
+          constraints += " UNIQUE";
+          break;
+        }
+        case "defaultVal": {
+          constraints += ` DEFAULT ${columns[column].defaultVal}`;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+    createTableQuery += `${constraints}, `;
+    constraints = "";
+  }
 
-//     for (const tableName of tableNames) {
-//       output[tableName] = tableEntries;
-//     }
-//   }
+  createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
+    "); ";
 
-//   return output;
-// };
+  let associationsQuery = ``;
+  let associationIndex = 0;
 
-// await seed();
+  for (const association of associations) {
+    const { columnName, mappedTable, mappedColumn } = association;
+
+    associationsQuery += `
+      ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_${columnName}_fkey${associationIndex++} FOREIGN KEY ("${columnName}") REFERENCES ${mappedTable}(${mappedColumn});
+    `;
+  }
+
+  let checksQuery = ``;
+
+  for (const check of checks) {
+    for (const constraintName in check) {
+      let checkQuery =
+        `ALTER TABLE ${tableName} ADD CONSTRAINT "${constraintName}" CHECK (`;
+      for (const definition of check[constraintName]) {
+        const arrayRegex = /\[.*\]/;
+        if (arrayRegex.test(definition)) {
+          const newDefinition = definition.replace("=", " in ").replace(
+            "[",
+            "(",
+          )
+            .replace("]", ")");
+
+          checkQuery += `${newDefinition} AND `;
+        } else {
+          checkQuery += `${definition} AND `;
+        }
+      }
+      checkQuery = checkQuery.slice(0, -5) + "); ";
+
+      checksQuery += checkQuery;
+    }
+  }
+
+  createTableQuery += associationsQuery + checksQuery;
+
+  return createTableQuery;
+};
+
+const getInsertQuery = (data: any, tableName: string) => {
+  let columns = "";
+
+  for (const column in data[0]) {
+    columns += `${column}, `;
+  }
+
+  columns = columns.slice(0, columns.length - 2);
+
+  let insertQuery = `INSERT INTO ${tableName} (${columns}) VALUES `;
+
+  let value;
+  let values = "";
+
+  for (const datum of data) {
+    value = "(";
+    for (const key in datum) {
+      value += `'${datum[key]}', `;
+    }
+    value = value.slice(0, value.length - 2) + "), ";
+    values += value;
+  }
+
+  values = values.slice(0, values.length - 2) + ";";
+
+  insertQuery += values;
+
+  return insertQuery;
+};

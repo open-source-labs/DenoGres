@@ -1,7 +1,11 @@
 import { ConnectDb, DisconnectDb } from "./Db.ts";
-import { columnInfoQuery, enumQuery } from "../queries/introspection.ts";
+import {
+  columnInfoQuery,
+  enumQuery,
+  tableConstQuery,
+  tableListQuery,
+} from "../queries/introspection.ts";
 import { sqlDataTypes } from "../constants/sqlDataTypes.ts";
-import { join } from "https://deno.land/std@0.141.0/path/win32.ts";
 
 // INTERFACES
 interface ITableQueryRecords {
@@ -24,40 +28,36 @@ interface IConstraint {
   table_name: string;
   condef: string;
   contype: string;
-  conname: string;
 }
 
-// ! Previous Code
 // const indexNames = Object.keys(sqlDataTypes)
 
-// interface ITableListObj {
-//   [key: string]: {
-//     columns: {
-//       [key: string]: {
-//         type: keyof typeof sqlDataTypes;
-//         primaryKey?: boolean;
-//         notNull?: boolean;
-//         unique?: boolean;
-//         checks?: any; // used to be string[]
-//         defaultVal?: unknown;
-//         autoIncrement?: boolean;
-//         length?: number;
-//         association?: { rel_type?: string; table: string; mappedCol: string };
-//       };
-//     };
-//     checks: string[];
-//     unique?: Array<string[]>;
-//     primaryKey?: string[];
-//     foreignKey?: {
-//       columns: string[];
-//       mappedColumns: string[];
-//       rel_type?: string;
-//       table: string;
-//     }[];
-//   };
-// }
-
-type ITableListObj = any;
+interface ITableListObj {
+  [key: string]: {
+    columns: {
+      [key: string]: {
+        type: keyof typeof sqlDataTypes;
+        primaryKey?: boolean;
+        notNull?: boolean;
+        unique?: boolean;
+        checks?: string[];
+        defaultVal?: unknown;
+        autoIncrement?: boolean;
+        length?: number;
+        association?: { rel_type?: string; table: string; mappedCol: string };
+      };
+    };
+    checks: string[];
+    unique?: Array<string[]>;
+    primaryKey?: string[];
+    foreignKey?: {
+      columns: string[];
+      mappedColumns: string[];
+      rel_type?: string;
+      table: string;
+    }[];
+  };
+}
 
 interface IEnumObj {
   [key: string]: string[];
@@ -89,16 +89,6 @@ const enumElType = (record: object): record is IEnumEl => {
     "enum_value" in record;
 };
 
-const tableConstQuery = `SELECT tables.schemaname, class.relname AS table_name,
-pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
-FROM pg_class class
-INNER JOIN pg_tables tables on class.relname = tables.tablename
-INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid;`;
-
-const tableListQuery = `SELECT table_name FROM information_schema.tables
-WHERE table_schema='public'
-AND table_type='BASE TABLE';`;
-
 // Introspection Function
 // ? const getDbData = async () => {
 export const getDbData = async (uri?: string) => {
@@ -120,14 +110,10 @@ export const getDbData = async (uri?: string) => {
 };
 // Add enums to tablelist obj, OR Create a new seperate object for all the enums that THAT database has in it.
 // When you hit an enum that youre building out in dbpull, you can just query off of that object
-export const introspect = async (
-  uri?: string,
-): Promise<[ITableListObj, IEnumObj]> => {
-  const { tableList, columnList, constraintList, enumList } = await getDbData(
-    uri,
-  );
+export const introspect = async (uri?:string): Promise<[ITableListObj, IEnumObj]> => {
+  const { tableList, columnList, constraintList, enumList } = await getDbData(uri);
   // convert table list to an object
-  const tableListObj: any = {};
+  const tableListObj: ITableListObj = {};
 
   // Create object to store enums
   const enumObj: IEnumObj = {};
@@ -136,28 +122,18 @@ export const introspect = async (
   tableList.forEach((el) => {
     if (typeof el === "object" && el !== null && "table_name" in el) {
       if (recordObjectType(el)) {
-        tableListObj[String(el.table_name)] = {};
+        tableListObj[String(el.table_name)] = { columns: {}, checks: [] };
       }
     }
   });
 
   columnList.forEach((el) => {
     if (typeof el === "object" && el !== null && colRecordObjectType(el)) {
-      if (String(el.column_type).includes("enum")) {
-        tableListObj[el.table_name][el.column_name] = {
-          type: "enum",
-          enumName: String(el.column_type).slice(6),
-        };
-      } else {
-        tableListObj[el.table_name][el.column_name] = {
-          type: el.column_type,
-        };
-      }
-      const refObj = tableListObj[el.table_name][el.column_name];
-
-      if (!String(el.column_type).includes("enum")) {
-        refObj["notNull"] = el.not_null;
-      }
+      tableListObj[el.table_name].columns[el.column_name] = {
+        type: el.column_type,
+      };
+      const refObj = tableListObj[el.table_name].columns[el.column_name];
+      refObj["notNull"] = el.not_null;
 
       if (el.character_maximum_length) {
         refObj["length"] = el.character_maximum_length;
@@ -167,17 +143,13 @@ export const introspect = async (
         refObj["autoIncrement"] = true;
       } else {
         if (typeof el.col_default === "string") {
-          // ! used to be typed unknown
-          let defaultVal: any = el.col_default.replace(/\:\:[\w\W]*/, "");
-
-          // ! I don't know what this is for
+          let defaultVal: unknown = el.col_default.replace(/\:\:[\w\W]*/, "");
+          if (defaultVal === "'false'") defaultVal = false;
+          if (defaultVal === "'true'") defaultVal = true;
           if (String(defaultVal).slice(-2) === "()") {
             defaultVal = "'" + defaultVal + "'";
           }
-
-          // * Might have to change this to...
-          // refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
-          refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
+          refObj["defaultVal"] = defaultVal;
         }
       }
     }
@@ -202,7 +174,7 @@ export const introspect = async (
           tableListObj[el.table_name].primaryKey = key.replaceAll(" ", "")
             .split(",");
         } else {
-          tableListObj[el.table_name][key]["primaryKey"] = true;
+          tableListObj[el.table_name].columns[key]["primaryKey"] = true;
         }
       } else if (el.contype === "u") {
         const key = el.condef.replaceAll("UNIQUE (", "").replaceAll(")", "");
@@ -219,38 +191,13 @@ export const introspect = async (
             );
           }
         } else {
-          tableListObj[el.table_name][key]["unique"] = true;
+          tableListObj[el.table_name].columns[key]["unique"] = true;
         }
       } else if (el.contype === "c") {
-        // * condef: Constraint Definition
-        let parsedCondef: any = el.condef.slice(6).replace(/[\(\)]/g, "");
-        parsedCondef = parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, "");
-        parsedCondef = parsedCondef.split(" AND ");
-
-        const val = [];
-
-        for (let i = 0; i < parsedCondef.length; i++) {
-          const arrayRegex = /\[(.*)\]/;
-          if (arrayRegex.test(parsedCondef[i])) {
-            const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
-            const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
-            parsedCondef[i] = parsedCondef1 + parsedCondef2;
-          }
-          val.push(parsedCondef[i]);
-        }
-
-        const columnName = val[0].match(/\w+/g)[0];
-
-        if (
-          tableListObj[el.table_name][columnName].checks === undefined
-        ) {
-          tableListObj[el.table_name][columnName].checks = {};
-        }
-
-        tableListObj[el.table_name][columnName].checks[el.conname] = val;
+        const val = el.condef.replaceAll("CHECK (", "").replace(")", "");
+        tableListObj[el.table_name].checks.push(String(val));
       } else if (el.contype === "f") {
         let condef = el.condef;
-        let conname = el.conname;
 
         if (condef.includes(",")) {
           const condefArray = condef.replace(/FOREIGN KEY */, "").split(
@@ -272,13 +219,12 @@ export const introspect = async (
             table: tableName,
           };
 
-          // ! Previous Code
-          // if (!tableListObj[el.table_name].foreignKey) {
-          //   tableListObj[el.table_name].foreignKey = [];
-          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
-          // } else {
-          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
-          // }
+          if (!tableListObj[el.table_name].foreignKey) {
+            tableListObj[el.table_name].foreignKey = [];
+            tableListObj[el.table_name].foreignKey?.push(fKObj);
+          } else {
+            tableListObj[el.table_name].foreignKey?.push(fKObj);
+          }
         } else {
           condef = condef.replace("FOREIGN KEY (", "").replace(
             ") REFERENCES",
@@ -286,11 +232,10 @@ export const introspect = async (
           );
           const condefArray = condef.split(" "); // 0: table column // 1: foreign table and its id
 
-          const columnObj: any = tableListObj[el.table_name][condefArray[0]];
+          const columnObj = tableListObj[el.table_name].columns[condefArray[0]];
           columnObj.association = {
-            name: conname,
-            mappedTable: condefArray[1].split("(")[0],
-            mappedColumn: condefArray[1].replace(/\w+\(/, "").replace(")", ""),
+            table: condefArray[1].split("(")[0],
+            mappedCol: condefArray[1].replace(/\w+\(/, "").replace(")", ""),
           };
         }
       }
