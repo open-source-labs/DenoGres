@@ -7,7 +7,7 @@ import { uniqueLog } from './myLog.ts';
 //* Creating timestamp for folders
 export const createCurrentDate = () : string => {
     const currentDate: string = new Date().toISOString()
-    .replace(/[-:.Z]/g, '')     // replace T with a space
+    .replace(/[-:.Z]/g, '')  
     .replace(/[T]/g, '_');
     return currentDate;
 }
@@ -30,7 +30,6 @@ export function checkDbPull(): void {
     \n This model is a reference to the shape of your SQL Database on ${today}. 
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
         const modelBefore = Deno.readTextFileSync(resolve('./models/model.ts'));
-        console.log("the checkDbPullfunction worked!", dateFolder);
          //* Checking directory exist to write safely
         ensureDir('./Migrations')
         //* Creating files and directory in Migrations
@@ -43,7 +42,5 @@ export function checkDbPull(): void {
     }
 
 
-// export const todayDate = today; //* date used to compare when modelBuild was created in human readable format.
-// export const permDate = dateFolder; //* date that is the timestamp for the folder when it was created.
-
+ //* today is date used to compare when modelBuild was created in human readable format. dateFolder is the timestamp for the folder when it was created.
 export {today, dateFolder};
