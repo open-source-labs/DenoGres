@@ -30,14 +30,16 @@ export default async function modelParser2(path: string = "./models/model.ts") {
       /.*statictable=\"(\w+)\".*\n/,
       "$1",
     );
-    let tableColumns = currentClass.replace(
-      /.*staticcolumns=(\{.*\}\,\}\;).*/,
-      "$1",
-    ).replace(/\,\}/g, "}");
-    tableColumns = tableColumns.slice(0, tableColumns.length - 2).replace(
-      /([\w\_]+)\:/g,
-      '"$1":',
-    );
+    let tableColumns = currentClass
+      .replace(/.*staticcolumns=(\{.*\}\,\}\;).*/, "$1")
+      .replace(/\,\}/g, "}")
+      .replace(/\,\]/g, "]");
+    tableColumns = tableColumns
+      .slice(0, tableColumns.length - 2)
+      .replace(/([\w\_]+)\:/g, '"$1":');
+    // .replaceAll('\'', '\"');
+
+    // console.log(tableColumns);
 
     tableColumns = JSON.parse(tableColumns);
 

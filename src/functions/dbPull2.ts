@@ -7,7 +7,6 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 export let wasFired: boolean;
 
 export async function dbPull2() {
-  checkDbPull(); //* Added this in for migration log
   const [tableListObj, enumObj] = await introspect2();
 
   let autoCreatedModels =
@@ -27,51 +26,76 @@ export async function dbPull2() {
       `  static columns = {\n`;
 
     // iterate over each property within the columns object
-    Object.keys(tableListObj[el].columns).forEach((colName) => {
-      const columnObj: any = tableListObj[el].columns[colName];
+    Object.keys(tableListObj[el]).forEach((colName) => {
+      const columnObj = tableListObj[el][colName];
       // console.log(columnObj);
 
       // add the column as a property to the interface, checking for enums first
-      if (columnObj.type.includes("enum:")) {
-        const enumName = columnObj.type.replaceAll("enum: ", "");
-        const enumCapitalized = enumName[0].toUpperCase() +
-          enumName.substring(1);
+      if (columnObj.type.includes("enum")) {
+        // const enumName = columnObj.type.replaceAll("enum: ", "");
+        const enumName = columnObj.enumName;
+        // const enumCapitalized = enumName[0].toUpperCase() +
+        //   enumName.substring(1);
+
+        const enumCapitalized = enumName[0].toUpperCase() + enumName.slice(1);
         interfaceCode += `  ${colName}: keyof typeof ${enumCapitalized}\n`;
       } else {
         interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`;
       }
       // add the column as a property to the class, remove enum column name if enum type is found
-      if (columnObj.type.includes("enum:")) {
-        const enumName = columnObj.type.replaceAll("enum: ", "");
+      // if (columnObj.type.includes("enum:")) {
+      //   const enumName = columnObj.type.replaceAll("enum: ", "");
+      //   classCode += `    ${colName}: {\n` +
+      //     `      type: 'enum',\n`;
+      //   classCode += `      enumName: '${enumName}'\n`;
+      // } else {
+      //   classCode += `    ${colName}: {\n` +
+      //     `      type: '${columnObj.type}',\n`;
+      // }
+      if (columnObj.type.includes("enum")) {
+        // const enumName = columnObj.type.replaceAll("enum: ", "");
+
+        // console.log("COL OBJ", columnObj);
+
         classCode += `    ${colName}: {\n` +
           `      type: 'enum',\n`;
-        classCode += `      enumName: '${enumName}'\n`;
+        classCode += `      enumName: '${columnObj.enumName}',\n`;
       } else {
         classCode += `    ${colName}: {\n` +
           `      type: '${columnObj.type}',\n`;
       }
+
+      if (columnObj.notNull) classCode += `      notNull: true,\n`;
+      else if (!columnObj.type.includes("enum")) {
+        classCode += `      notNull: false,\n`;
+      }
       // for each 'property' of the column add it to the object
       if (columnObj.length) classCode += `      length: ${columnObj.length},\n`;
-      if (columnObj.notNull) classCode += `      notNull: true,\n`;
-      else classCode += `      notNull: false,\n`;
+
+      if (columnObj.autoIncrement) classCode += `      autoIncrement: true,\n`;
+
+      if (columnObj.defaultVal) {
+        classCode += `      defaultVal: ${columnObj.defaultVal},\n`;
+      }
+
       if (columnObj.primaryKey) classCode += `      primaryKey: true,\n`;
+
       if (columnObj.unique) classCode += `      unique: true,\n`;
+
       if (columnObj.checks) {
         // classCode += `      check: [${columnObj.checks}],\n`;
         classCode += `      checks: ${JSON.stringify(columnObj.checks)},\n`;
 
         // console.log(columnObj.checks);
       }
-      if (columnObj.defaultVal) {
-        classCode += `      defaultVal: ${columnObj.defaultVal},\n`;
-      }
-      if (columnObj.autoIncrement) classCode += `      autoIncrement: true,\n`;
+
       if (columnObj.association) {
         classCode += `      association: {\n` +
-          `        constraintName: '${columnObj.association.constraintName}',\n` +
+          `        name: '${columnObj.association.name}',\n` +
           `        mappedTable: '${columnObj.association.mappedTable}',\n` +
           `        mappedColumn: '${columnObj.association.mappedColumn}',\n      }\n`;
       }
+
       // close the column obj
       classCode += `    },\n`;
     });
@@ -82,37 +106,37 @@ export async function dbPull2() {
     // add the interface and class code to the autoCreatedModels string
     autoCreatedModels += interfaceCode + classCode;
     // for each table constraint add as properties onto the autoCreatedModels query
-    if (tableObj.checks.length > 0) {
-      autoCreatedModels += `  static checks = ${
-        JSON.stringify(tableObj.checks)
-      }\n`;
-    }
-    if (tableObj.unique) {
-      autoCreatedModels += `  static unique = ${
-        JSON.stringify(tableObj.unique)
-      }\n`;
-    }
-    if (tableObj.primaryKey) {
-      autoCreatedModels += `  static primaryKey = ${
-        JSON.stringify(tableObj.primaryKey)
-      }\n`;
-    }
-    if (tableObj.foreignKey) {
-      autoCreatedModels += `  static foreignKey = [`;
+    // if (tableObj.checks.length > 0) {
+    //   autoCreatedModels += `  static checks = ${
+    //     JSON.stringify(tableObj.checks)
+    //   }\n`;
+    // }
+    // if (tableObj.unique) {
+    //   autoCreatedModels += `  static unique = ${
+    //     JSON.stringify(tableObj.unique)
+    //   }\n`;
+    // }
+    // if (tableObj.primaryKey) {
+    //   autoCreatedModels += `  static primaryKey = ${
+    //     JSON.stringify(tableObj.primaryKey)
+    //   }\n`;
+    // }
+    // if (tableObj.foreignKey) {
+    //   autoCreatedModels += `  static foreignKey = [`;
 
-      tableObj.foreignKey.forEach((fkObj, idx) => {
-        const delimiter = idx === 0 ? "" : ", ";
+    //   tableObj.foreignKey.forEach((fkObj, idx) => {
+    //     const delimiter = idx === 0 ? "" : ", ";
 
-        autoCreatedModels += `${delimiter}\n    {columns: ${
-          JSON.stringify(fkObj.columns)
-        }, 
-                mappedColumns: ${
-          JSON.stringify(fkObj.mappedColumns)
-        }, table: '${fkObj.table}'}`;
-      });
+    //     autoCreatedModels += `${delimiter}\n    {columns: ${
+    //       JSON.stringify(fkObj.columns)
+    //     },
+    //             mappedColumns: ${
+    //       JSON.stringify(fkObj.mappedColumns)
+    //     }, table: '${fkObj.table}'}`;
+    //   });
 
-      autoCreatedModels += `]\n`;
-    }
+    //   autoCreatedModels += `]\n`;
+    // }
     // close the query for this table
     autoCreatedModels += `}\n\n`;
   });
@@ -130,4 +154,5 @@ export async function dbPull2() {
   await Deno.run({
     cmd: ["deno", "fmt", resolve("./models/model.ts")],
   }).status();
+  checkDbPull(); //* Added this in for migration log
 }

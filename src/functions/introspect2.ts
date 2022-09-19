@@ -6,6 +6,7 @@ import {
   tableListQuery,
 } from "../queries/introspection.ts";
 import { sqlDataTypes } from "../constants/sqlDataTypes.ts";
+import { join } from "https://deno.land/std@0.141.0/path/win32.ts";
 
 // INTERFACES
 interface ITableQueryRecords {
@@ -33,32 +34,34 @@ interface IConstraint {
 
 // const indexNames = Object.keys(sqlDataTypes)
 
-interface ITableListObj {
-  [key: string]: {
-    columns: {
-      [key: string]: {
-        type: keyof typeof sqlDataTypes;
-        primaryKey?: boolean;
-        notNull?: boolean;
-        unique?: boolean;
-        checks?: any; // used to be string[]
-        defaultVal?: unknown;
-        autoIncrement?: boolean;
-        length?: number;
-        association?: { rel_type?: string; table: string; mappedCol: string };
-      };
-    };
-    checks: string[];
-    unique?: Array<string[]>;
-    primaryKey?: string[];
-    foreignKey?: {
-      columns: string[];
-      mappedColumns: string[];
-      rel_type?: string;
-      table: string;
-    }[];
-  };
-}
+// interface ITableListObj {
+//   [key: string]: {
+//     columns: {
+//       [key: string]: {
+//         type: keyof typeof sqlDataTypes;
+//         primaryKey?: boolean;
+//         notNull?: boolean;
+//         unique?: boolean;
+//         checks?: any; // used to be string[]
+//         defaultVal?: unknown;
+//         autoIncrement?: boolean;
+//         length?: number;
+//         association?: { rel_type?: string; table: string; mappedCol: string };
+//       };
+//     };
+//     checks: string[];
+//     unique?: Array<string[]>;
+//     primaryKey?: string[];
+//     foreignKey?: {
+//       columns: string[];
+//       mappedColumns: string[];
+//       rel_type?: string;
+//       table: string;
+//     }[];
+//   };
+// }
+
+type ITableListObj = any;
 
 interface IEnumObj {
   [key: string]: string[];
@@ -128,7 +131,7 @@ export const introspect2 = async (
     uri,
   );
   // convert table list to an object
-  const tableListObj: ITableListObj = {};
+  const tableListObj: any = {};
 
   // Create object to store enums
   const enumObj: IEnumObj = {};
@@ -139,18 +142,36 @@ export const introspect2 = async (
   tableList.forEach((el) => {
     if (typeof el === "object" && el !== null && "table_name" in el) {
       if (recordObjectType(el)) {
-        tableListObj[String(el.table_name)] = { columns: {}, checks: [] };
+        tableListObj[String(el.table_name)] = {};
       }
     }
   });
 
   columnList.forEach((el) => {
     if (typeof el === "object" && el !== null && colRecordObjectType(el)) {
-      tableListObj[el.table_name].columns[el.column_name] = {
-        type: el.column_type,
-      };
-      const refObj = tableListObj[el.table_name].columns[el.column_name];
-      refObj["notNull"] = el.not_null;
+      // tableListObj[el.table_name][el.column_name] = {
+      //   type: el.column_type,
+      // };
+
+      if (String(el.column_type).includes("enum")) {
+        tableListObj[el.table_name][el.column_name] = {
+          type: "enum",
+          enumName: String(el.column_type).slice(6),
+        };
+      } else {
+        tableListObj[el.table_name][el.column_name] = {
+          type: el.column_type,
+        };
+      }
+      const refObj = tableListObj[el.table_name][el.column_name];
+      // refObj["notNull"] = el.not_null;
+
+      // console.log(!String(el.column_type).includes("enum"));
+
+      if (!String(el.column_type).includes("enum")) {
+        refObj["notNull"] = el.not_null;
+        // console.log(refObj);
+      }
 
       if (el.character_maximum_length) {
         refObj["length"] = el.character_maximum_length;
@@ -160,13 +181,34 @@ export const introspect2 = async (
         refObj["autoIncrement"] = true;
       } else {
         if (typeof el.col_default === "string") {
-          let defaultVal: unknown = el.col_default.replace(/\:\:[\w\W]*/, "");
-          if (defaultVal === "'false'") defaultVal = false;
-          if (defaultVal === "'true'") defaultVal = true;
+          // let defaultVal: unknown = el.col_default.replace(/\:\:[\w\W]*/, "");
+
+          // console.log('el.colDe', el.col_default);
+          let defaultVal: any = el.col_default.replace(/\:\:[\w\W]*/, "");
+
+          // console.log('checking DVAL', defaultVal);
+          // console.log('checking DVAL type', typeof defaultVal);
+
+          // defaultVal = defaultVal.replace(/\'/g, '\"');
+
+          // console.log();
+
+          // if (defaultVal === "'false'") defaultVal = false;
+          // if (defaultVal === "'true'") defaultVal = true;
           if (String(defaultVal).slice(-2) === "()") {
+            // console.log('triggered');
             defaultVal = "'" + defaultVal + "'";
           }
-          refObj["defaultVal"] = defaultVal;
+
+          // if (String(defaultVal).slice(-2) === "()") {
+          //   console.log('triggered');
+          //   defaultVal = '"' + defaultVal + '"';
+          // }
+
+          // console.log(defaultVal);
+          
+          // refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
+          refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
         }
       }
     }
@@ -191,7 +233,7 @@ export const introspect2 = async (
           tableListObj[el.table_name].primaryKey = key.replaceAll(" ", "")
             .split(",");
         } else {
-          tableListObj[el.table_name].columns[key]["primaryKey"] = true;
+          tableListObj[el.table_name][key]["primaryKey"] = true;
         }
       } else if (el.contype === "u") {
         const key = el.condef.replaceAll("UNIQUE (", "").replaceAll(")", "");
@@ -208,33 +250,75 @@ export const introspect2 = async (
             );
           }
         } else {
-          tableListObj[el.table_name].columns[key]["unique"] = true;
+          tableListObj[el.table_name][key]["unique"] = true;
         }
       } else if (el.contype === "c") {
-        const val = el.condef.replaceAll("CHECK (", "").replace(")", "");
-
-        const columnName = val.slice(1, val.indexOf(" "));
-
-        // console.log(el);
+        // const val = el.condef.replaceAll("CHECK (", "").replace(")", "");
 
         // console.log(val);
-        // console.log(columnName);
+        // console.log(el);
+
+        // console.log("el", el);
+
+        // console.log(el.condef.replace(/CHECK \(\((.*)\)\)/, "$1"));
+
+        // let parsedCondef = el.condef.replace(/CHECK \((.*)\)/, "$1");
+        let parsedCondef: any = el.condef.slice(6).replace(/[\(\)]/g, "");
+        parsedCondef = parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, "");
+        parsedCondef = parsedCondef.split(" AND ");
+        // parsedCondef = parsedCondef.match(/\w+ [\<\>]?[\=] /g)
+
+        const val = [];
+
+        for (let i = 0; i < parsedCondef.length; i++) {
+          const arrayRegex = /\[(.*)\]/;
+          if (arrayRegex.test(parsedCondef[i])) {
+            const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
+            // const parsedCondef2 = JSON.parse(parsedCondef[i].match(arrayRegex)[0].replaceAll('\'', '\"').replaceAll(' ', ''));
+            const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
+            parsedCondef[i] = parsedCondef1 + parsedCondef2;
+          }
+          val.push(parsedCondef[i]);
+        }
+
+        // console.log('parsedCondef:', parsedCondef);
+
+        // console.log(parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, ''));
+
+        // console.log(parsedCondef.replace(/\s/g, '\n'));
+
+        // console.log(el.condef.match(/\((\w+)\)/g));
+
+        // const definitionStart = el.condef.indexOf("(");
+        // const definitionEnd = el.condef.lastIndexOf(")");
+
+        // const val: any = el.condef.slice(definitionStart + 1, definitionEnd);
+
+        const columnName = val[0].match(/\w+/g)[0];
+
+        // const columnName = val.slice(1, val.indexOf(" "));
+
+        // const columnName = el.condef.replace(/CHECK.*(\w+).*/, '$1');
+        // console.log(object);
+
+        // console.log("COL NAME", columnName);
+        // console.log("COL VAL", val);
+
         if (
-          tableListObj[el.table_name].columns[columnName].checks === undefined
+          tableListObj[el.table_name][columnName].checks === undefined
         ) {
-          tableListObj[el.table_name].columns[columnName].checks = {};
+          tableListObj[el.table_name][columnName].checks = {};
         }
 
         // else {
-        //   tableListObj[el.table_name].columns[columnName].checks?.push({
+        //   tableListObj[el.table_name][columnName].checks?.push({
         //     name: el.conname,
         //     definition: val
         //   });
         // }
-        tableListObj[el.table_name].columns[columnName].checks[el.conname] =
-          val;
+        tableListObj[el.table_name][columnName].checks[el.conname] = val;
 
-        tableListObj[el.table_name].checks.push(String(val));
+        // tableListObj[el.table_name].checks.push(String(val));
       } else if (el.contype === "f") {
         let condef = el.condef;
         let conname = el.conname;
@@ -259,12 +343,12 @@ export const introspect2 = async (
             table: tableName,
           };
 
-          if (!tableListObj[el.table_name].foreignKey) {
-            tableListObj[el.table_name].foreignKey = [];
-            tableListObj[el.table_name].foreignKey?.push(fKObj);
-          } else {
-            tableListObj[el.table_name].foreignKey?.push(fKObj);
-          }
+          // if (!tableListObj[el.table_name].foreignKey) {
+          //   tableListObj[el.table_name].foreignKey = [];
+          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
+          // } else {
+          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
+          // }
         } else {
           condef = condef.replace("FOREIGN KEY (", "").replace(
             ") REFERENCES",
@@ -272,10 +356,9 @@ export const introspect2 = async (
           );
           const condefArray = condef.split(" "); // 0: table column // 1: foreign table and its id
 
-          const columnObj: any =
-            tableListObj[el.table_name].columns[condefArray[0]];
+          const columnObj: any = tableListObj[el.table_name][condefArray[0]];
           columnObj.association = {
-            constraintName: conname,
+            name: conname,
             mappedTable: condefArray[1].split("(")[0],
             mappedColumn: condefArray[1].replace(/\w+\(/, "").replace(")", ""),
           };
@@ -284,7 +367,7 @@ export const introspect2 = async (
     }
   });
 
-  // console.log(tableListObj.people.columns.species_id.association);
+  // console.log(tableListObj.people.species_id.association);
 
   return [tableListObj, enumObj];
 };

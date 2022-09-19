@@ -39,11 +39,11 @@ export class Model {
       enumName?: string;
     };
   };
-  static checks: string[];
-  static unique: Array<string[]>;
-  static primaryKey: string[];
+  static checks?: string[];
+  static unique?: Array<string[]>;
+  static primaryKey?: string[];
   private static sql = "";
-  static foreignKey: {
+  static foreignKey?: {
     columns: string[];
     mappedColumns: string[];
     rel_type?: string;
@@ -66,7 +66,7 @@ export class Model {
       else Model.sql += ")";
     }
     Model.sql += ` RETURNING *`;
-    const results = await Model.query();
+    const results: any = await Model.query();
     if (typeof results[0] === "object" && results[0] !== null) {
       this.record = results[0];
     }
