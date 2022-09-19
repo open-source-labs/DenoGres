@@ -1,6 +1,6 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
 import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
-import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
+// import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
 import { uniqueLog } from './myLog.ts';
 
 
@@ -23,11 +23,8 @@ export const dateNow = () : Date => {
 //* creating dates
 const dateFolderSync = createCurrentDate();
 const todaySync = dateNow();
-console.log(dateFolderSync);
-console.log(todaySync);
 
-
-
+//* Function will create synced version after dbSync has ran
 export function checkDbSync(): void {
     uniqueLog('db-sync');
     // dbSyncBool = true;
@@ -35,7 +32,6 @@ export function checkDbSync(): void {
     \n This model is a reference to the shape of your SQL Database on ${todaySync}. 
     \n If you'd like a more recent model please check the Migrations directory for synced versions of the model.` 
     const modelAfter = Deno.readTextFileSync(resolve('./models/model.ts'));
-    console.log("the checkDbSync function worked!");
     //* Checking directory exist to write safely
     ensureDir('./Migrations')
     //* Creating files and directory in Migrations

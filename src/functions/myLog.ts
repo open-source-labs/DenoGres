@@ -5,9 +5,9 @@
  * * (2) - Create a unique id name for the model.ts that was saved date with 24 time marker
  * * (3) - Save the unique id and user comment to a log file
  */
-import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
+// import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 import { dateFolder, today } from "./checkDbPull.ts";
-import { dateFolderSync, todaySync } from "./checkDbSync.ts"; //! This is giving me an issue right here
+import { dateFolderSync, todaySync } from "./checkDbSync.ts"; 
 import { readLines } from "https://deno.land/std@0.141.0/io/buffer.ts";
 
 export async function promptString(question: string) {
@@ -20,8 +20,6 @@ export async function promptString(question: string) {
 //* Within this function we want to pass in the users comment and have it fire off.
 export async function uniqueLog(method: string): Promise<void> {
   const input = await promptString("What is your comment? ");
-  console.log("Unique log is running.");
-  console.log(input);
   if (method === "db-sync") {
     const dbSyncInfo =
       `This model was created with ${method} and was created on ${todaySync}. It's currently stored in the directory './Migrations/syncedModel/_${dateFolderSync}'\n ${input}\n`;
@@ -30,8 +28,8 @@ export async function uniqueLog(method: string): Promise<void> {
       `${dbSyncInfo}\n`,
       { append: true },
     ); //* adds onto the text file instead of creating it again.
-    console.log(dbSyncInfo);
-  } else {
+  } 
+  else {
     const dbPullInfo =
       `This model was created with ${method} and was created on ${today}. It's currently stored in the directory './Migrations/modelBuild/_${dateFolder}'\n ${input}\n`;
     Deno.writeTextFileSync(
@@ -39,8 +37,6 @@ export async function uniqueLog(method: string): Promise<void> {
       `${dbPullInfo}\n`,
       { append: true },
     ); //* adds onto the text file instead of creating it again.
-    console.log(dbPullInfo);
   }
   return;
-  //? Messing up right here when I use resolve to resolve path, direct path works, maybe because resolve is async??
 }
