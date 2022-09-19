@@ -9,8 +9,6 @@ import { Model } from "../src/class/Model.ts";
 import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import { sqlDataTypes } from "../src/constants/sqlDataTypes.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
-// import JSONbig from "npm:json-bigint";
-import { modelParser } from "../src/functions/modelParser.ts";
 
 const sampleModelTS = `
 // import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
@@ -280,8 +278,6 @@ Deno.test(
     }
 
     console.log(output);
-    // console.log(modelParser());
-    // console.log(expectedOutput);
     assertEquals(JSON.stringify(output), JSON.stringify(expectedOutput));
   },
 );

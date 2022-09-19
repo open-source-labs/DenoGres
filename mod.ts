@@ -2,19 +2,16 @@
 import { config, parse } from "./deps.ts";
 import "https://deno.land/x/dotenv/load.ts";
 import { init } from "./src/functions/init.ts";
-import { sync } from "./src/functions/sync.ts";
-import { dbPull } from "./src/functions/dbPull.ts";
 import seed from "./src/functions/seed.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
-import sync2 from "./src/functions/sync2.ts";
-import { dbPull2 } from "./src/functions/dbPull2.ts";
+import sync from "./src/functions/sync.ts";
+import { dbPull } from "./src/functions/dbPull.ts";
 
 switch (Deno.args[0]) {
   case "--init":
-    init(); // This function is imported on line 5, It creates a models folder, and a env file.
+    init();
     break;
   case "--log": {
-    // declare a constatnt
     const myLog = Deno.readTextFileSync(
       "./Migrations/log/migration_log.txt",
     );
@@ -22,21 +19,17 @@ switch (Deno.args[0]) {
     break;
   }
 
-  case "--db-pull": { // introspection begins
-    const envVar = parse(await Deno.readTextFile("./.env")); // Gets the DB_URI
+  case "--db-pull": {
+    const envVar = parse(await Deno.readTextFile("./.env"));
     if (envVar.DATABASE_URI === "") {
       console.log("Please enter a valid DATABASE_URI value in .env");
     } else {
-      dbPull2();
+      dbPull();
     }
     break;
   }
   case "--db-sync": {
-    Deno.args[1] === "-x" ? sync2(true) : sync2();
-    // Deno.args[1] === "-log" ? sync2(true) : sync2(); //* adding for dbSync log
-
-    // -CASCADE ? DROP CASCADE
-    // ! COME BACK LATER TO FIX OVERWRITE
+    Deno.args[1] === "-x" ? sync(true) : sync();
     break;
   }
   case "-h":
@@ -66,15 +59,9 @@ switch (Deno.args[0]) {
     await Deno.args[1] === undefined ? seed() : seed(Deno.args[1]);
     break;
   }
-  // case "--log": {
-  //   //* Check if -c flag was passed in for comment
-  //   Deno.args[1] === "-c" ? console.log(denoLog()) : 'Please enter a comment with the -c flag';
-  //   break;
-  // }
   default:
 }
 
-// This is the message that details what the commands do
 function displayHelpMsg() {
   return `flags:
 --init: set-up DenoGres required files

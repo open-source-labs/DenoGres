@@ -23,11 +23,11 @@ export class Model {
       primaryKey?: boolean;
       notNull?: boolean;
       unique?: boolean;
-      checks?: any; // used to be string[]
+      checks?: any; // ! used to be string[]
       defaultVal?: string | number | boolean | Date;
       autoIncrement?: boolean;
       association?: any;
-      // { // used to be {rel_type?: string, table: string, mappedCol: string}
+      // { // ! used to be {rel_type?: string, table: string, mappedCol: string}
       //   rel_type?: string;
       //   table?: string;
       //   mappedCol?: string;
@@ -39,7 +39,7 @@ export class Model {
       enumName?: string;
     };
   };
-  static checks?: string[];
+  static checks?: any; // used to be string[]
   static unique?: Array<string[]>;
   static primaryKey?: string[];
   private static sql = "";
