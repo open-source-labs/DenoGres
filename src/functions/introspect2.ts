@@ -6,6 +6,7 @@ import {
   tableListQuery,
 } from "../queries/introspection.ts";
 import { sqlDataTypes } from "../constants/sqlDataTypes.ts";
+import { join } from "https://deno.land/std@0.141.0/path/win32.ts";
 
 // INTERFACES
 interface ITableQueryRecords {
@@ -241,14 +242,57 @@ export const introspect2 = async (
           tableListObj[el.table_name][key]["unique"] = true;
         }
       } else if (el.contype === "c") {
-        const val = el.condef.replaceAll("CHECK (", "").replace(")", "");
-
-        const columnName = val.slice(1, val.indexOf(" "));
-
-        // console.log(el);
+        // const val = el.condef.replaceAll("CHECK (", "").replace(")", "");
 
         // console.log(val);
-        // console.log(columnName);
+        // console.log(el);
+
+        // console.log("el", el);
+
+        // console.log(el.condef.replace(/CHECK \(\((.*)\)\)/, "$1"));
+
+        // let parsedCondef = el.condef.replace(/CHECK \((.*)\)/, "$1");
+        let parsedCondef: any = el.condef.slice(6).replace(/[\(\)]/g, "");
+        parsedCondef = parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, "");
+        parsedCondef = parsedCondef.split(" AND ");
+        // parsedCondef = parsedCondef.match(/\w+ [\<\>]?[\=] /g)
+
+        const val = [];
+
+        for (let i = 0; i < parsedCondef.length; i++) {
+          const arrayRegex = /\[(.*)\]/;
+          if (arrayRegex.test(parsedCondef[i])) {
+            const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
+            // const parsedCondef2 = JSON.parse(parsedCondef[i].match(arrayRegex)[0].replaceAll('\'', '\"').replaceAll(' ', ''));
+            const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
+            parsedCondef[i] = parsedCondef1 + parsedCondef2;
+          }
+          val.push(parsedCondef[i]);
+        }
+
+        // console.log('parsedCondef:', parsedCondef);
+
+        // console.log(parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, ''));
+
+        // console.log(parsedCondef.replace(/\s/g, '\n'));
+
+        // console.log(el.condef.match(/\((\w+)\)/g));
+
+        // const definitionStart = el.condef.indexOf("(");
+        // const definitionEnd = el.condef.lastIndexOf(")");
+
+        // const val: any = el.condef.slice(definitionStart + 1, definitionEnd);
+
+        const columnName = val[0].match(/\w+/g)[0];
+
+        // const columnName = val.slice(1, val.indexOf(" "));
+
+        // const columnName = el.condef.replace(/CHECK.*(\w+).*/, '$1');
+        // console.log(object);
+
+        // console.log("COL NAME", columnName);
+        // console.log("COL VAL", val);
+
         if (
           tableListObj[el.table_name][columnName].checks === undefined
         ) {

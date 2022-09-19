@@ -7,7 +7,7 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 export let wasFired: boolean;
 
 export async function dbPull2() {
-  checkDbPull(); //* Added this in for migration log
+  // checkDbPull(); //* Added this in for migration log
   const [tableListObj, enumObj] = await introspect2();
 
   let autoCreatedModels =
@@ -56,7 +56,7 @@ export async function dbPull2() {
       if (columnObj.type.includes("enum")) {
         // const enumName = columnObj.type.replaceAll("enum: ", "");
 
-        console.log("COL OBJ", columnObj);
+        // console.log("COL OBJ", columnObj);
 
         classCode += `    ${colName}: {\n` +
           `      type: 'enum',\n`;
