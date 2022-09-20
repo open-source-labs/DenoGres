@@ -6,6 +6,7 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 
 export let wasFired: boolean;
 
+// * reads PSQL database information, convert them into JS objects, then write them into the model.ts file
 export async function dbPull() {
   const [tableListObj, enumObj] = await introspect();
 
@@ -50,6 +51,7 @@ export async function dbPull() {
       //   classCode += `    ${colName}: {\n` +
       //     `      type: '${columnObj.type}',\n`;
       // }
+      // * if a given column is typed as ENUM
       if (columnObj.type.includes("enum")) {
         classCode += `    ${colName}: {\n` +
           `      type: 'enum',\n`;
@@ -64,6 +66,7 @@ export async function dbPull() {
         classCode += `      notNull: false,\n`;
       }
       // for each 'property' of the column add it to the object
+      // ! upcoming feature
       if (columnObj.length) classCode += `      length: ${columnObj.length},\n`;
 
       if (columnObj.autoIncrement) classCode += `      autoIncrement: true,\n`;
@@ -143,6 +146,8 @@ export async function dbPull() {
   });
   // Create the model.ts file
   Deno.writeTextFileSync("./models/model.ts", autoCreatedModels);
+
+  // * format the newly created model.ts file
   await Deno.run({
     cmd: ["deno", "fmt", resolve("./models/model.ts")],
   }).status();
