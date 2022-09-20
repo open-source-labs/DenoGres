@@ -40,7 +40,7 @@ export const enumSync = async () => {
 
             //* database enum doesn't exist in model - remove database enum
             if(!modelEnum[el.enum_name]) { // TESTED
-                enumCreateAlter += `DROP type ${el.enum_name}; `
+                enumCreateAlter += `DROP type ${el.enum_name} CASCADE; `
             } 
             else {
                 //* If the enum object and the values from modelEnum do not align
@@ -86,7 +86,7 @@ export const enumSync = async () => {
 
                 if(deleteEnum){ // TESTED
                     const enumList = "'" + tempDBEnumVal.join("','") + "'";
-                    enumCreateAlter += `DROP type ${key}; CREATE type ${key} as enum (${enumList})`;
+                    enumCreateAlter += `DROP type ${key} CASCADE; CREATE type ${key} as enum (${enumList})`;
                 } else { // TESTED
                     const rev = modelEnum[key].reverse();
                     rev.forEach((val, idx) => {

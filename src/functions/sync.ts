@@ -13,18 +13,24 @@ const objectLooselyEquals = (modelObject: any, dbObject: any) => {
       removeWhitespaces(JSON.stringify(Object.values(dbObject).sort()));
 };
 
+// * take schema information in the model.ts and upload into the PSQL database
+// * overwrite: if the user passes an additional optional flag -x, overwrite will be come true, which will not prompt the user whenever deleting any table/column
 export default async function sync(overwrite = false) {
+  // * if the optional -x flag wasn't passed in, alert the user
   if (!overwrite) {
     console.log(
       "To avoid all potential prompts, please consider running your command with the -x flag.",
     );
   }
 
+  // * compilation of all the queries that will be sent to PSQL DB (for ACID Compliance)
   let masterQuery = ``;
 
+  // * schema information from the PSQL DB
   const [dbTables] = await introspect();
   const db = await ConnectDb();
 
+  // * schema information from the local model.ts file
   const models = await modelParser();
 
   await enumSync();
@@ -35,6 +41,7 @@ export default async function sync(overwrite = false) {
   const createTablesList = [];
   const updateTablesList = [];
 
+  // * function that verifies whether or not a given table needs to be updated
   const checkUpdateColumns = (modelColumns: any, dbColumns: any) => {
     for (const columnName in dbColumns) {
       if (modelColumns[columnName] === undefined) return true;
@@ -55,6 +62,7 @@ export default async function sync(overwrite = false) {
     return false;
   };
 
+  // * loop through all of the tables to determine which tables to create, delete, update
   for (const tableName of modelTableNames) {
     if (!(dbTableNames.has(tableName))) {
       createTablesList.push(tableName);
@@ -87,18 +95,30 @@ export default async function sync(overwrite = false) {
     dbTables,
     overwrite,
   );
-
   updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
 
-  // * The ACID compliant query that will be sent to PostgreSQL Database
+  // * Single query that will be sent to PostgreSQL Database (sync will send only ONE query to the PSQL DB for ACID compliance)
   // console.log("masterQuery:", await masterQuery);
 
   await db.queryObject(masterQuery);
 
+  // * Used for migration feature (backing up/restoring data)
   await checkDbSync();
 
   DisconnectDb(db);
 }
+
+const getCreateTablesQuery = (createTablesList: string[], models: any) => {
+  let getCreateTablesQuery = ``;
+
+  for (const tableName of createTablesList) {
+    const columns = models[tableName];
+    // * NOTE: addition of the letter S on the left hand variable
+    getCreateTablesQuery += getCreateTableQuery(tableName, columns);
+  }
+
+  return getCreateTablesQuery;
+};
 
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
@@ -115,6 +135,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
       switch (constraint) {
+        // * association: foreign keys
         case "association": {
           associations.push({
             columnName: column,
@@ -158,6 +179,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
     "); ";
 
+  // * association: foreign keys
   let associationsQuery = ``;
   let associationIndex = 0;
 
@@ -217,6 +239,7 @@ const getDeleteTablesQuery = (
     let input;
     let properInput = false;
 
+    // * since overwrite is false, we need to prompt the user if they want to delete a table every time we're about to delete a table
     while (!properInput) {
       input = prompt(
         `Are you sure you want to delete the ${table} table? [y/n]`,
@@ -243,15 +266,135 @@ const getDeleteTablesQuery = (
   return deleteTablesQuery;
 };
 
-const getCreateTablesQuery = (createTablesList: string[], models: any) => {
-  let getCreateTablesQuery = ``;
+const getUpdateTablesQuery = async (
+  updateTablesList: string[],
+  models: any,
+  dbTables: any,
+  overwrite: Boolean,
+) => {
+  let updateTablesQuery = ``;
 
-  for (const tableName of createTablesList) {
-    const columns = models[tableName];
-    getCreateTablesQuery += getCreateTableQuery(tableName, columns);
+  for (const tableName of updateTablesList) {
+    const modelColumns = models[tableName];
+    const dbColumns = dbTables[tableName];
+
+    const createColumnsList = [];
+    const updateColumnsList = [];
+
+    const modelColumnNames = new Set(Object.keys(modelColumns));
+    const dbColumnNames = new Set(Object.keys(dbColumns));
+
+    // * check whether or not a given column that exists both in model.ts AND PSQL needs to be updated (values inside the column has changed)
+    const constraintsChecker = (modelConstraints: any, dbConstraints: any) => {
+      if (modelConstraints.type !== dbConstraints.type) return true;
+      if (
+        modelConstraints.notNull !== dbConstraints.notNull
+      ) {
+        return true;
+      }
+      if (Boolean(modelConstraints.unique) !== Boolean(dbConstraints.unique)) {
+        return true;
+      }
+      if (
+        Boolean(modelConstraints.primaryKey) !==
+          Boolean(dbConstraints.primaryKey)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(modelConstraints.defaultVal) !==
+          JSON.stringify(dbConstraints.defaultVal)
+      ) {
+        return true;
+      }
+      if (
+        JSON.stringify(modelConstraints.association) !==
+          JSON.stringify(dbConstraints.association)
+      ) {
+        return true;
+      }
+
+      if (
+        (modelConstraints.checks && !dbConstraints.checks) ||
+        (!modelConstraints.checks && dbConstraints.checks)
+      ) {
+        return true;
+      }
+
+      if (modelConstraints.checks && dbConstraints.checks) {
+        const modelChecks = modelConstraints.checks;
+        const dbChecks = dbConstraints.checks;
+
+        if (
+          !objectLooselyEquals(modelChecks, dbChecks)
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    // * figure out which columns within a table needs to be created, deleted, updated
+    for (const columnName of modelColumnNames) {
+      if (dbColumnNames.has(columnName)) {
+        if (
+          constraintsChecker(
+            models[tableName][columnName],
+            dbColumns[columnName],
+          )
+        ) {
+          updateColumnsList.push(columnName);
+        }
+        modelColumnNames.delete(columnName);
+        dbColumnNames.delete(columnName);
+      } else if (!(dbColumnNames.has(columnName))) {
+        createColumnsList.push(columnName);
+        modelColumnNames.delete(columnName);
+      }
+    }
+
+    const deleteColumnsList = Array.from(dbColumnNames);
+
+    // * Shows list of columns to create/delete/update (Part of updating a table)
+    // console.log(
+    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to CREATE`,
+    //   createColumnsList,
+    // );
+    // console.log(
+    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to DELETE`,
+    //   deleteColumnsList,
+    // );
+    // console.log(
+    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to UPDATE`,
+    //   updateColumnsList,
+    // );
+
+    const createColumnsQuery = getCreateColumnsQuery(
+      tableName,
+      createColumnsList,
+      models[tableName],
+    );
+    createColumnsQuery.length ? updateTablesQuery += createColumnsQuery : null;
+
+    const deleteColumnsQuery = getDeleteColumnsQuery(
+      tableName,
+      deleteColumnsList,
+      overwrite,
+    );
+    deleteColumnsQuery.length ? updateTablesQuery += deleteColumnsQuery : null;
+
+    const updateColumnsQuery: any = await getUpdateColumnsQuery(
+      tableName,
+      updateColumnsList,
+      models,
+      dbTables,
+    );
+
+    updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
   }
 
-  return getCreateTablesQuery;
+  return updateTablesQuery;
 };
 
 const getDeleteColumnsQuery = (
@@ -260,6 +403,7 @@ const getDeleteColumnsQuery = (
   overwrite: Boolean,
 ) => {
   let deleteColumnsQuery = `ALTER TABLE ${tableName} `;
+  // * will be used to verify whether or not any columns were deleted within a table
   const originalLength = deleteColumnsQuery.length;
 
   if (overwrite) {
@@ -327,6 +471,7 @@ const getCreateColumnsQuery = (
         model[columnName].type
       } `;
 
+    // * lists of foreign keys/checks that needs to be updated on the PSQL
     const associations = [];
     const checks: any = [];
 
@@ -361,7 +506,7 @@ const getCreateColumnsQuery = (
           createColumnQuery += `DEFAULT ${model[columnName].defaultVal} `;
           break;
         }
-        // TODO Work on this later
+        // TODO upcoming feature
         case "length": {
           break;
         }
@@ -388,6 +533,7 @@ const getCreateColumnsQuery = (
           `ALTER TABLE ${tableName} ADD CONSTRAINT "${constraintName}" CHECK (`;
         for (const definition of check[constraintName]) {
           const arrayRegex = /\[.*\]/;
+          // * if the check has list of categories (i.e. gender in ('F', 'M'))
           if (arrayRegex.test(definition)) {
             const newDefinition = definition.replace("=", " in ").replace(
               "[",
@@ -421,6 +567,7 @@ const getUpdateColumnsQuery = async (
   const db = await ConnectDb();
   let updateColumnsQuery = ``;
 
+  // * query that gets all constraints in a given table
   const constraintsListQuery =
     `SELECT tables.schemaname, class.relname AS table_name, 
   pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
@@ -435,6 +582,7 @@ const getUpdateColumnsQuery = async (
 
   const tableConstraints: any = {};
 
+  // * organize all of the constraints in a table by the columns they are used in
   for (const constraint of constraintsList) {
     const { contype, conname, condef } = constraint;
     let columnName;
@@ -473,6 +621,7 @@ const getUpdateColumnsQuery = async (
 
         for (let i = 0; i < parsedCondef.length; i++) {
           const arrayRegex = /\[(.*)\]/;
+          // * if the check has categories
           if (arrayRegex.test(parsedCondef[i])) {
             const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
             const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
@@ -559,6 +708,7 @@ const getUpdateColumnsQuery = async (
         `ALTER TABLE ${tableName} ADD CONSTRAINT ${tableName}_pkey PRIMARY KEY (${columnName}); `;
       primaryKeyAssignment = true;
     } else if (
+      // * avoiding adding more than one primary key inside a table
       !modelColumn.primaryKey && !primaryKeyAssignment && dbColumn.primaryKey
     ) {
       if (columnConstraints.p) {
@@ -677,6 +827,7 @@ const getUpdateColumnsQuery = async (
       }
     }
 
+    // * when a given column in a table does NOT have any constraint attached to, continue with the loop
     if (!columnConstraints) continue;
 
     if (columnConstraints.f) {
@@ -710,133 +861,4 @@ const getUpdateColumnsQuery = async (
   await DisconnectDb(db);
 
   return updateColumnsQuery;
-};
-
-const getUpdateTablesQuery = async (
-  updateTablesList: string[],
-  models: any,
-  dbTables: any,
-  overwrite: Boolean,
-) => {
-  let updateTablesQuery = ``;
-
-  for (const tableName of updateTablesList) {
-    const modelColumns = models[tableName];
-    const dbColumns = dbTables[tableName];
-
-    const createColumnsList = [];
-    const updateColumnsList = [];
-
-    const modelColumnNames = new Set(Object.keys(modelColumns));
-    const dbColumnNames = new Set(Object.keys(dbColumns));
-
-    const constraintsChecker = (modelConstraints: any, dbConstraints: any) => {
-      if (modelConstraints.type !== dbConstraints.type) return true;
-      if (
-        modelConstraints.notNull !== dbConstraints.notNull
-      ) {
-        return true;
-      }
-      if (Boolean(modelConstraints.unique) !== Boolean(dbConstraints.unique)) {
-        return true;
-      }
-      if (
-        Boolean(modelConstraints.primaryKey) !==
-          Boolean(dbConstraints.primaryKey)
-      ) {
-        return true;
-      }
-      if (
-        JSON.stringify(modelConstraints.defaultVal) !==
-          JSON.stringify(dbConstraints.defaultVal)
-      ) {
-        return true;
-      }
-      if (
-        JSON.stringify(modelConstraints.association) !==
-          JSON.stringify(dbConstraints.association)
-      ) {
-        return true;
-      }
-
-      if (
-        (modelConstraints.checks && !dbConstraints.checks) ||
-        (!modelConstraints.checks && dbConstraints.checks)
-      ) {
-        return true;
-      }
-
-      if (modelConstraints.checks && dbConstraints.checks) {
-        const modelChecks = modelConstraints.checks;
-        const dbChecks = dbConstraints.checks;
-
-        if (
-          !objectLooselyEquals(modelChecks, dbChecks)
-        ) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
-    for (const columnName of modelColumnNames) {
-      if (dbColumnNames.has(columnName)) {
-        if (
-          constraintsChecker(
-            models[tableName][columnName],
-            dbColumns[columnName],
-          )
-        ) {
-          updateColumnsList.push(columnName);
-        }
-        modelColumnNames.delete(columnName);
-        dbColumnNames.delete(columnName);
-      } else if (!(dbColumnNames.has(columnName))) {
-        createColumnsList.push(columnName);
-        modelColumnNames.delete(columnName);
-      }
-    }
-
-    const deleteColumnsList = Array.from(dbColumnNames);
-
-    // * Shows list of columns to create/delete/update (Part of updating a table)
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to CREATE`,
-    //   createColumnsList,
-    // );
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to DELETE`,
-    //   deleteColumnsList,
-    // );
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to UPDATE`,
-    //   updateColumnsList,
-    // );
-
-    const createColumnsQuery = getCreateColumnsQuery(
-      tableName,
-      createColumnsList,
-      models[tableName],
-    );
-    createColumnsQuery.length ? updateTablesQuery += createColumnsQuery : null;
-
-    const deleteColumnsQuery = getDeleteColumnsQuery(
-      tableName,
-      deleteColumnsList,
-      overwrite,
-    );
-    deleteColumnsQuery.length ? updateTablesQuery += deleteColumnsQuery : null;
-
-    const updateColumnsQuery: any = await getUpdateColumnsQuery(
-      tableName,
-      updateColumnsList,
-      models,
-      dbTables,
-    );
-
-    updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
-  }
-
-  return updateTablesQuery;
 };

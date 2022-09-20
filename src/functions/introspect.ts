@@ -99,8 +99,7 @@ const tableListQuery = `SELECT table_name FROM information_schema.tables
 WHERE table_schema='public'
 AND table_type='BASE TABLE';`;
 
-// Introspection Function
-// ? const getDbData = async () => {
+// * Grabs all the data needed to perform the INTROSPECT function
 export const getDbData = async (uri?: string) => {
   const db = await ConnectDb(uri);
 
@@ -141,8 +140,10 @@ export const introspect = async (
     }
   });
 
+  // * loop through the columns to make columns and their respective properties into tables
   columnList.forEach((el) => {
     if (typeof el === "object" && el !== null && colRecordObjectType(el)) {
+      // * ENUM
       if (String(el.column_type).includes("enum")) {
         tableListObj[el.table_name][el.column_name] = {
           type: "enum",
@@ -155,35 +156,42 @@ export const introspect = async (
       }
       const refObj = tableListObj[el.table_name][el.column_name];
 
+      // * NOT NULL
       if (!String(el.column_type).includes("enum")) {
         refObj["notNull"] = el.not_null;
       }
 
+      // ! didn't get to look over the length property
       if (el.character_maximum_length) {
         refObj["length"] = el.character_maximum_length;
       }
 
+      // * AUTOINCREMENT
       if (/nextval\('\w+_seq'::regclass/.test(String(el.col_default))) {
         refObj["autoIncrement"] = true;
       } else {
+        // * DEFAULT
         if (typeof el.col_default === "string") {
           // ! used to be typed unknown
           let defaultVal: any = el.col_default.replace(/\:\:[\w\W]*/, "");
 
-          // ! I don't know what this is for
+          // ! not entirely sure what this is for
           if (String(defaultVal).slice(-2) === "()") {
             defaultVal = "'" + defaultVal + "'";
           }
 
           // * Might have to change this to...
           // refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
+
           refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
         }
       }
     }
   });
 
+  // * loop through each enum type in the schema
   enumList.forEach((el) => {
+    // * key: ENUM name value: list of all the enumerations (categories of the enum type)
     if (typeof el === "object" && el !== null && enumElType(el)) {
       const enumVals = el.enum_value.split(/ *, */);
       enumObj[el.enum_name] = enumVals;
@@ -191,8 +199,10 @@ export const introspect = async (
   });
 
   // PRIMARY & UNIQUE & CHECK CONSTRAINTS
+  // * loop through all of the constraints
   constraintList.forEach((el) => {
     if (typeof el === "object" && el !== null && constraintObjectType(el)) {
+      // * primary key
       if (el.contype === "p") {
         const key = el.condef.replaceAll("PRIMARY KEY (", "").replaceAll(
           ")",
@@ -204,6 +214,7 @@ export const introspect = async (
         } else {
           tableListObj[el.table_name][key]["primaryKey"] = true;
         }
+        // * unique
       } else if (el.contype === "u") {
         const key = el.condef.replaceAll("UNIQUE (", "").replaceAll(")", "");
         // Check if it's composite
@@ -221,6 +232,7 @@ export const introspect = async (
         } else {
           tableListObj[el.table_name][key]["unique"] = true;
         }
+        // * checks
       } else if (el.contype === "c") {
         // * condef: Constraint Definition
         let parsedCondef: any = el.condef.slice(6).replace(/[\(\)]/g, "");
@@ -231,6 +243,7 @@ export const introspect = async (
 
         for (let i = 0; i < parsedCondef.length; i++) {
           const arrayRegex = /\[(.*)\]/;
+          // * if a check has list of categories listed (i.e. gender in ('F', 'M'))
           if (arrayRegex.test(parsedCondef[i])) {
             const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
             const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
@@ -248,6 +261,7 @@ export const introspect = async (
         }
 
         tableListObj[el.table_name][columnName].checks[el.conname] = val;
+        // * foreign keys
       } else if (el.contype === "f") {
         let condef = el.condef;
         let conname = el.conname;
