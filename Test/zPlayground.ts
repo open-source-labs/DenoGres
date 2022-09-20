@@ -7,10 +7,23 @@ import seed from "../src/functions/seed.ts";
 import { checkDbSync } from "../src/functions/checkDbSync.ts";
 import { introspect2 } from "../src/functions/introspect2.ts";
 import modelParser2 from "../src/functions/modelParser2.ts";
+import * as denogres from "../models/model.ts";
 
-// await dbPull2();
 
-sync2(true);
+// const person = new denogres.Person();
+
+// console.log(person)
+// Person.edit('hair_color = blue').query();
+
+
+// await denogres.Person.edit('current_mood = happy').where('name = Henry').query();
+
+// console.log(await denogres.Person.select('*').query());
+
+
+await dbPull2();
+
+// sync2(true);
 
 // const [dbTables] = await introspect2();
 

@@ -7,7 +7,6 @@ import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 export let wasFired: boolean;
 
 export async function dbPull2() {
-  checkDbPull(); //* Added this in for migration log
   const [tableListObj, enumObj] = await introspect2();
 
   let autoCreatedModels =
@@ -60,7 +59,7 @@ export async function dbPull2() {
 
         classCode += `    ${colName}: {\n` +
           `      type: 'enum',\n`;
-        classCode += `      enumName: '${columnObj.enumName}'\n`;
+        classCode += `      enumName: '${columnObj.enumName}',\n`;
       } else {
         classCode += `    ${colName}: {\n` +
           `      type: '${columnObj.type}',\n`;
@@ -155,4 +154,5 @@ export async function dbPull2() {
   await Deno.run({
     cmd: ["deno", "fmt", resolve("./models/model.ts")],
   }).status();
+  checkDbPull(); //* Added this in for migration log
 }

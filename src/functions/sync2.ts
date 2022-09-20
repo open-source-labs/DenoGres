@@ -36,8 +36,6 @@ const objectLooselyEquals = (modelObject: any, dbObject: any) => {
 };
 
 export default async function sync2(overwrite = false) {
-  await checkDbSync();
-
   if (!overwrite) {
     console.log(
       "To avoid all potential prompts, please consider running your command with the -x flag.",
@@ -120,6 +118,8 @@ export default async function sync2(overwrite = false) {
   console.log("masterQuery:", await masterQuery);
 
   await db.queryObject(masterQuery);
+
+  await checkDbSync();
 
   DisconnectDb(db);
 }

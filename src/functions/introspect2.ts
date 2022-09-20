@@ -189,6 +189,8 @@ export const introspect2 = async (
           // console.log('checking DVAL', defaultVal);
           // console.log('checking DVAL type', typeof defaultVal);
 
+          // defaultVal = defaultVal.replace(/\'/g, '\"');
+
           // console.log();
 
           // if (defaultVal === "'false'") defaultVal = false;
@@ -197,7 +199,16 @@ export const introspect2 = async (
             // console.log('triggered');
             defaultVal = "'" + defaultVal + "'";
           }
-          refObj["defaultVal"] = JSON.parse(defaultVal);
+
+          // if (String(defaultVal).slice(-2) === "()") {
+          //   console.log('triggered');
+          //   defaultVal = '"' + defaultVal + '"';
+          // }
+
+          // console.log(defaultVal);
+          
+          // refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
+          refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
         }
       }
     }
