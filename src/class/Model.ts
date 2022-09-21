@@ -26,7 +26,13 @@ export class Model {
       checks?: any; // ! used to be string[]
       defaultVal?: string | number | boolean | Date;
       autoIncrement?: boolean;
-      association?: any;
+      // association?: any;
+      association?: {
+        rel_type?: string;
+        name: string;
+        mappedTable: string;
+        mappedColumn: string;
+      };
       // { // ! used to be {rel_type?: string, table: string, mappedCol: string}
       //   rel_type?: string;
       //   table?: string;
@@ -298,7 +304,7 @@ export class Model {
   //BELONGS TO
   // create foreign key on this model (if not exist)
   static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
-    let foreignKey_ColumnName: any; // used to be typed string
+    let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = "";
     let rel_type = options?.associationName
@@ -326,7 +332,8 @@ export class Model {
       const tempPrime = await getprimaryKey(targetModel.table);
       mappingTarget_ColumnName = tempPrime ? tempPrime : "id" || "_id"; // << hard coded
 
-      const columnAtt = {
+      // * typed any (it wasn't typed before)
+      const columnAtt: any = {
         type: targetModel.columns[mappingTarget_ColumnName].type,
         association: {
           rel_type: rel_type,
