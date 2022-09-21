@@ -6,6 +6,7 @@ import seed from "./src/functions/seed.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 import sync from "./src/functions/sync.ts";
 import { dbPull } from "./src/functions/dbPull.ts";
+import restoreModel from "./src/functions/restore.ts";
 
 switch (Deno.args[0]) {
   case "--init":
@@ -56,7 +57,11 @@ switch (Deno.args[0]) {
     break;
   }
   case "--seed": {
-    await Deno.args[1] === undefined ? seed() : seed(Deno.args[1]);
+    Deno.args[1] === undefined ? seed() : seed(Deno.args[1]);
+    break;
+  }
+  case "--restore": {
+    restoreModel();
     break;
   }
   default:
