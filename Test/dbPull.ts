@@ -2,6 +2,7 @@ import { assert } from './deps.ts';
 import { dbPull } from '../src/functions/dbPull.ts';
 
 const generatedModel = 
+// `import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
 `import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here
 
