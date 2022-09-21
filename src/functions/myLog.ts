@@ -7,7 +7,7 @@
  */
 // import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 import { dateFolder, today } from "./checkDbPull.ts";
-import { dateFolderSync, todaySync } from "./checkDbSync.ts"; 
+import { dateFolderSync, todaySync } from "./checkDbSync.ts";
 import { readLines } from "https://deno.land/std@0.141.0/io/buffer.ts";
 
 export async function promptString(question: string) {
@@ -18,20 +18,48 @@ export async function promptString(question: string) {
 }
 
 //* Within this function we want to pass in the users comment and have it fire off.
+// export async function uniqueLog(method: string): Promise<void> {
+//   const input = await promptString("What is your comment? ");
+//   if (method === "db-sync") {
+//     const dbSyncInfo =
+//       `This model was created with ${method} and was created on ${todaySync}. It's currently stored in the directory './Migrations/syncedModel/_${dateFolderSync}'\n ${input}\n`;
+//     Deno.writeTextFileSync(
+//       "./Migrations/log/migration_log.txt",
+//       `${dbSyncInfo}\n`,
+//       { append: true },
+//     ); //* adds onto the text file instead of creating it again.
+//   }
+//   else {
+//     const dbPullInfo =
+//       `This model was created with ${method} and was created on ${today}. It's currently stored in the directory './Migrations/modelBuild/_${dateFolder}'\n ${input}\n`;
+//     Deno.writeTextFileSync(
+//       "./Migrations/log/migration_log.txt",
+//       `${dbPullInfo}\n`,
+//       { append: true },
+//     ); //* adds onto the text file instead of creating it again.
+//   }
+//   return;
+// }
 export async function uniqueLog(method: string): Promise<void> {
   const input = await promptString("What is your comment? ");
+
+  // console.log("DATE FOLDER SYNC", dateFolderSync);
+  // console.log("DATE FOLDER", dateFolder);
+
   if (method === "db-sync") {
     const dbSyncInfo =
-      `This model was created with ${method} and was created on ${todaySync}. It's currently stored in the directory './Migrations/syncedModel/_${dateFolderSync}'\n ${input}\n`;
+      `This model was created with ${method} and was created on ${todaySync}. It's currently stored in the directory './Migrations/syncedModel_${dateFolderSync}'\n ${input}\n`;
     Deno.writeTextFileSync(
       "./Migrations/log/migration_log.txt",
       `${dbSyncInfo}\n`,
       { append: true },
     ); //* adds onto the text file instead of creating it again.
-  } 
-  else {
+  } else {
     const dbPullInfo =
-      `This model was created with ${method} and was created on ${today}. It's currently stored in the directory './Migrations/modelBuild/_${dateFolder}'\n ${input}\n`;
+      `This model was created with ${method} and was created on ${today}. It's currently stored in the directory './Migrations/modelBuild_${dateFolder}'\n ${input}\n`;
+
+    console.log("DB PULL INFO", dbPullInfo);
+
     Deno.writeTextFileSync(
       "./Migrations/log/migration_log.txt",
       `${dbPullInfo}\n`,
