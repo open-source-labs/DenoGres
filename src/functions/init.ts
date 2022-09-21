@@ -13,11 +13,11 @@ DATABASE_URI=" "
 # (for test mode)
 TEST_DB_URI=" "
 `;
-  // Check if root exists, then returns a promise wheich writes the file path, and the file content to the file path.
+  // Check if root exists, then returns a promise which writes the file path, and the file content to the file path.
 
   ensureDir(envFilePath).then(() => {
     Deno.writeTextFile(envFilePath + ".env", envFileContent);
-    // + add .env in gitignor file (if no gitignore file, make one)
+    // + add .env in gitignore file (if no gitignore file, make one)
     console.log(".env file created");
   });
 
@@ -25,13 +25,17 @@ TEST_DB_URI=" "
   ensureDir(migrationFilePath);
   console.log("Migrations folder created");
 
-  // create moodel folder in root directory
+  // create model folder in root directory
   // inside the model folder, create model.ts file with boilerplate code
   const modelFilePath = "./models/";
   const modelFileContent = `    
-import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
+import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here    
     `;
+  //   const modelFileContent = `
+  // import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
+  // // user model definition comes here
+  //     `;
   ensureDir(modelFilePath).then(() => {
     Deno.writeTextFile(modelFilePath + "model.ts", modelFileContent);
     console.log("model.ts file created under model folder");

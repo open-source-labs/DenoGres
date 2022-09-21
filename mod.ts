@@ -45,18 +45,14 @@ switch (Deno.args[0]) {
         "run",
         "-Ar",
         "--unstable",
-        "https://deno.land/x/denogresdev/webview/webview.ts",
+        "https://deno.land/x/denogres/webview/webview.ts",
+        // "https://deno.land/x/denogresdev/webview/webview.ts",
       ],
-      // "app": "deno run -Ar --unstable ./webview/webview.ts",
-
-      // FOR DEVELOPMENT
-      // "webview_script.ts",
-      // FOR PRODUCTION
     });
     await app.status();
     break;
   }
-  case "--seed": {
+  case "--db-seed": {
     Deno.args[1] === undefined ? seed() : seed(Deno.args[1]);
     break;
   }
@@ -69,9 +65,16 @@ switch (Deno.args[0]) {
 
 function displayHelpMsg() {
   return `flags:
---init: set-up DenoGres required files
---db-pull: Introspect database and create and populate model.ts file`;
+  --db-pull: Introspect database, create and populate model.ts file
+  --db-seed: Upload locally stored data file to the PostgreSQL database
+  --db-sync: Update the PostgreSQL database schema to match the DenoGres Model schema
+  --gui: Launch the DenoGres graphical user interface
+  -h, --help: Display the list of all commands
+  --init: Set-up files required by DenoGres
+  --log: Display a historical log of DenoGres Model schemas
+  --restore: Restore locally stored DenoGres Model schemas and sync with the PostgreSQL database`;
 }
+
 
 export { Model } from "./src/class/Model.ts";
 export { manyToMany } from "./src/class/Model.ts";

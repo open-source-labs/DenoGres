@@ -11,7 +11,8 @@ export async function dbPull() {
   const [tableListObj, enumObj] = await introspect();
 
   let autoCreatedModels =
-    `import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n// user model definition comes here\n\n`;
+    `import { Model } from 'https://deno.land/x/denogres/mod.ts'\n// user model definition comes here\n\n`;
+    // `import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n// user model definition comes here\n\n`;
 
   // iterate over the properties of tableListObj
   Object.keys(tableListObj).forEach((el) => {
