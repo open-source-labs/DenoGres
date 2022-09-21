@@ -10,8 +10,9 @@ import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import { sqlDataTypes } from "../src/constants/sqlDataTypes.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 
-const sampleModelTS = `
 // import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
+const sampleModelTS = `
+// import { Model } from 'https://deno.land/x/denogres/mod.ts'
 import { Model } from "../src/class/Model.ts";
 // user model definition comes here
 

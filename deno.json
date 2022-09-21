@@ -1,6 +1,7 @@
 {
   "tasks": {
     "app": "deno run -Ar --unstable ./webview/webview.ts",
-    "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogresdev/webview/webview.ts\""
+    "appDEV": "deno run -Ar --unstable \"https://deno.land/x/denogresdev/webview/webview.ts\"",
+    "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogres/webview/webview.ts\""
   }
 }
