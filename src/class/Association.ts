@@ -38,11 +38,11 @@ abstract class Association {
   abstract addAssociatedData(...args:any): void
 
   // Table altering query
-  async syncAssociation() {
+  async syncAssociation(uri?: string) {
     if(!this.associationQuery) {
       console.log('No association query exist. Possibley already existing association.')
     } else {
-      const db = await ConnectDb();
+      const db = await ConnectDb(uri);
       try {      
         await db.queryObject(this.associationQuery)
         console.log('syncing db...')
@@ -73,7 +73,7 @@ export class HasOne extends Association {
     addAddMethodToModel(this, this.target, this.addAccesorName)
   }
 
-  async getAssociatedData(instance:any, options?:any) {
+  async getAssociatedData(instance:any, uri?: string, options?:any) {
     let query = ''
     let queryResult:any
     if(this.targetModel_MappindColumnName) { // type checking 
@@ -81,7 +81,7 @@ export class HasOne extends Association {
         WHERE ${this.foreignKey_ColumnName} ='${instance[this.targetModel_MappindColumnName]}'`
     }
     //console.log(query)
-    const db = await ConnectDb()
+    const db = await ConnectDb(uri)
     try {
       queryResult = await db.queryObject(query);
     } catch (error) {
@@ -91,7 +91,7 @@ export class HasOne extends Association {
     }
     return queryResult.rows
   }
-  async addAssociatedData(instance:any, values:any){
+  async addAssociatedData(instance:any, values:any, uri?: string){
     let query = ''
     let queryResult:any
     // case1. value is an object (e.g. {id:1})
@@ -113,7 +113,7 @@ export class HasOne extends Association {
       // postres auto converting string to numbers
     }
 
-    const db = await ConnectDb()
+    const db = await ConnectDb(uri)
     try {
       await db.queryObject(query);
     } catch (error) {
@@ -144,7 +144,7 @@ export class BelongsTo extends Association {
   }
 
    // this is instance method e.g. profile1.getUser(), person.getSpecies()
-  async getAssociatedData(instance:any, options?:any) { // 
+  async getAssociatedData(instance:any, uri?: string, options?:any) { // 
     let query = ''
     let queryResult:any
     if(this.foreignKey_ColumnName) { // type checking
@@ -152,7 +152,7 @@ export class BelongsTo extends Association {
       WHERE ${this.targetModel_MappindColumnName} ='${instance[this.foreignKey_ColumnName]}'`
     }
     //console.log(query)
-    const db = await ConnectDb()
+    const db = await ConnectDb(uri)
     try {
       queryResult = await db.queryObject(query);
     } catch (error) {
@@ -193,7 +193,7 @@ export class HasMany extends Association {
   }
 
   // this is instance method e.g. species1.getPeople()
-  async getAssociatedData(instance:any, options?:any) {
+  async getAssociatedData(instance:any, uri?: string, options?:any) {
     let query = ''
     if(this.mapping_ColumnName) {
       query = `
@@ -202,7 +202,7 @@ export class HasMany extends Association {
     }
     //console.log("association query:", query)
 
-    const db = await ConnectDb()
+    const db = await ConnectDb(uri)
     let queryResult:any
     try {
       queryResult = await db.queryObject(query);
@@ -249,7 +249,7 @@ export class ManyToMany extends Association {
     //addAddMethodToModel(this, this.target, this.addAccesorName_B)
   }
 
-  async getAssociatedData<T extends {}>(instance:T, options?:any) {
+  async getAssociatedData<T extends {}>(instance:T, uri?: string, options?:any) {
     //console.log("instance? ", instance)
     //console.log("OPTIONS: ", options)
     //console.log("THIS: ", this)
@@ -272,7 +272,7 @@ export class ManyToMany extends Association {
         WHERE ${this.modelB.table}.${this.modelB_mappingKey} = '${instance[this.modelB_mappingKey]}' ORDER BY ${this.modelA.table}.${this.modelA_mappingKey}`
       }
     }  
-      const db = await ConnectDb()      
+      const db = await ConnectDb(uri)      
       try {
         queryResult = await db.queryObject(query);
       } catch (error) {
