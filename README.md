@@ -120,9 +120,9 @@ abstraction functionality can be found here: https://denogres.deno.dev/
 - Joe Hynan | [GitHub](https://github.com/JoeH1020) |
   [LinkedIn](pending)
 - James Howat | [GitHub](https://github.com/jbhowat) |
-  [LinkedIn](pending)
+  [LinkedIn](https://www.linkedin.com/in/jamesbhowat/)
 - Hao Ze Lin| [GitHub](https://github.com/LinHAO-1) |
-  [LinkedIn](pending)
+  [LinkedIn](https://www.linkedin.com/in/hao-ze-lin-411747216/)
 
 ### Version 2.0
 
