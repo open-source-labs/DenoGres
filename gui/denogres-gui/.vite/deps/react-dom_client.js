@@ -1,7 +1,7 @@
 import {
   __commonJS,
   require_react
-} from "./chunk-URHM6FH3.js";
+} from "./chunk-BJFMU22U.js";
 
 // node_modules/.deno/scheduler@0.23.0/node_modules/scheduler/cjs/scheduler.development.js
 var require_scheduler_development = __commonJS({
