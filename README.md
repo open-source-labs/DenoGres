@@ -113,6 +113,17 @@ abstraction functionality can be found here: https://denogres.deno.dev/
 
 ## Contributors
 
+### Version 3.0
+
+- Azal Adeel | [GitHub](https://github.com/azaladeel) |
+  [LinkedIn](pending)
+- Joe Hynan | [GitHub](https://github.com/JoeH1020) |
+  [LinkedIn](pending)
+- James Howat | [GitHub](https://github.com/jbhowat) |
+  [LinkedIn](pending)
+- Hao Ze Lin| [GitHub](https://github.com/LinHAO-1) |
+  [LinkedIn](pending)
+
 ### Version 2.0
 
 - Anthony Lo | [GitHub](https://github.com/anthonylo87) |
