@@ -5,5 +5,5 @@ function.ts
 /application/fresh.gen.ts
 Test/henryPlayground.ts
 Test/henryPlayground.ts
-/gui/node_modules
+/gui/deno-gui/node_modules
 
