@@ -1,11 +1,11 @@
 import {
   __commonJS,
   require_react
-} from "./chunk-BJFMU22U.js";
+} from "./chunk-URHM6FH3.js";
 
-// node_modules/.deno/react@18.2.0/node_modules/react/cjs/react-jsx-dev-runtime.development.js
-var require_react_jsx_dev_runtime_development = __commonJS({
-  "node_modules/.deno/react@18.2.0/node_modules/react/cjs/react-jsx-dev-runtime.development.js"(exports) {
+// node_modules/.deno/react@18.2.0/node_modules/react/cjs/react-jsx-runtime.development.js
+var require_react_jsx_runtime_development = __commonJS({
+  "node_modules/.deno/react@18.2.0/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
     "use strict";
     if (true) {
       (function() {
@@ -852,32 +852,44 @@ var require_react_jsx_dev_runtime_development = __commonJS({
             return element;
           }
         }
-        var jsxDEV$1 = jsxWithValidation;
+        function jsxWithValidationStatic(type, props, key) {
+          {
+            return jsxWithValidation(type, props, key, true);
+          }
+        }
+        function jsxWithValidationDynamic(type, props, key) {
+          {
+            return jsxWithValidation(type, props, key, false);
+          }
+        }
+        var jsx = jsxWithValidationDynamic;
+        var jsxs = jsxWithValidationStatic;
         exports.Fragment = REACT_FRAGMENT_TYPE;
-        exports.jsxDEV = jsxDEV$1;
+        exports.jsx = jsx;
+        exports.jsxs = jsxs;
       })();
     }
   }
 });
 
-// node_modules/.deno/react@18.2.0/node_modules/react/jsx-dev-runtime.js
-var require_jsx_dev_runtime = __commonJS({
-  "node_modules/.deno/react@18.2.0/node_modules/react/jsx-dev-runtime.js"(exports, module) {
+// node_modules/.deno/react@18.2.0/node_modules/react/jsx-runtime.js
+var require_jsx_runtime = __commonJS({
+  "node_modules/.deno/react@18.2.0/node_modules/react/jsx-runtime.js"(exports, module) {
     if (false) {
       module.exports = null;
     } else {
-      module.exports = require_react_jsx_dev_runtime_development();
+      module.exports = require_react_jsx_runtime_development();
     }
   }
 });
-export default require_jsx_dev_runtime();
+export default require_jsx_runtime();
 /**
  * @license React
- * react-jsx-dev-runtime.development.js
+ * react-jsx-runtime.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-//# sourceMappingURL=react_jsx-dev-runtime.js.map
+//# sourceMappingURL=react_jsx-runtime.js.map

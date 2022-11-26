@@ -1,0 +1,29 @@
+{
+  "hash": "88aa2781",
+  "browserHash": "1e18d201",
+  "optimized": {
+    "react/jsx-runtime": {
+      "src": "../../node_modules/.deno/react@18.2.0/node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "c084947b",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.deno/react@18.2.0/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "b250980c",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/.deno/react@18.2.0/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "b0c4fc89",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-URHM6FH3": {
+      "file": "chunk-URHM6FH3.js"
+    }
+  }
+}
