@@ -1,11 +1,11 @@
 {
   "hash": "07ad2ea0",
-  "browserHash": "6f53f017",
+  "browserHash": "16b36a17",
   "optimized": {
     "react/jsx-runtime": {
       "src": "../../node_modules/.deno/react@18.2.0/node_modules/react/jsx-runtime.js",
       "file": "react_jsx-runtime.js",
-      "fileHash": "8f335fb6",
+      "fileHash": "06f7857c",
       "needsInterop": true
     },
     "react/jsx-dev-runtime": {
@@ -23,7 +23,7 @@
     "react-dom/client": {
       "src": "../../node_modules/.deno/react-dom@18.2.0/node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "234cb41d",
+      "fileHash": "b9f20906",
       "needsInterop": true
     },
     "react-router-dom": {
@@ -31,9 +31,21 @@
       "file": "react-router-dom.js",
       "fileHash": "7f9e7913",
       "needsInterop": false
+    },
+    "reactflow": {
+      "src": "../../node_modules/.deno/reactflow@11.3.0/node_modules/reactflow/dist/esm/index.js",
+      "file": "reactflow.js",
+      "fileHash": "a1cbe592",
+      "needsInterop": false
     }
   },
   "chunks": {
+    "chunk-WKVYYAQV": {
+      "file": "chunk-WKVYYAQV.js"
+    },
+    "chunk-DRANYMSX": {
+      "file": "chunk-DRANYMSX.js"
+    },
     "chunk-BJFMU22U": {
       "file": "chunk-BJFMU22U.js"
     }
