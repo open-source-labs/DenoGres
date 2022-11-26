@@ -6,7 +6,7 @@ import {
   Routes,
 } from 'react-router-dom';
 
-import ReactFlow from './components/ReactFlow.tsx';
+import ReactFlow from './components/ReactFlow.jsx';
 
 export default function App(props) {
   return (

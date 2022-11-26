@@ -7,7 +7,7 @@ import ReactFlow, {
   applyEdgeChanges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import TableNode from './TableNode';
+import TableNode from './TableNode.jsx';
 
 const nodeTypes = {
   table: TableNode,
