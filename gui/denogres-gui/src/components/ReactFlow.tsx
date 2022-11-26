@@ -7,6 +7,11 @@ import ReactFlow, {
   applyEdgeChanges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import TableNode from './TableNode';
+
+const nodeTypes = {
+  table: TableNode,
+};
 
 const initialNodes = [
   {
@@ -46,6 +51,7 @@ function Flow() {
         onNodesChange={onNodesChange}
         edges={edges}
         onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
       >
         <Background />
         <Controls />
