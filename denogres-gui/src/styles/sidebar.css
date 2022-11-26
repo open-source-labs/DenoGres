@@ -1,0 +1,54 @@
+aside {
+  width: 110px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+.aside-wrapper {
+  width: 110px;
+  background: radial-gradient(
+    750px at 0% 2.1%,
+    rgb(92, 188, 242) 0.3%,
+    rgb(87, 82, 212) 100%
+  );
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+.navbuttons {
+  background-image: linear-gradient(
+    to right,
+    rgb(92, 188, 242),
+    rgb(87, 82, 212)
+  );
+  padding: 30px 0px;
+  text-align: center;
+  transition: 0.5s;
+  background-size: 200% auto;
+  color: white;
+  border-style: solid;
+  border-width: thin;
+  border-color: black;
+  display: block;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 300;
+}
+
+.navbuttons:hover {
+  background-position: right center; /* change the direction of the change here */
+  color: #fff;
+  text-decoration: none;
+}

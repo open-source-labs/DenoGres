@@ -32,6 +32,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  width: 96.7%;
+  margin-left: 110px;
 }
 
 h1 {

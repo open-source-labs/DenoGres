@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import throttle from "../utils/throttle.ts";
+import throttle from "../../utils/throttle.ts";
 
 export interface IConnectionObject {
   id: number;
