@@ -17,7 +17,8 @@ const Sidebar = () => {
               to={'/home'}
               className="navbuttons"
             >
-              Home
+              {/* <span id="logo" className="navbuttons">
+                <img src= {require('../assets/logo.png')}/></span> */}
             </Link>
           </li>
           <li key={1}>
