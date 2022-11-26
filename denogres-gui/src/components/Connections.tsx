@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import throttle from "../../utils/throttle.ts";
-
+import React from 'react';
 export interface IConnectionObject {
   id: number;
   user_id: number;
@@ -172,7 +172,8 @@ export default function Connections() {
     const throttledHandleDelete = throttle(handleDelete, 1000);
 
     return (
-      <form className="flex flex-col my-5 py-5">
+      <form id='connectionHead' className="flex flex-col my-5 py-5">
+        
         <label className={labelStyle}>Connection Name:</label>
         <input
           className={inputStyle}
