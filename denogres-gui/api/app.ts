@@ -1,5 +1,7 @@
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { Application } from 'https://deno.land/x/oak/mod.ts';
 import { oakCors } from 'https://deno.land/x/cors/mod.ts';
+import 'https://deno.land/x/dotenv/load.ts';
+import database from '../src/helpers/database.ts';
 
 const PORT = 8000;
 
@@ -19,3 +21,12 @@ app.addEventListener('listen', () => {
 });
 
 await app.listen({port: PORT});
+
+try {
+  await database.connect();
+  console.log('Connected to the database')
+} catch(err) {
+  console.log(err)
+}
+
+await database.end();
