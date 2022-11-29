@@ -1,12 +1,13 @@
 import { Application } from 'https://deno.land/x/oak/mod.ts';
 import { oakCors } from 'https://deno.land/x/cors/mod.ts';
-import 'https://deno.land/x/dotenv/load.ts';
 import router from './routes.ts'
-
+import errorHandler from './controllers/errorHandler.ts';
 
 const PORT = 8000;
 
 const app = new Application();
+
+app.use(errorHandler);
 app.use(oakCors());
 app.use(router.routes());
 app.use(router.allowedMethods());

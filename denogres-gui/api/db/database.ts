@@ -1,6 +1,6 @@
 import { Client } from 'https://deno.land/x/mod.ts';
 
-let client = new Client({
+const client = new Client({
   user: "bzopmbyy",
   database: "bzopmbyy",
   hostname: "heffalump.db.elephantsql.com",
