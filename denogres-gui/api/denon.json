@@ -1,0 +1,9 @@
+{
+  "$schema": "https://deno.land/x/denon/schema.json",
+  "scripts": {
+    "start": {
+      "cmd": "deno run --allow-env --allow-net app.ts",
+      "desc": "Run the admin server in dev mode"
+    }
+  }
+}
