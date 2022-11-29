@@ -3,7 +3,22 @@ import { useState, useEffect } from 'react';
 import { Handle, Position } from 'reactflow';
 import RowNode from './RowNode'
 export default function TableNode({ data }) {
-  console.log('RFdata',data.table)
+  console.log('DATA:',data)
+  const rowArray = [];
+  for (let i = 0; i < data.table.length -1; i++) {
+    console.log('INSIDE FOR LOOP');
+    rowArray.push(<tr>
+      <RowNode
+      id={i}
+      name={data.table[i+1].name}
+      type={data.table[i+1].type}
+      constraint={data.table[i+1].constraint}
+      fk= {data.table[i+1].fk}
+      pk= {data.table[i+1].pk}
+      ></RowNode>
+    </tr>)
+  }
+  console.log('Array Content',rowArray)
   return (
     <div class="table-node">
       <div>
@@ -29,8 +44,10 @@ export default function TableNode({ data }) {
             </tr>
           </thead>
           <tbody>
+          {rowArray}
             {/* if row array is empty, create empty rows tof ill space */}
-            <tr className="empty-row">
+            
+            {/* <tr className="empty-row">
             <RowNode
                 id={1}
                 name={data.table[1].name}
@@ -59,7 +76,7 @@ export default function TableNode({ data }) {
                  fk= {data.table[3].fk}
                  pk= {data.table[3].pk}
               ></RowNode>
-            </tr>
+            </tr> */}
             {/* render row nodes depending on databse information */}
           </tbody>
         </table>
