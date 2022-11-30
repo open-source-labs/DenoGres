@@ -5,7 +5,7 @@ const client = new Client({
   database: "bzopmbyy",
   hostname: "heffalump.db.elephantsql.com",
   password: "gUrD5br_9QnTAoRdIaJcK54bc3M6Mr0H",
-  port: 8080,
+  port: 5432,
 });
 
 await client.connect();
