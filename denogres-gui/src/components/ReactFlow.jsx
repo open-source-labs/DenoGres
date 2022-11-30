@@ -12,21 +12,78 @@ import TableNode from './TableNode.jsx';
 const nodeTypes = {
   table: TableNode,
 };
+// name='string'
+// type='string'
+// constraint='None'
+// fk= 'False'
+// pk= 'False'
+const tableData = [
+  [
+    'students',
+    {
+      name: 'firstName',
+      type: 'string',
+      constraint: 'None',
+      pk: 'True',
+      fk: 'False',
+    },
+    {
+      name: 'lastName',
+      type: 'string',
+      constraint: 'None',
+      pk: 'False',
+      fk: 'False',
+    },
+    {
+      name: 'major',
+      type: 'string',
+      constraint: 'None',
+      pk: 'False',
+      fk: 'False',
+    },
+  ],
 
-const initialNodes = [
-  {
-    id: '1',
-    data: { label: 'Hello' },
-    position: { x: 0, y: 0 },
-    type: 'table',
-  },
-  {
-    id: '2',
-    data: { label: 'World' },
-    position: { x: 100, y: 100 },
-  },
+  [
+    'soda',
+    {
+      name: 'student',
+      type: 'string',
+      constraint: 'None',
+      pk: 'False',
+      fk: 'False',
+    },
+    {
+      name: 'Soda',
+      type: 'string',
+      constraint: 'None',
+      pk: 'False',
+      fk: 'False',
+    },
+    {
+      name: 'StudentID',
+      type: 'integer',
+      constraint: 'None',
+      pk: 'True',
+      fk: 'True',
+    },
+    {
+      name: 'SodaID',
+      type: 'integer',
+      constraint: 'None',
+      pk: 'True',
+      fk: 'False',
+    },
+  ],
 ];
-
+const initialNodes = [];
+for (let i = 0; i < tableData.length; i++) {
+  initialNodes.push({
+    id: `${i}`,
+    position: { x: `${400 * i}`, y: `0` },
+    data: { table: tableData[i] },
+    type: 'table',
+  });
+}
 const initialEdges = [
   { id: '1-2', source: '1', target: '2', label: 'to the', type: 'step' },
 ];
@@ -45,7 +102,7 @@ function Flow() {
   );
 
   return (
-    <div style={{ height: '1500px', width: '1500px' }}>
+    <div style={{ height: '80vh', width: '80vw' }}>
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}

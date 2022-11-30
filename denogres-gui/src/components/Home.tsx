@@ -16,7 +16,7 @@ export default function home() {
                 <img src="../logo.png"></img>
               </div>
               <br></br>
-              <p>
+              <p id='headerHome'>
                 <strong>
                   Welcome to the Denogres App, a GUI for the new, comprehensive
                   ORM for PostgreSQL in Deno runtime.
