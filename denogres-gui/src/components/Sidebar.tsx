@@ -1,11 +1,17 @@
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import '../styles/sidebar.css';
-
+import logo from '../assets/logo.png';
+import cloud from '../assets/cloud-icon.svg';
+import glass from '../assets/magnifier-icon.svg';
+import databaseIcon from '../assets/database-icon.svg';
+import logoutIcon from '../assets/logout-icon.svg';
+import diagramIcon from '../assets/diagram-icon.svg';
 // import sidebar paths and icons -> for now we just make a file with an array of objects
 // import {sideBarMenu, socialIcons} from "../../data/data";
 //import './sidebar.scss';
 // import logo from './logo.png';
+
 const Sidebar = () => {
   return (
     // Everything in a certain side
@@ -13,45 +19,95 @@ const Sidebar = () => {
       <div className="aside-wrapper">
         <ul className="side-link">
           <li>
-            <Link
+            <NavLink
               to={'/home'}
-              className="navbuttons"
+              data-hover="Home"
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
             >
-              {/* <span id="logo" className="navbuttons">
-                <img src= {require('../assets/logo.png')}/></span> */}
-            </Link>
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={logo}
+                />
+              </span>
+            </NavLink>
           </li>
           <li key={1}>
-            <Link
+            <NavLink
               to={'/connections'}
-              className="navbuttons"
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
             >
-              Connections
-            </Link>
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={databaseIcon}
+                />
+              </span>
+            </NavLink>
           </li>
           <li>
-            <Link
+            <NavLink
               to={'/console'}
-              className="navbuttons"
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
             >
-              Console
-            </Link>
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={glass}
+                />
+              </span>
+            </NavLink>
           </li>
           <li>
-            <Link
+            <NavLink
               to={'/migrations'}
-              className="navbuttons"
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
             >
-              Migrations
-            </Link>
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={cloud}
+                />
+              </span>
+            </NavLink>
           </li>
           <li>
-            <Link
+            <NavLink
               to={'/diagram'}
-              className="navbuttons"
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
             >
-              Diagram
-            </Link>
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={diagramIcon}
+                />
+              </span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink
+              to={'/logout'}
+              className={({ isActive }) =>
+                isActive ? 'navbuttons-active' : 'navbuttons'
+              }
+            >
+              <span id="logo-span">
+                <img
+                  id="logo-img"
+                  src={logoutIcon}
+                />
+              </span>
+            </NavLink>
           </li>
         </ul>
       </div>
