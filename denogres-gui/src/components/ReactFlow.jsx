@@ -102,7 +102,7 @@ function Flow() {
   );
 
   return (
-    <div style={{ height: '80vh', width: '80vw' }}>
+    <div style={{ height: '80vh', width: '85vw' }}>
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
