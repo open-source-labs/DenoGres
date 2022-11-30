@@ -11,7 +11,12 @@ export const columnNames = (tableName: string) => {
   })
 };
 
+export const allConstraints = () => {
+  return client.queryArray("SELECT conrelid::regclass AS table_from, conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE contype IN ('f', 'p ') AND connamespace = 'public'::regnamespace ORDER BY conrelid::regclass::text, contype DESC")
+}
+
 export default { 
   allTables,
   columnNames,
+  allConstraints
 };
