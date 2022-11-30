@@ -66,6 +66,13 @@ const tableData = [
       pk: 'True',
       fk: 'True',
     },
+    {
+      name: 'SodaID',
+      type: 'integer',
+      constraint: 'None',
+      pk: 'True',
+      fk: 'False',
+    },
   ],
 ];
 const initialNodes = [];

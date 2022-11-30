@@ -1,15 +1,13 @@
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { Application } from 'https://deno.land/x/oak/mod.ts';
 import { oakCors } from 'https://deno.land/x/cors/mod.ts';
+import router from './routes.ts'
+import errorHandler from './controllers/errorHandler.ts';
 
 const PORT = 8000;
 
-const router = new Router();
-router.get('/api/', (ctx) => {
-    ctx.response.body = 'Hello World, I am Deno!';
-    console.log('Knock, knock...')
-  });
-
 const app = new Application();
+
+app.use(errorHandler);
 app.use(oakCors());
 app.use(router.routes());
 app.use(router.allowedMethods());
