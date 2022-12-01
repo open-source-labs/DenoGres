@@ -7,7 +7,7 @@ const router = new Router();
 
 router
   .get('/api/tables', getTables)
-  .get('/api/constraints', getConstraints)
+  .get('/api/constraints/:table', getConstraints)
   .get('/api/columns/:table', columnNames)
   .get('/api', (ctx) => {
     ctx.response.body = 'Hello World, I am Deno!';
