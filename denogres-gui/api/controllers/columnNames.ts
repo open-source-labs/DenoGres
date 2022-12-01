@@ -3,7 +3,7 @@ import { Context } from "https://deno.land/x/oak/mod.ts";
 
 interface ContextWithParams extends Context {
   params: {
-    id: string;
+    table: string;
   };
 }
 
