@@ -233,13 +233,11 @@ export default function Console() {
   });
 
   // Tailwind CSS styling - for textArea;
-  const textArea =
-    'bg-gray-50 appearance-none border-1 border-gray-200 rounded p-2 my-2 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-gray-500 text-xs font-mono';
-
+  const textArea = 'query-input';
   return (
-    <div className="w-full flex flex-row">
-      <div className="w-5/12 bg-white rounded mx-3">
-        <div className="h-2/4 p-3 flex flex-col items-center">
+    <div className="console-page">
+      <div className="savedQueriesAndActiveModels">
+        <div className="savedQueries">
           <h2 className="mb-3">Saved Queries</h2>
           <div className="flex flex-col w-full overflow-y-auto">
             {savedQueries}
@@ -252,7 +250,7 @@ export default function Console() {
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-center p-3 h-2/4">
+        <div className="activeModels">
           <h2 className="mb-3">Active Models</h2>
           <div className="flex flex-col w-full overflow-y-auto">
             {activeModelNames}
@@ -296,13 +294,13 @@ export default function Console() {
           ) : null}
         </div>
       </div>
-      <div className="flex flex-col w-full">
-        <div className="flex flex-col h-2/4 bg-white p-3 mb-3 rounded">
+      <div className="query-console-and-results">
+        <div className="query-console">
           <h2>Query Console</h2>
           <div className="my-1">
             <label className="mr-1">Query Name:</label>
             <input
-              className={textArea}
+              className="query-input-small"
               onInput={(e) => {
                 setQueryName(e.currentTarget.value);
               }}
@@ -310,7 +308,7 @@ export default function Console() {
             ></input>
           </div>
           <textarea
-            className={textArea}
+            className="query-input-large"
             onInput={(e) => {
               setQueryText(e.currentTarget.value);
             }}
@@ -320,10 +318,10 @@ export default function Console() {
             rows={8}
             cols={10}
           />
-          <div className="flex flex-row justify-end">
+          <div className="query-buttons">
             <button
               type="button"
-              className="bg-deno-pink-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-pink-200"
+              className="query-button"
               onClick={throttledHandleSave}
             >
               {queryType === 'new' ? 'Save' : 'Update'}
@@ -331,15 +329,14 @@ export default function Console() {
             <button
               type="button"
               className={
-                'bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400' +
-                (queryType === 'new' ? ' hidden' : '')
+                'query-button' + (queryType === 'new' ? ' hidden' : '')
               }
               onClick={throttledHandleDelete}
             >
               Delete
             </button>
             <button
-              className="bg-deno-blue-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-blue-200"
+              className="query-button"
               onClick={throttledHandleRun}
             >
               Run
@@ -347,7 +344,7 @@ export default function Console() {
           </div>
         </div>
         <div className="bg-white h-full rounded p-3 overflow-y-scroll flex flex-col">
-          <h2 className="mb-3">Results</h2>
+          <h2 className="results">Results</h2>
           {queryRows}
         </div>
       </div>

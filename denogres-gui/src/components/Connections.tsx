@@ -126,8 +126,7 @@ export default function Connections() {
   // <------------ CONNECTION FORM ------------>
   function connectionForm(type: string) {
     const labelStyle = 'py-1';
-    const inputStyle =
-      'my-1 py-2 px-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-11/12';
+    const inputStyle = 'connections-input';
 
     const handleClick = async (): Promise<void> => {
       const method = connectionType === 'new' ? 'POST' : 'PATCH';
@@ -172,7 +171,7 @@ export default function Connections() {
     return (
       <form
         id="connectionHead"
-        className="flex flex-col my-5 py-5"
+        className="connections-form-fields"
       >
         <label className={labelStyle}>Connection Name:</label>
         <input
@@ -212,25 +211,24 @@ export default function Connections() {
           value={password}
           type="password"
         ></input>
-        <div className="flex flex-row py-5">
+        <div className="connections-buttons">
           <button
             type="button"
-            className="bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400 hidden"
+            className="connections-button"
           >
             Test Connection
           </button>
           <button
             onClick={throttledHandleClick}
             type="button"
-            className="bg-deno-pink-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-pink-200"
+            className="connections-button"
           >
             {connectionType === 'new' ? 'Create' : 'Update'}
           </button>
           <button
             type="button"
             className={
-              'bg-gray-300 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-gray-400' +
-              (connectionType === 'new' ? ' hidden' : '')
+              'connections-button' + (connectionType === 'new' ? ' hidden' : '')
             }
             onClick={throttledHandleDelete}
           >
@@ -239,8 +237,7 @@ export default function Connections() {
           <button
             type="button"
             className={
-              'bg-deno-blue-100 px-5 mx-1 py-3 text-sm shadow-sm font-medium tracking-wider text-gray-600 rounded-full hover:shadow-2xl hover:bg-deno-blue-200' +
-              (connectionType === 'new' ? ' hidden' : '')
+              'connections-button' + (connectionType === 'new' ? ' hidden' : '')
             }
             onClick={throttledHandleUriSaveAndRedirect}
           >
@@ -252,7 +249,7 @@ export default function Connections() {
   }
 
   return (
-    <div className="w-full flex flex-row">
+    <div className="connections-page">
       <div className="connections-list">
         <h2 className="mb-3 text-center">Connections List</h2>
         {connectionsList()}
@@ -264,7 +261,7 @@ export default function Connections() {
           Add New Connection
         </button>
       </div>
-      <div className="flex flex-col w-full">
+      <div className="connections-form">
         <div className="flex flex-col h-full bg-white p-3 rounded">
           <div>
             <h2>Connection Details</h2>

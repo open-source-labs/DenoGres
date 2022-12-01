@@ -3,6 +3,7 @@ import NavBarGUI from './NavBarGUI.tsx';
 import { HandlerContext } from '$fresh/server.ts';
 import jwtAuth from '../../utils/jwtAuth.ts';
 import React from 'react';
+import denogresLogo from '../assets/denogres-logo.png';
 
 export default function home() {
   return (
@@ -11,17 +12,20 @@ export default function home() {
       <div className="w-full flex flex-row ml-3">
         <div className="flex flex-col w-full">
           <div className="flex flex-col h-full bg-white p-3 rounded">
-            <div className="overflow-y-scroll">
+            <div className="home-overflow">
               <div className="bg-gray-900 w-96 h-96 p-5">
-                <img src="../logo.png"></img>
+                <img
+                  className="denogresLogo"
+                  src={denogresLogo}
+                ></img>
               </div>
               <br></br>
-              <p id='headerHome'>
+              <h2 id="headerHome">
                 <strong>
                   Welcome to the Denogres App, a GUI for the new, comprehensive
                   ORM for PostgreSQL in Deno runtime.
                 </strong>
-              </p>
+              </h2>
               <p>
                 <h2 className="mt-10 mb-5">Navigation Guide</h2>
                 <h2 className="mt-5 mb-5">Home</h2>
