@@ -36,7 +36,27 @@ fetch('http://localhost:8000/api/tables')
 const fullData = [];
 async function fullDataArray (data) {
 
-  
+  //[[o1][o2][o3]]
+  for (let i = 0; i < data.length; i++) {
+    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`)
+    const rowData = await res.json();
+    const newArray = [data[i]];
+    for(let j = 0; j < rowData.rows.length; j++) {
+           
+      const dataObj = {};
+      dataObj.name = rowData.rows[j][0];
+      dataObj.type = rowData.rows[j][1];
+      dataObj.pk = 'False'
+      dataObj.fk = 'False'
+      dataObj.constraint = 'None'
+      newArray.push(dataObj);
+      }
+      fullData.push(newArray);
+  }
+
+  return fullData;
+
+ /* 
   await data.map((e) => {
     return fetch(`http://localhost:8000/api/columns/${e}`)
     .then(response => response.json())
@@ -57,7 +77,7 @@ async function fullDataArray (data) {
     })
       return fullData;
 
-
+*/
 
   }
 
