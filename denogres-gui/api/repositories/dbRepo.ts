@@ -6,7 +6,7 @@ export const allTables = () => {
 
 export const columnNames = (tableName: string) => {
   return client.queryArray({
-    text: "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name=$1",
+    text: "SELECT column_name, data_type FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name=$1",
     args: [tableName]
   })
 };
