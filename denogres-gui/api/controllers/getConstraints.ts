@@ -1,4 +1,4 @@
-import { columnNames } from "../repositories/dbRepo.ts";
+import { allConstraints } from "../repositories/dbRepo.ts";
 import { Context } from "https://deno.land/x/oak/mod.ts";
 
 interface ContextWithParams extends Context {
@@ -13,7 +13,6 @@ export default async ({
 }: ContextWithParams) => {
   console.log(params)
   const tableName = params.table;
-
   console.log(`${tableName}`)
 
   if (!tableName) {
@@ -22,12 +21,12 @@ export default async ({
     return;
   }
 
-  const foundTable = await columnNames(tableName);
+  const foundTable = await allConstraints(tableName);
   if (!foundTable) {
     response.status = 404;
     response.body = { msg: `Table with name ${tableName} not found` };
     return;
   }
 
-  response.body = foundTable;
+  response.body = foundTable.rows;
 };
