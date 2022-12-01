@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ReactFlow, {
   Controls,
@@ -17,78 +17,75 @@ const nodeTypes = {
 // constraint='None'
 // fk= 'False'
 // pk= 'False'
-const tableData = [
-  [
-    'students',
-    {
-      name: 'firstName',
-      type: 'string',
-      constraint: 'None',
-      pk: 'True',
-      fk: 'False',
-    },
-    {
-      name: 'lastName',
-      type: 'string',
-      constraint: 'None',
-      pk: 'False',
-      fk: 'False',
-    },
-    {
-      name: 'major',
-      type: 'string',
-      constraint: 'None',
-      pk: 'False',
-      fk: 'False',
-    },
-  ],
 
-  [
-    'soda',
-    {
-      name: 'student',
-      type: 'string',
-      constraint: 'None',
-      pk: 'False',
-      fk: 'False',
-    },
-    {
-      name: 'Soda',
-      type: 'string',
-      constraint: 'None',
-      pk: 'False',
-      fk: 'False',
-    },
-    {
-      name: 'StudentID',
-      type: 'integer',
-      constraint: 'None',
-      pk: 'True',
-      fk: 'True',
-    },
-    {
-      name: 'SodaID',
-      type: 'integer',
-      constraint: 'None',
-      pk: 'True',
-      fk: 'False',
-    },
-  ],
-];
+
+async function getFullData() {  
+   const res = await fetch('http://localhost:8000/api/tables')
+   const data = await res.json();
+   return data.rows;
+}
+const data =  await getFullData();
+console.log('Data', JSON.stringify(data))
+
+// setTimeout(() => {},3000)
+/*
+fetch('http://localhost:8000/api/tables')
+.then ()
+*/
+  
+const fullData = [];
+async function fullDataArray (data) {
+
+  
+  await data.map((e) => {
+    return fetch(`http://localhost:8000/api/columns/${e}`)
+    .then(response => response.json())
+    .then(rowInfo => {
+      const newArray = [e];
+      for(let j = 0; j < rowInfo.rows.length; j++) {
+           
+          const dataObj = {};
+          dataObj.name = rowInfo.rows[j][0];
+          dataObj.type = rowInfo.rows[j][1];
+          dataObj.pk = 'False'
+          dataObj.fk = 'False'
+          dataObj.constraint = 'None'
+          newArray.push(dataObj);
+          }
+          fullData.push(newArray);
+      })
+    })
+      return fullData;
+
+
+
+  }
+
+
+const rfData = await fullDataArray(data);
+//  const rfData = setTimeout(await fullDataArray(data), 0);
+
+console.log('FULL DATA',JSON.stringify(rfData))
+console.log(rfData);
+console.log('length', rfData.length)  
 const initialNodes = [];
-for (let i = 0; i < tableData.length; i++) {
+for (let i = 0; i < rfData.length; i++) {
+  console.log('IN FOR LOOP')
   initialNodes.push({
     id: `${i}`,
     position: { x: `${400 * i}`, y: `0` },
-    data: { table: tableData[i] },
+    data: { table: fullData[i] },
     type: 'table',
   });
 }
+console.log('INITIAL NODES', initialNodes)
 const initialEdges = [
   { id: '1-2', source: '1', target: '2', label: 'to the', type: 'step' },
 ];
 
+
 function Flow() {
+  
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
 
@@ -100,7 +97,7 @@ function Flow() {
     (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
     []
   );
-
+  
   return (
     <div style={{ height: '80vh', width: '85vw' }}>
       <ReactFlow
@@ -118,3 +115,5 @@ function Flow() {
 }
 
 export default Flow;
+
+  
