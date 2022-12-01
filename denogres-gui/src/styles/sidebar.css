@@ -4,6 +4,7 @@ aside {
   top: 0;
   bottom: 0;
   left: 0;
+  margin: 0;
 }
 
 .aside-wrapper {
@@ -16,6 +17,7 @@ aside {
   position: absolute;
   top: 0;
   bottom: 0;
+  margin: 0;
 }
 
 ul {
@@ -39,15 +41,41 @@ a:link {
   transition: 0.5s;
   background-size: 200% auto;
   color: white;
-  border-style: solid;
+  /* border-style: solid;
   border-width: thin;
-  border-color: black;
+  border-color: black; */
+  border-bottom: 2px solid black;
   display: block;
   text-decoration: none;
   font-size: 18px;
   font-weight: 300;
 }
 
+button {
+  background-image: linear-gradient(
+    to right,
+    rgb(190, 159, 200),
+    rgb(113, 147, 185)
+  );
+  padding: 30px 0px;
+  text-align: center;
+  transition: 0.5s;
+  background-size: 200% auto;
+  color: white;
+  /* border-style: solid;
+  border-width: thin;
+  border-color: black; */
+  border-bottom: 2px solid black;
+  display: block;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 300;
+}
+button:hover {
+  background-position: right center; /* change the direction of the change here */
+  color: #fff;
+  text-decoration: none;
+}
 .navbuttons-active {
   background-image: linear-gradient(
     to right,
@@ -60,9 +88,10 @@ a:link {
   transition: 0.5s;
   background-size: 200% auto;
   color: #fff;
-  border-style: solid;
+  /* border-style: solid;
   border-width: thin;
-  border-color: black;
+  border-color: black; */
+  border-bottom: 2px solid black;
   display: block;
   text-decoration: none;
   font-size: 18px;
