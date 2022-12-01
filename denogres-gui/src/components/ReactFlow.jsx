@@ -5,6 +5,7 @@ import ReactFlow, {
   Background,
   applyNodeChanges,
   applyEdgeChanges,
+  Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import TableNode from './TableNode.jsx';
@@ -85,15 +86,13 @@ async function fullDataArray (data) {
 const rfData = await fullDataArray(data);
 //  const rfData = setTimeout(await fullDataArray(data), 0);
 
-console.log('FULL DATA',JSON.stringify(rfData))
-console.log(rfData);
-console.log('length', rfData.length)  
+
 const initialNodes = [];
 for (let i = 0; i < rfData.length; i++) {
   console.log('IN FOR LOOP')
   initialNodes.push({
     id: `${i}`,
-    position: { x: `${400 * i}`, y: `0` },
+    position: { x: `${500 * i}`, y: `0` },
     data: { table: fullData[i] },
     type: 'table',
   });
