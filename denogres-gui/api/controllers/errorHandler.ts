@@ -1,4 +1,4 @@
-import { Middleware } from "https://deno.land/x/oak/mod.ts";
+import { Middleware } from "https://deno.land/x/oak@v11.1.0/mod.ts";
 
 const errorHandler: Middleware = async ({ response }, next) => {
   try {

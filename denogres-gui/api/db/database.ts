@@ -1,4 +1,4 @@
-import { Client } from 'https://deno.land/x/postgres/mod.ts';
+import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 const client = new Client({
   user: "bzopmbyy",
