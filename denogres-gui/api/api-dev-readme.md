@@ -25,9 +25,8 @@ All of the back-end files are neatly contained the 'api' folder. Within this dir
 
 - **controllers**: standard middleware controllers that handle arriving request, call on services and repositories, and send responses
 - **connections**: folder containing two files: 
-    1. db.ts which is where the connection is made to the working database as entered by the user of the GUI
-    2. usersDatabase.ts which is where the conenction is made to the user database. 
-- **users**: folder containing a usersDatabase.ts file, which is where the connection is made to our own user database
+    1. database.ts which is where the connection is made to the working database as entered by the user of the GUI
+    2. usersDatabase.ts which is where the connection is made to the user database.
 - **repositories**: these TS files will handle the management of the database operations for both databases. Each create, delete, or update will take place, in its logic, here.
 - **services**: these are the files that handle data manipulation and logic - such as validations, formatting queries, aggregating queries before being returned, etc.
 - **utilities**: these files handle authorization, encryption, and other simple server-side needs
