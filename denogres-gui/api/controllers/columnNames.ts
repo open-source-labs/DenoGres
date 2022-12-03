@@ -11,10 +11,7 @@ export default async ({
   params,
   response,
 }: ContextWithParams) => {
-  console.log(params)
   const tableName = params.table;
-
-  console.log(`${tableName}`)
 
   if (!tableName) {
     response.status = 400;
