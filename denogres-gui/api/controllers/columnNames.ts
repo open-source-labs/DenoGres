@@ -1,5 +1,5 @@
 import { columnNames } from "../repositories/dbRepo.ts";
-import { Context } from "https://deno.land/x/oak/mod.ts";
+import { Context } from "https://deno.land/x/oak@v11.1.0/mod.ts";
 
 interface ContextWithParams extends Context {
   params: {
@@ -11,10 +11,7 @@ export default async ({
   params,
   response,
 }: ContextWithParams) => {
-  console.log(params)
   const tableName = params.table;
-
-  console.log(`${tableName}`)
 
   if (!tableName) {
     response.status = 400;
