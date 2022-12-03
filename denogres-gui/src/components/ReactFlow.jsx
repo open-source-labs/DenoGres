@@ -13,11 +13,7 @@ import TableNode from './TableNode.jsx';
 const nodeTypes = {
   table: TableNode,
 };
-// name='string'
-// type='string'
-// constraint='None'
-// fk= 'False'
-// pk= 'False'
+
 
 async function getConstraints() {
   const res = await fetch('http://localhost:8000/api/constraints')
