@@ -13,7 +13,15 @@ router
   .get('/api/columns/:table', columnNames)
   
   // user db routes:
-  .post('api/signIn', signIn)
+  .post('/api/signin', async (ctx) => {
+    if (!ctx.request.hasBody) {
+      console.log('415')
+      ctx.throw(415);
+    }
+    const reqBody = await ctx.request.body().value;
+    console.log(reqBody);
+    ctx.response.status = 200;
+  });
 
 export default router;
 
