@@ -6,16 +6,21 @@ export const allTables = () => {
 };
 
 // checkUser checks to see if a username is in the database, if it is, it returns the hashed pw associated with that user, for comparison
-export const checkUser = (username: string) => {
-  const hashedPass: Object = client.queryObject({
-    text: "SELECT password FROM users WHERE name=$1",
+export const checkUser = async (username: string): boolean => {
+  const result  = await client.queryObject({
+    text: "SELECT password FROM users WHERE username=$1",
     args: [username]
   })
-  console.log(hashedPass);
+  const hashedPass: string = result.rows[0].password
+  if (!hashedPass) {
+    return false;
+  } else return true;
 }
 
 // checkPW checks to see if a password is in the database, using encryption
-
+export const checkPW = (password: string) => {
+  console.log('checkPW Function' + password)
+}
 // createUser
 
 // addConnection
@@ -25,4 +30,5 @@ export const checkUser = (username: string) => {
 export default { 
   allTables,
   checkUser,
+  checkPW
 };
