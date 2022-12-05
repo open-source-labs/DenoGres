@@ -4,18 +4,18 @@
   line-height: 24px;
   font-weight: 400;
   height: 100vh;
-  width: 90vw;
+  width: 100vw;
   color-scheme: light dark;
   color: whitesmoke;
   background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-  display: flex;
+  display: block;
   justify-content: space-between;
+  margin: 0;
 }
 
 a {
@@ -28,20 +28,19 @@ a:hover {
 }
 
 body {
-  margin: auto;
   display: flex;
   justify-content: space-between;
   place-items: center;
-  min-width: 320px;
+  min-width: 647px;
   min-height: 100vh;
-  width: 96.7%;
-  margin-right: 200px;
-  margin-left: 200px;
-  overflow-y: visible;
+  width: 97%;
+  overflow: scroll;
+  margin: 0;
 }
 
 .denogresLogo {
   margin: 0;
+  width: 95vw;
 }
 h1 {
   font-size: 3.2em;
@@ -79,6 +78,15 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.home-main-1 {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  /* margin-right: 5vw; */
+}
+
 #headerHome {
   display: flex;
   justify-content: center;
@@ -386,7 +394,12 @@ button:focus-visible {
 }
 
 /*custom react flow styling*/
-
+.react-flow-div {
+  display: flex;
+  height: 80vh;
+  width: 85vw;
+  margin-top: 5vh;
+}
 .flow {
   border: 1px solid rgb(113, 147, 169);
   background: #fbf3de;
@@ -494,12 +507,13 @@ tr {
 /*page stuff*/
 
 .connections-page {
-  margin: auto;
+  /* margin: auto; */
   display: flex;
   justify-content: space-around;
   align-items: center;
   flex-direction: row;
-  margin-left: 22vh;
+  /* margin-left: 25vw; */
+  margin-top: 5vh;
 }
 .connections-list {
   margin: auto;
@@ -507,7 +521,7 @@ tr {
   border-radius: 15px;
   height: 80vh;
   width: 300px;
-  margin-right: 20vh;
+  margin-right: 10vw;
   padding: 30px;
   display: flex;
 
