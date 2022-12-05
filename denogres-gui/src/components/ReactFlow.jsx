@@ -42,8 +42,8 @@ async function getFullData() {
    const data = await res.json();
    return data.rows;
 }
-const data =  await getFullData();
-console.log('Data', JSON.stringify(data))
+const data = await getFullData();
+console.log('Data', JSON.stringify(data));
 
 // setTimeout(() => {},3000)
 /*
@@ -52,12 +52,13 @@ fetch('http://localhost:8000/api/tables')
 */
 
   
-const fullData = [];
-async function fullDataArray (data) {
 
+
+const fullData = [];
+async function fullDataArray(data) {
   //[[o1][o2][o3]]
   for (let i = 0; i < data.length; i++) {
-    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`)
+    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`);
     const rowData = await res.json();
     const newArray = [data[i]];
     for(let j = 0; j < rowData.rows.length; j++) {
@@ -71,8 +72,8 @@ async function fullDataArray (data) {
       dataObj.fk = (constraints[data[i]]['fk'][(dataObj.name)]? "True":"False");
       dataObj.constraint = 'None'
       newArray.push(dataObj);
-      }
-      fullData.push(newArray);
+    }
+    fullData.push(newArray);
   }
 
   return fullData;
@@ -105,7 +106,7 @@ const nodePositions = [
 
 const initialNodes = [];
 for (let i = 0; i < rfData.length; i++) {
-  console.log('IN FOR LOOP')
+  console.log('IN FOR LOOP');
   initialNodes.push({
     id: `${i}`,
     position: nodePositions[i],
@@ -113,14 +114,12 @@ for (let i = 0; i < rfData.length; i++) {
     type: 'table',
   });
 }
-console.log('INITIAL NODES', initialNodes)
+console.log('INITIAL NODES', initialNodes);
 const initialEdges = [
   { id: '1-2', source: '1', target: '2', label: 'to the', type: 'step' },
 ];
 
-
 function Flow() {
-  
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
 
@@ -132,9 +131,12 @@ function Flow() {
     (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
     []
   );
-  
+
   return (
-    <div style={{ height: '80vh', width: '85vw' }}>
+    <div
+      className="react-flow-div"
+      // style={{ height: '80vh', width: '85vw' }}
+    >
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
@@ -150,5 +152,3 @@ function Flow() {
 }
 
 export default Flow;
-
-  
