@@ -1,1 +1,0 @@
-// cookie utility is used for creating and returning the authorization cookie that can later be appended to the body and sent as a response

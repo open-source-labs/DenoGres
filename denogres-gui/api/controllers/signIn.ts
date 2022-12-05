@@ -16,7 +16,6 @@ export default async (Context) => {
     "password": "enteredpassword"
   }
   */
-
   //send username and password to the Sign In Service to check that they are valid
   //if the service returns false, the credentials were not valid, return status 401 - unauthorized
   if (!signInService(reqBody.username, reqBody.password)) {
