@@ -12,6 +12,8 @@ import { Context } from "https://deno.land/x/oak@v11.1.0/mod.ts"
 - if there are any errors in this process (like UN or PW are not a match) this service returns the error back to the controller to be returned as a response.
 */
 
+
+
 const signInService = async (username: string, password: string): Promise<any> => {
   //first, check to see if the username is in the database
   const userID: string = await checkUser(username);
@@ -27,36 +29,12 @@ const signInService = async (username: string, password: string): Promise<any> =
   const payload = {
     id: userID,
     username: username,
-    exp: getNumericDate(30 * 60)
+    exp: getNumericDate(24 * 60 * 60)
   };
-  //generate the JWT
-  const jwt = await cookieUtil(payload);
-  //
-  const response = { 
-    id: payload.id,
-    username: payload.username,
-    token: jwt}
-  return response;
-  }
-  // cookie.setCookie(response.headers, {
-  //   name: "jwt",
-  //   value: jwt,
-  //   path: "/",
-  //   httpOnly: true,
-  // });
-
-  // cookie.setCookie(response.headers, {
-  //   name: "userId",
-  //   value: String(response.body.id),
-  //   path: "/",
-  //   httpOnly: true,
-  // });
-
-  // cookie.setCookie(response.headers, {
-  //   name: "connectionId",
-  //   value: "",
-  //   path: "/",
-  //   httpOnly: true,
-  // });
-
+  //generate the JWT and cookies
+  const packagedResponse = await cookieUtil(payload);
+  //return package to signIn mw
+  return packagedResponse;
+};
+ 
 export default signInService;

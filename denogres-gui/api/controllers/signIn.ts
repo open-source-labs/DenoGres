@@ -18,22 +18,14 @@ export default async (ctx: Context) => {
   */
   //send username and password to the Sign In Service to check that they are valid
   //if the service returns false, the credentials were not valid, return status 401 - unauthorized
-  const response = await signInService(reqBody.username, reqBody.password) 
+  const packagedResponse = await signInService(reqBody.username, reqBody.password) 
 
-    if (!response) {
+    if (!packagedResponse) {
       return ctx.response.status = 401;
     } else {
-      // Context.response.status = 200;
-      // Context.response.body = response;
-      // await Context.cookies.set('cookie_name_test, cookie_value_test')
-      // console.log(Context.response)
-      // Context.response.body ={
-      //   id: "test",
-      //   username: "testname",
-      //   token: "testtoken",
-      // };
-      // Context.response.status = 200;
-      ctx.cookies.set("token", "12345")
-      console.log(ctx.cookies)
+      ctx.response.status = packagedResponse.status;
+      ctx.cookies.set(`${packagedResponse.cookie1[0]}`, `${packagedResponse.cookie1[1]}`);
+      ctx.cookies.set(`${packagedResponse.cookie2[0]}`, `${packagedResponse.cookie2[1]}`);
+      ctx.response.body = packagedResponse.body;
   }
 }
