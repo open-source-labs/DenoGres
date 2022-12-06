@@ -1,5 +1,5 @@
 import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
-import { config } from "https://deno.land/x/dotenv/mod.ts"
+import { config } from "https://deno.land/x/dotenv@v3.2.0/mod.ts"
 
 const env = config({
   path: "./api/userDB.env"
