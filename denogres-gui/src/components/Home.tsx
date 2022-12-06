@@ -10,10 +10,10 @@ export default function home() {
     <div>
       {/* <NavBarGUI active="/gui/home" /> */}
       <div className="w-full flex flex-row ml-3">
-        <div className="flex flex-col w-full">
-          <div className="flex flex-col h-full bg-white p-3 rounded">
+        <div className="home-main-1">
+          <div className="home-main-2">
             <div className="home-overflow">
-              <div className="bg-gray-900 w-96 h-96 p-5">
+              <div className="home-page">
                 <img
                   className="denogresLogo"
                   src={denogresLogo}

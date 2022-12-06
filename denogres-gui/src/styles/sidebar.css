@@ -1,22 +1,26 @@
 aside {
   width: 110px;
-  position: absolute;
+  /* position: relative;
   top: 0;
   bottom: 0;
-  left: 0;
+  left: 0; */
   margin: 0;
+  float: left;
+  margin-right: 5vw;
 }
 
 .aside-wrapper {
   width: 110px;
+  height: 100vh;
   background: radial-gradient(
     1250px at 0% 2.1%,
     rgb(113, 147, 169) 0.3%,
     rgb(190, 159, 200) 100%
   );
-  position: absolute;
+  /* position: sticky;
   top: 0;
   bottom: 0;
+  left: 0; */
   margin: 0;
 }
 
