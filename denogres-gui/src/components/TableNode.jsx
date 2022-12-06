@@ -4,6 +4,7 @@ import { Handle, Position } from 'reactflow';
 import RowNode from './RowNode'
 // /api/cplumns/<tablename>
 // /api/tables
+const handleStyle = {left:10};
 export default function TableNode({ data }) {
 //  console.log('DATA FROM TABLENODE', data)
   const rowArray = [];
@@ -21,7 +22,11 @@ export default function TableNode({ data }) {
   }
   
   return (
-    <div class="table-node">
+    <div className="table-node">
+      
+      <Handle type="target" position={Position.Left}/>
+      
+      <Handle type="source" position={Position.Right}/>
       <div>
         <label htmlFor="text">
           {data.table[0]}
