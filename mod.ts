@@ -1,6 +1,6 @@
 /* This module contains the denoGres commands that are compiled when typed in a command line */
 import { config, parse } from "./deps.ts";
-import "https://deno.land/x/dotenv/load.ts";
+import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { init } from "./src/functions/init.ts";
 import seed from "./src/functions/seed.ts";
 import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";

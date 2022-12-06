@@ -34,7 +34,7 @@ export default function Login() {
         password,
       };
 
-      const response = await fetch("gui/api/signIn", {
+      const response = await fetch("api/signIn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
