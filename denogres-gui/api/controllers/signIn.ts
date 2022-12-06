@@ -27,5 +27,6 @@ export default async (ctx: Context) => {
       ctx.cookies.set(`${packagedResponse.cookie1[0]}`, `${packagedResponse.cookie1[1]}`);
       ctx.cookies.set(`${packagedResponse.cookie2[0]}`, `${packagedResponse.cookie2[1]}`);
       ctx.response.body = packagedResponse.body;
+      return;
   }
 }

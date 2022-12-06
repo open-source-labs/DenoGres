@@ -1,13 +1,16 @@
 import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
+import { config } from "https://deno.land/x/dotenv/mod.ts"
 
-//! TESTING ONLY - MUST NOT BE HARDCODED HERE IN THE PRODUCTION CODE
+const env = config({
+  path: "./api/userDB.env"
+});
 
 const client = new Client({
-  user: "bheazclb",
-  database: "bheazclb",
-  hostname: "kashin.db.elephantsql.com",
-  password: "1i_gDuUEk9FSlwrtSl2BzEs0a3CMPwm6",
-  port: 5432,
+  user: env.USERDB_USERNAME,
+  database: env.USERDB_DB,
+  hostname: env.USERDB_HOST,
+  password: env.USERDB_PASSWORD,
+  port: env.USERDB_PORT
 });
 
 await client.connect();
