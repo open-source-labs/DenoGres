@@ -34,8 +34,9 @@ body {
   min-width: 647px;
   min-height: 100vh;
   width: 97%;
-  overflow: scroll;
+  overflow: auto;
   margin: 0;
+  /* flex-direction: row; */
 }
 
 .denogresLogo {
@@ -512,7 +513,7 @@ tr {
   justify-content: space-around;
   align-items: center;
   flex-direction: row;
-  /* margin-left: 25vw; */
+  margin-left: 23vw;
   margin-top: 5vh;
 }
 .connections-list {
@@ -670,4 +671,44 @@ tr {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+}
+
+@media screen and (max-width: 1576px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 82vw;
+  }
+  .connections-page {
+    margin-left: 10vw;
+  }
+  .connections-list {
+    margin-right: 5vw;
+  }
+  .savedQueries {
+    margin-left: 2.5vw;
+  }
+  .activeModels {
+    margin-left: 2.5vw;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 80vw;
+  }
+}
+
+@media screen and (max-width: 917px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 78vw;
+  }
+}
+
+@media screen and (max-width: 786px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 75vw;
+  }
 }
