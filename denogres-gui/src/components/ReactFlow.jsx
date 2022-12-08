@@ -15,22 +15,26 @@ const nodeTypes = {
   table: TableNode,
 };
 
-
 async function getConstraints() {
-  const res = await fetch('http://localhost:8000/api/constraints')
+  const res = await fetch('http://localhost:8000/api/constraints');
   const data = await res.json();
   // console.log(data.rows)
-  let cstrObj = {}
-  for(let i = 0; i < data.rows.length; i++) {
-    if(!cstrObj[data.rows[i][0]]) {cstrObj[data.rows[i][0]] = {}};
-    if(!cstrObj[data.rows[i][0]]['fk']) {cstrObj[data.rows[i][0]]['fk'] = {}};
+  let cstrObj = {};
+  for (let i = 0; i < data.rows.length; i++) {
+    if (!cstrObj[data.rows[i][0]]) {
+      cstrObj[data.rows[i][0]] = {};
+    }
+    if (!cstrObj[data.rows[i][0]]['fk']) {
+      cstrObj[data.rows[i][0]]['fk'] = {};
+    }
 
     if (data.rows[i][0] === data.rows[i][2]) {
       cstrObj[data.rows[i][0]]['pk'] = data.rows[i][1];
-    }
-    else {
-      
-      cstrObj[data.rows[i][0]]['fk'][data.rows[i][1]] = [data.rows[i][2], data.rows[i][3]];
+    } else {
+      cstrObj[data.rows[i][0]]['fk'][data.rows[i][1]] = [
+        data.rows[i][2],
+        data.rows[i][3],
+      ];
     }
   }
   return cstrObj;
@@ -38,10 +42,10 @@ async function getConstraints() {
 const constraints = await getConstraints();
 console.log('Constraints', constraints);
 
-async function getFullData() {  
-   const res = await fetch('http://localhost:8000/api/tables')
-   const data = await res.json();
-   return data.rows;
+async function getFullData() {
+  const res = await fetch('http://localhost:8000/api/tables');
+  const data = await res.json();
+  return data.rows;
 }
 const data = await getFullData();
 // console.log('Data', JSON.stringify(data));
@@ -52,9 +56,6 @@ fetch('http://localhost:8000/api/tables')
 .then ()
 */
 
-  
-
-
 const fullData = [];
 async function fullDataArray(data) {
   //[[o1][o2][o3]]
@@ -62,25 +63,22 @@ async function fullDataArray(data) {
     const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`);
     const rowData = await res.json();
     const newArray = [data[i]];
-    for(let j = 0; j < rowData.rows.length; j++) {
-
+    for (let j = 0; j < rowData.rows.length; j++) {
       const dataObj = {};
       dataObj.name = rowData.rows[j][0];
       dataObj.type = rowData.rows[j][1];
-     // const pk = (constraints[data[i]].pk === dataObj.name)? "True":"False";
-      dataObj.pk = (constraints[data[i]].pk === dataObj.name)? "True":"False";
-     // const fk = (constraints[data[i]].fk.includes(dataObj.name)? "True":"False";
-      dataObj.fk = (constraints[data[i]]['fk'][(dataObj.name)]? "True":"False");
-      dataObj.constraint = 'None'
+      // const pk = (constraints[data[i]].pk === dataObj.name)? "True":"False";
+      dataObj.pk = constraints[data[i]].pk === dataObj.name ? 'True' : 'False';
+      // const fk = (constraints[data[i]].fk.includes(dataObj.name)? "True":"False";
+      dataObj.fk = constraints[data[i]]['fk'][dataObj.name] ? 'True' : 'False';
+      dataObj.constraint = 'None';
       newArray.push(dataObj);
     }
     fullData.push(newArray);
   }
 
   return fullData;
-
-  }
-
+}
 
 const rfData = await fullDataArray(data);
 //  const rfData = setTimeout(await fullDataArray(data), 0);
@@ -108,7 +106,6 @@ const nodePositions = [
 const initialNodes = [];
 // console.log('Full Data before Node',fullData)
 for (let i = 0; i < rfData.length; i++) {
-  
   initialNodes.push({
     id: `${fullData[i][0]}`,
     position: nodePositions[i],
@@ -122,7 +119,14 @@ const edges = [
 ];
 for (let key in constraints) {
   for (let fkKey in constraints[key].fk) {
-    edges.push({ id: `${key}-${constraints[key].fk[fkKey][0]}`, source: `${key}`, target: `${constraints[key].fk[fkKey][0]}`, markerEnd: {type: MarkerType.ArrowClosed}, type: 'step'})
+    edges.push({
+      id: `${key}-${constraints[key].fk[fkKey][0]}`,
+      source: `${key}`,
+      target: `${constraints[key].fk[fkKey][0]}`,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      type: 'smoothstep',
+      style: { stroke: 'purple', strokeWidth: 3 },
+    });
   }
 }
 function Flow() {
