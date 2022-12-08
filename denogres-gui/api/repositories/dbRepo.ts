@@ -1,4 +1,4 @@
-import client from "../db/database.ts"
+import client from "../connections/database.ts"
 
 export const allTables = () => {
   return client.queryArray("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'");
