@@ -23,6 +23,9 @@ export const checkPW = async (username: string): Promise<string> => {
 // createUser
 
 // addConnection
+export const addConnection = async (userID: string, connectionID: string): Promise<void> => {
+  
+}
 
 // addQuery
 
