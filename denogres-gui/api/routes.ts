@@ -14,7 +14,7 @@ router
   .get('/api/columns/:table', columnNames)
   
   // route to return list of user's connections
-  .post('/api/allConnections', userConnections)
+  .get('/api/allConnections', userConnections)
   
   // user db routes:
   .post('/api/signin', signIn)
