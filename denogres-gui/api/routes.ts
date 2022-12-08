@@ -3,6 +3,7 @@ import columnNames from "./controllers/columnNames.ts";
 import getTables from "./controllers/getTables.ts";
 import getConstraints from "./controllers/getConstraints.ts"
 import signIn from "./controllers/signIn.ts";
+import userConnections from "./controllers/userConnections.ts";
 
 const router = new Router();
 
@@ -12,8 +13,8 @@ router
   .get('/api/constraints', getConstraints)
   .get('/api/columns/:table', columnNames)
   
-  // route to set working db:
-  //.put('/api/')
+  // route to return list of user's connections
+  .post('/api/allConnections', userConnections)
   
   // user db routes:
   .post('/api/signin', signIn)

@@ -37,9 +37,19 @@ export const addConnection = async (userID: string, connectionName: string): Pro
   
 }
 
+// get all connections for a user
+export const getAllConnections = async (userID: string): Promise<any> => {
+  const result = await client.queryObject({
+    text: "SELECT * FROM connections WHERE user_id=$1",
+    args: [userID]
+  })
+  return result.rows;
+}
+
 // addQuery
 
 export default { 
   checkUser,
-  checkPW
+  checkPW,
+  getAllConnections,
 };
