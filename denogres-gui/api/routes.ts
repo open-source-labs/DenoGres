@@ -13,7 +13,7 @@ router
   .get('/api/columns/:table', columnNames)
   
   // route to set working db:
-  .put('/api/')
+  //.put('/api/')
   
   // user db routes:
   .post('/api/signin', signIn)
