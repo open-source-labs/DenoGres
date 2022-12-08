@@ -1,4 +1,4 @@
-import { Context, Router } from "https://deno.land/x/oak@v11.1.0/mod.ts";
+import { Router } from "https://deno.land/x/oak@v11.1.0/mod.ts";
 import columnNames from "./controllers/columnNames.ts";
 import getTables from "./controllers/getTables.ts";
 import getConstraints from "./controllers/getConstraints.ts"
@@ -12,10 +12,13 @@ router
   .get('/api/constraints', getConstraints)
   .get('/api/columns/:table', columnNames)
   
+  // route to set working db:
+  .put('/api/')
+  
   // user db routes:
   .post('/api/signin', signIn)
 
-  //test route:
+  //test route for devs:
   .post('/api/test', async (ctx) => {
     if (!ctx.request.hasBody) {
       ctx.throw(415);

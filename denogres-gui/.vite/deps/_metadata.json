@@ -29,7 +29,7 @@
     "react-router-dom": {
       "src": "../../node_modules/.deno/react-router-dom@6.4.3/node_modules/react-router-dom/dist/index.js",
       "file": "react-router-dom.js",
-      "fileHash": "19704d33",
+      "fileHash": "f0e83190",
       "needsInterop": false
     },
     "reactflow": {

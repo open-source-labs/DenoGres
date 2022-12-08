@@ -23,6 +23,19 @@ export const checkPW = async (username: string): Promise<string> => {
 // createUser
 
 // addConnection
+/*
+  id: number;
+  user_id: number;
+  connection_name: string;
+  connection_address: string;
+  port_number: number;
+  default_db: string;
+  db_username: string;
+  db_password: string;
+*/
+export const addConnection = async (userID: string, connectionName: string): Promise<void> => {
+  
+}
 
 // addQuery
 
