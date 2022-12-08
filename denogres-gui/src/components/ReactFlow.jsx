@@ -6,9 +6,10 @@ import ReactFlow, {
   applyNodeChanges,
   applyEdgeChanges,
   Position,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import TableNode from './TableNode.tsx';
+import TableNode from './TableNode.jsx';
 
 const nodeTypes = {
   table: TableNode,
@@ -17,7 +18,7 @@ const nodeTypes = {
 async function getConstraints() {
   const res = await fetch('http://localhost:8000/api/constraints');
   const data = await res.json();
-  console.log(data.rows);
+  // console.log(data.rows)
   let cstrObj = {};
   for (let i = 0; i < data.rows.length; i++) {
     if (!cstrObj[data.rows[i][0]]) {
@@ -47,7 +48,7 @@ async function getFullData() {
   return data.rows;
 }
 const data = await getFullData();
-console.log('Data', JSON.stringify(data));
+// console.log('Data', JSON.stringify(data));
 
 // setTimeout(() => {},3000)
 /*
@@ -85,15 +86,15 @@ const rfData = await fullDataArray(data);
 const nodePositions = [
   { x: 0, y: 0 },
   { x: 500, y: 0 },
-  { x: 0, y: 350 },
-  { x: 500, y: 350 },
-  { x: 0, y: 700 },
-  { x: 500, y: 700 },
-  { x: 0, y: 1050 },
-  { x: 500, y: 1050 },
-  { x: 0, y: 1400 },
-  { x: 500, y: 1400 },
-  { x: 0, y: 1750 },
+  { x: 0, y: 500 },
+  { x: -500, y: 0 },
+  { x: 500, y: 500 },
+  { x: -500, y: 500 },
+  { x: -500, y: -500 },
+  { x: 500, y: -500 },
+  { x: 0, y: -500 },
+  { x: 1000, y: 0 },
+  { x: 1000, y: -500 },
   { x: 500, y: 1750 },
   { x: 0, y: 2100 },
   { x: 500, y: 2100 },
@@ -103,23 +104,34 @@ const nodePositions = [
 ];
 
 const initialNodes = [];
+// console.log('Full Data before Node',fullData)
 for (let i = 0; i < rfData.length; i++) {
-  console.log('IN FOR LOOP');
   initialNodes.push({
-    id: `${i}`,
+    id: `${fullData[i][0]}`,
     position: nodePositions[i],
     data: { table: fullData[i] },
     type: 'table',
   });
 }
 console.log('INITIAL NODES', initialNodes);
-const initialEdges = [
-  { id: '1-2', source: '1', target: '2', label: 'to the', type: 'step' },
+const edges = [
+  // { id: "1-2", source: "0", target: "1", sourceHandle: "a", animated: true,},
 ];
-
+for (let key in constraints) {
+  for (let fkKey in constraints[key].fk) {
+    edges.push({
+      id: `${key}-${constraints[key].fk[fkKey][0]}`,
+      source: `${key}`,
+      target: `${constraints[key].fk[fkKey][0]}`,
+      markerEnd: { type: MarkerType.ArrowClosed },
+      type: 'smoothstep',
+      style: { stroke: 'purple', strokeWidth: 3 },
+    });
+  }
+}
 function Flow() {
   const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+  // const [edges, setEdges] = useState(initialEdges);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -139,7 +151,7 @@ function Flow() {
         nodes={nodes}
         onNodesChange={onNodesChange}
         edges={edges}
-        onEdgesChange={onEdgesChange}
+        // onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
       >
         <Background />
