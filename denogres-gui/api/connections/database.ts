@@ -2,10 +2,10 @@ import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 //! TESTING ONLY - MUST NOT BE HARDCODED IN THE PRODUCTION CODE
 const client = new Client({
-  user: "bzopmbyy",
-  database: "bzopmbyy",
-  hostname: "heffalump.db.elephantsql.com",
-  password: "gUrD5br_9QnTAoRdIaJcK54bc3M6Mr0H",
+  user: "ltolmioe",
+  database: "ltolmioe",
+  hostname: "kashin.db.elephantsql.com",
+  password: "b3aocBfDytGOvtmqZ_NaTgRMteO9_75B",
   port: 5432,
 });
 
