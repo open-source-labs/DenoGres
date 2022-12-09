@@ -3,6 +3,7 @@ import columnNames from "./controllers/columnNames.ts";
 import getTables from "./controllers/getTables.ts";
 import getConstraints from "./controllers/getConstraints.ts"
 import signIn from "./controllers/signIn.ts";
+import signUp from "./controllers/signUp.ts";
 import userConnections from "./controllers/userConnections.ts";
 
 const router = new Router();
@@ -18,6 +19,7 @@ router
   
   // user db routes:
   .post('/api/signin', signIn)
+  .post('/api/signup', signUp)
 
   //test route for devs:
   .post('/api/test', async (ctx) => {
