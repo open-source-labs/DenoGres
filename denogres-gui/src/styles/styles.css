@@ -116,6 +116,7 @@ button:focus-visible {
   cursor: -webkit-grab;
   cursor: grab;
   border: thin black;
+  /* background-color: rgb(236, 244, 253); */
 }
 .react-flow__pane.dragging {
   cursor: -webkit-grabbing;
@@ -711,4 +712,21 @@ tr {
   .react-flow-div {
     width: 75vw;
   }
+}
+
+.download-btn {
+  position: absolute;
+  bottom: 100px;
+  right: 50px;
+  z-index: 10;
+  border: 1px solid #eee;
+  background: #rgb(185, 159, 200);
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.download-btn:hover {
+  opacity: 0.9;
 }
