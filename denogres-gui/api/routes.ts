@@ -4,6 +4,7 @@ import getTables from "./controllers/getTables.ts";
 import getConstraints from "./controllers/getConstraints.ts"
 import signIn from "./controllers/signIn.ts";
 import userConnections from "./controllers/userConnections.ts";
+import addConnection from "./controllers/addConnection.ts";
 
 const router = new Router();
 
@@ -15,6 +16,9 @@ router
   
   // route to return list of user's connections
   .get('/api/allConnections', userConnections)
+
+  //add a new connection to user's list of connections
+  .post('/api/newConnection', addConnection)
   
   // user db routes:
   .post('/api/signin', signIn)
