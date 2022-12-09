@@ -6,6 +6,7 @@ import signIn from "./controllers/signIn.ts";
 import signUp from "./controllers/signUp.ts";
 import userConnections from "./controllers/userConnections.ts";
 import addConnection from "./controllers/addConnection.ts";
+import setActiveConnection from "./controllers/setActiveConnection.ts";
 
 const router = new Router();
 
@@ -20,6 +21,9 @@ router
 
   //add a new connection to user's list of connections
   .post('/api/newConnection', addConnection)
+
+  //set connectionId cookie
+  .get('/api/setConnectionId/:id', setActiveConnection)
   
   // user db routes:
   .post('/api/signin', signIn)
