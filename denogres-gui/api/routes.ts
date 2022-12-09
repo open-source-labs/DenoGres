@@ -11,6 +11,7 @@ import setActiveConnection from "./controllers/setActiveConnection.ts";
 const router = new Router();
 
 router
+
   // working db routes:
   .get('/api/tables', getTables)
   .get('/api/constraints', getConstraints)
