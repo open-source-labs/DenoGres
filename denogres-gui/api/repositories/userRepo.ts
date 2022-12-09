@@ -40,8 +40,6 @@ export const createUser = async (
 ): Promise<string> => {
   const checkUserID = checkUser(username);
   if ((await checkUserID) === undefined) {
-    console.log('username:', username);
-    console.log('hashedPW:', hashedPW);
     const result = await client.queryObject({
       text: 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id',
       args: [username, hashedPW],

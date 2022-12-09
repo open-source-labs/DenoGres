@@ -22,11 +22,11 @@ export default async (ctx: Context) => {
     return (ctx.response.status = 401);
   } else {
     ctx.response.status = packagedResponse.status;
-    ctx.cookies.set(
+    await ctx.cookies.set(
       `${packagedResponse.cookie1[0]}`,
       `${packagedResponse.cookie1[1]}`
     );
-    ctx.cookies.set(
+    await ctx.cookies.set(
       `${packagedResponse.cookie2[0]}`,
       `${packagedResponse.cookie2[1]}`
     );
