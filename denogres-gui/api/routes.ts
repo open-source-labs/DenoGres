@@ -10,6 +10,7 @@ import addConnection from "./controllers/addConnection.ts";
 const router = new Router();
 
 router
+
   // working db routes:
   .get('/api/tables', getTables)
   .get('/api/constraints', getConstraints)
