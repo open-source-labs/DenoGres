@@ -52,7 +52,6 @@ export const createUser = async (
   }
 };
 
-
 // add a new connection to user's list of connections
 interface ConnectionSettings {
   user_id: string;
@@ -63,14 +62,23 @@ interface ConnectionSettings {
   db_username: string;
   db_password: string;
 }
-export const addConnection = async (newConnection: ConnectionSettings): Promise<any> => {
+export const addConnection = async (
+  newConnection: ConnectionSettings
+): Promise<any> => {
   const result = await client.queryObject({
-    text: "INSERT INTO connections (user_id, connection_name, connection_address, port_number, default_db, db_username, db_password) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-    args: [newConnection.user_id, newConnection.connection_name, newConnection.connection_address, newConnection.port_number, newConnection.default_db, newConnection.db_username, newConnection.db_password]
+    text: 'INSERT INTO connections (user_id, connection_name, connection_address, port_number, default_db, db_username, db_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    args: [
+      newConnection.user_id,
+      newConnection.connection_name,
+      newConnection.connection_address,
+      newConnection.port_number,
+      newConnection.default_db,
+      newConnection.db_username,
+      newConnection.db_password,
+    ],
   });
   return result;
-}
-
+};
 
 // get all connections for a user
 export const getAllConnections = async (userID: string): Promise<any> => {
@@ -82,22 +90,72 @@ export const getAllConnections = async (userID: string): Promise<any> => {
 };
 
 // get a specific connection for a user
-export const getOneConnection = async (userID: string, connectionID: string): Promise<any> => {
+export const getOneConnection = async (
+  userID: string,
+  connectionID: string
+): Promise<any> => {
   const result = await client.queryObject({
     text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
     args: [userID, connectionID],
   });
   console.log(result.rows[0].id);
   return result.rows[0].id;
-}
+};
 
 // addQuery
+export const getAllQueries = async (connectionId: string): Promise<any> => {
+  const result = await client.queryObject({
+    text: 'SELECT * FROM queries WHERE connection_id=$1',
+    args: [connectionId],
+  });
+  return result.rows;
+};
 
+export const addQuery = async (
+  connectionId: string,
+  queryName: string,
+  formattedQuery: string
+): Promise<string> => {
+  console.log(connectionId);
+  console.log(queryName);
+  console.log(formattedQuery);
+  const result = await client.queryObject({
+    text: `INSERT INTO queries (connection_id, query_name, query_text)
+    VALUES ($1, $2, $3)`,
+    args: [connectionId, queryName, formattedQuery],
+  });
+  return 'New query created successfully';
+};
+
+export const updateQuery = async (
+  queryName: string,
+  formattedQuery: string,
+  queryId: string
+): Promise<string> => {
+  const result = await client.queryObject({
+    text: `UPDATE queries SET
+    query_name = $1, query_text = $2
+    WHERE id = $3`,
+    args: [queryName, formattedQuery, queryId],
+  });
+  return 'New query updated successfully';
+};
+
+export const deleteQuery = async (queryId: string): Promise<any> => {
+  console.log(queryId);
+  const result = await client.queryObject({
+    text: `DELETE FROM queries WHERE id = $1`,
+    args: [queryId],
+  });
+  return 'Successfully deleted saved query';
+};
 export default {
   checkUser,
   checkPW,
   getAllConnections,
   createUser,
   addConnection,
-  getOneConnection
+  getAllQueries,
+  addQuery,
+  getOneConnection,
 };
