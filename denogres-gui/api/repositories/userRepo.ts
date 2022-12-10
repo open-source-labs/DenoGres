@@ -62,21 +62,37 @@ interface ConnectionSettings {
   db_username: string;
   db_password: string;
 }
-export const addConnection = async (
-  newConnection: ConnectionSettings
-): Promise<any> => {
+export const addConnection = async (newConnection): Promise<any> => {
+  console.log('hei 1', newConnection);
+  console.log('hello', [
+    newConnection.user_id,
+    newConnection.connection_name,
+    newConnection.connection_address,
+    newConnection.port_number,
+    newConnection.default_db,
+    newConnection.db_username,
+    newConnection.db_password,
+  ]);
   const result = await client.queryObject({
     text: 'INSERT INTO connections (user_id, connection_name, connection_address, port_number, default_db, db_username, db_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
     args: [
+      // newConnection.user_id,
+      // newConnection.connection_name,
+      // newConnection.connection_address,
+      // newConnection.port_number,
+      // newConnection.default_db,
+      // newConnection.db_username,
+      // newConnection.db_password,
       newConnection.user_id,
-      newConnection.connection_name,
-      newConnection.connection_address,
-      newConnection.port_number,
-      newConnection.default_db,
-      newConnection.db_username,
-      newConnection.db_password,
+      newConnection.connectionName,
+      newConnection.address,
+      newConnection.port,
+      newConnection.defaultDB,
+      newConnection.username,
+      newConnection.password,
     ],
   });
+  console.log(result);
   return result;
 };
 
@@ -121,8 +137,8 @@ export const addQuery = async (
   console.log(formattedQuery);
   const result = await client.queryObject({
     text: `INSERT INTO queries (connection_id, query_name, query_text)
-    VALUES ($1, $2, $3)`,
-    args: [connectionId, queryName, formattedQuery],
+    VALUES ($1, $2, (E'${formattedQuery}')::text)`,
+    args: [connectionId, queryName],
   });
   return 'New query created successfully';
 };
@@ -134,9 +150,9 @@ export const updateQuery = async (
 ): Promise<string> => {
   const result = await client.queryObject({
     text: `UPDATE queries SET
-    query_name = $1, query_text = $2
-    WHERE id = $3`,
-    args: [queryName, formattedQuery, queryId],
+    query_name = $1, query_text = (E'${formattedQuery}')::text
+    WHERE id = $2`,
+    args: [queryName, queryId],
   });
   return 'New query updated successfully';
 };
