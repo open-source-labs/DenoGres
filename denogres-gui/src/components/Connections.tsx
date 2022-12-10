@@ -36,8 +36,11 @@ export default function Connections() {
 
   // function to retrieve list of connections to render
   const getData = async (): Promise<void> => {
-    const response = await fetch('/gui/api/handleConnectionSave');
+    const response = await fetch('http://localhost:8000/api/allConnections', {
+      credentials: 'include',
+    });
     const data = await response.json();
+    console.log(data);
     setConnectList(data);
   };
 
@@ -68,11 +71,13 @@ export default function Connections() {
       uri: uriText,
       task: 'cache uri and validate',
     };
-    await fetch('/gui/api/setConnectionIdCookie', {
-      method: 'POST',
-      body: JSON.stringify({ connectionId }),
+    await fetch(`http://localhost:8000/api/setConnectionId/${connectionId}`, {
+      method: 'GET',
+      credentials: 'include',
+      // body: JSON.stringify({ connectionId }),
     });
-    const response = await fetch('/gui/api/handleRequests', {
+    const response = await fetch('http://localhost:8000/api/handleRequests', {
+      credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody),
@@ -82,8 +87,11 @@ export default function Connections() {
       setErrorMessage(error);
       displayErrorModal();
       return;
+    } else if (response.status === 200) {
+      console.log('pog');
     }
-    window.location.href = '/gui/explorer';
+    // console.log(connectionId);
+    // window.location.href = '/console';
   };
 
   // create throttled versions of handler
@@ -141,7 +149,8 @@ export default function Connections() {
         password,
       };
 
-      await fetch('/gui/api/handleConnectionSave', {
+      await fetch('http://localhost:8000/api/newConnection', {
+        credentials: 'include',
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reqBody),

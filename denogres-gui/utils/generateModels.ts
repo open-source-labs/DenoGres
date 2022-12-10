@@ -1,12 +1,15 @@
-import { introspect } from "denogres-functions/introspect.ts"
-import { createClassName } from "denogres-functions/StringFormat.ts";
-import { Model } from "denogres/mod.ts";
+// import { introspect } from 'denogres-functions/introspect.ts';
+import { introspect } from '../../src/functions/introspect.ts';
+// import { createClassName } from 'denogres-functions/StringFormat.ts';
+import { createClassName } from '../../src/functions/StringFormat.ts';
+// import { Model } from 'https://deno.land/x/denogres@v2.0/mod.ts';
+import { Model } from '../../src/class/Model.ts';
 
 // helper func to delete any keys in models with value of false
 // applies to k-v pairs such as "notNull: false" (i.e. no 'NOT NULL' constraint)
 const deleteFalseKeys = (modelsObj: any) => {
   for (const key in modelsObj) {
-    if (typeof modelsObj[key] === "object") {
+    if (typeof modelsObj[key] === 'object') {
       deleteFalseKeys(modelsObj[key]);
     }
     if (modelsObj[key] === false) {
@@ -20,12 +23,12 @@ const deleteFalseKeys = (modelsObj: any) => {
 // if "asText" option set to true, return a stringifiable models object for FE to render
 export const generateModels = async (
   userUri: string,
-  options?: { "asText": boolean },
+  options?: { asText: boolean }
 ): Promise<any> => {
   // introspect by default attempts to load URI from env if not provided
   // here we explicitly check for missing URI and throw error
   if (!userUri) {
-    return new Error("Please provide valid database URI to obtain models.");
+    return new Error('Please provide valid database URI to obtain models.');
   }
 
   const [tableListObj, enumObj] = await introspect(userUri);

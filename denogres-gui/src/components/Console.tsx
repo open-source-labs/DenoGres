@@ -34,7 +34,8 @@ export default function Console() {
 
   // retrieve models as stringifiable plain objects (i.e. not classes) to render
   const getModels = async (): Promise<any> => {
-    const res = await fetch('/gui/api/handleRequests', {
+    const res = await fetch('api/handleRequests', {
+      credentials: 'include',
       method: 'POST',
       body: JSON.stringify({ task: 'get models as text' }),
     });
@@ -58,7 +59,9 @@ export default function Console() {
   // fetch all saved queries related to this connection and display
   // sorted in descending query ID order
   const getQueriesToDisplay = async (): Promise<void> => {
-    const response = await fetch('/gui/api/handleQuerySave');
+    const response = await fetch('http://localhost:8000/api/handleQuery', {
+      credentials: 'include',
+    });
     const queries = await response.json();
     const sortedList = queries.sort(
       (a: IQueryListItem, b: IQueryListItem) => b.id - a.id
@@ -88,8 +91,9 @@ export default function Console() {
       queryType === 'new'
         ? { queryName, queryText }
         : { queryName, queryText, queryId };
-    await fetch('/gui/api/handleQuerySave', {
+    await fetch('http://localhost:8000/api/handleQuery', {
       method,
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newQuery),
     });
@@ -100,8 +104,9 @@ export default function Console() {
   // Deletes current query from external DB
   const handleDelete = async (): Promise<void> => {
     const reqBody = { queryId };
-    await fetch('/gui/api/handleQuerySave', {
+    await fetch('http://localhost:8000/api/handleQuery', {
       method: 'DELETE',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody),
     });
@@ -112,8 +117,9 @@ export default function Console() {
   // Runs query and updates state to render result
   const handleRun = async (): Promise<void> => {
     const bodyObj = { queryText };
-    const res = await fetch('/gui/api/handleRequests', {
+    const res = await fetch('http://localhost:8000/api/handleQuery', {
       method: 'POST',
+      credentials: 'include',
       body: JSON.stringify(bodyObj),
     });
     const data: IQueryListItem[] = await res.json();
@@ -126,6 +132,7 @@ export default function Console() {
   const throttledHandleRun = throttle(handleRun, 1000);
 
   // map saved queries to display components
+  console.log(queriesList);
   const savedQueries = queriesList.map((ele, idx) => {
     return (
       <button

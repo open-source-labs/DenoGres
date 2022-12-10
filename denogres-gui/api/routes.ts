@@ -1,16 +1,17 @@
-import { Router } from "https://deno.land/x/oak@v11.1.0/mod.ts";
-import columnNames from "./controllers/columnNames.ts";
-import getTables from "./controllers/getTables.ts";
-import getConstraints from "./controllers/getConstraints.ts"
-import signIn from "./controllers/signIn.ts";
-import signUp from "./controllers/signUp.ts";
-import userConnections from "./controllers/userConnections.ts";
-import addConnection from "./controllers/addConnection.ts";
-import getQuery from "./controllers/getQuery.ts";
-import addQuery from "./controllers/addQuery.ts";
-import updateQuery from "./controllers/updateQuery.ts";
-import deleteQuery from "./controllers/deleteQuery.ts";
-import setActiveConnection from "./controllers/setActiveConnection.ts";
+import { Router } from 'https://deno.land/x/oak@v11.1.0/mod.ts';
+import columnNames from './controllers/columnNames.ts';
+import getTables from './controllers/getTables.ts';
+import getConstraints from './controllers/getConstraints.ts';
+import signIn from './controllers/signIn.ts';
+import signUp from './controllers/signUp.ts';
+import userConnections from './controllers/userConnections.ts';
+import addConnection from './controllers/addConnection.ts';
+import getQuery from './controllers/getQuery.ts';
+import addQuery from './controllers/addQuery.ts';
+import updateQuery from './controllers/updateQuery.ts';
+import deleteQuery from './controllers/deleteQuery.ts';
+import setActiveConnection from './controllers/setActiveConnection.ts';
+import handleRequests from './controllers/handleRequests.ts';
 
 const router = new Router();
 
@@ -20,21 +21,23 @@ router
   .get('/api/tables', getTables)
   .get('/api/constraints', getConstraints)
   .get('/api/columns/:table', columnNames)
-  
+
   // route to return list of user's connections
   .get('/api/allConnections', userConnections)
 
   //add a new connection to user's list of connections
   .post('/api/newConnection', addConnection)
-  
-  //console 
+
+  //console
   .get('/api/handleQuery', getQuery)
   .post('/api/handleQuery', addQuery)
   .patch('/api/handleQuery', updateQuery)
   .delete('/api/handleQuery', deleteQuery)
+
+  .post('/api/handleRequests', handleRequests)
   //set connectionId cookie
   .get('/api/setConnectionId/:id', setActiveConnection)
-  
+
   // user db routes:
   .post('/api/signin', signIn)
   .post('/api/signup', signUp)
@@ -47,7 +50,6 @@ router
     const reqBody = await ctx.request.body().value;
     ctx.response.status = 200;
     ctx.response.body = reqBody;
-  })
+  });
 
 export default router;
-
