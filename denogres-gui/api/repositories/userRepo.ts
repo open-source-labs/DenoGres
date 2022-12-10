@@ -90,14 +90,17 @@ export const getAllConnections = async (userID: string): Promise<any> => {
 };
 
 // get a specific connection for a user
-export const getOneConnection = async (userID: string, connectionID: string): Promise<any> => {
+export const getOneConnection = async (
+  userID: string,
+  connectionID: string
+): Promise<any> => {
   const result = await client.queryObject({
     text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
     args: [userID, connectionID],
   });
   console.log(result.rows[0].id);
   return result.rows[0].id;
-}
+};
 
 // addQuery
 export const getAllQueries = async (connectionId: string): Promise<any> => {
@@ -113,9 +116,12 @@ export const addQuery = async (
   queryName: string,
   formattedQuery: string
 ): Promise<string> => {
+  console.log(connectionId);
+  console.log(queryName);
+  console.log(formattedQuery);
   const result = await client.queryObject({
     text: `INSERT INTO queries (connection_id, query_name, query_text)
-    VALUES ('$1', '$2', (E'$3')::text)`,
+    VALUES ($1, $2, $3)`,
     args: [connectionId, queryName, formattedQuery],
   });
   return 'New query created successfully';
@@ -128,7 +134,7 @@ export const updateQuery = async (
 ): Promise<string> => {
   const result = await client.queryObject({
     text: `UPDATE queries SET
-    query_name = '$1', query_text = (E'$2')::text
+    query_name = $1, query_text = $2
     WHERE id = $3`,
     args: [queryName, formattedQuery, queryId],
   });
@@ -136,8 +142,9 @@ export const updateQuery = async (
 };
 
 export const deleteQuery = async (queryId: string): Promise<any> => {
+  console.log(queryId);
   const result = await client.queryObject({
-    text: `DELETE FROM queries WHERE id = '$1'`,
+    text: `DELETE FROM queries WHERE id = $1`,
     args: [queryId],
   });
   return 'Successfully deleted saved query';
@@ -150,5 +157,5 @@ export default {
   addConnection,
   getAllQueries,
   addQuery,
-  getOneConnection
+  getOneConnection,
 };

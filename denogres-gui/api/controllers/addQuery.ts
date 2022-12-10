@@ -1,6 +1,6 @@
 import { Context } from 'https://deno.land/x/oak@v11.1.0/context.ts';
-import { addQuery } from '../repositories/userRepo';
-import { formatQueryText } from '../utilities/formatQueryToSave.ts';
+import { addQuery } from '../repositories/userRepo.ts';
+import formatQueryText from '../utilities/formatQueryToSave.ts';
 
 export default async (ctx: Context) => {
   const connectionId: string = await ctx.cookies.get('connectionId');

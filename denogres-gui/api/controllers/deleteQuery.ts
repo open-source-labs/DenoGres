@@ -1,5 +1,5 @@
 import { Context } from 'https://deno.land/x/oak@v11.1.0/context.ts';
-import { deleteQuery } from '../repositories/userRepo';
+import { deleteQuery } from '../repositories/userRepo.ts';
 
 export default async (ctx: Context) => {
   const { queryId } = await ctx.request.body().value;
@@ -9,6 +9,6 @@ export default async (ctx: Context) => {
   }
   await deleteQuery(queryId);
   ctx.response.status = 200;
-  ctx.response.body = 'Successfully updated query';
+  ctx.response.body = 'Successfully deleted query';
   return;
 };

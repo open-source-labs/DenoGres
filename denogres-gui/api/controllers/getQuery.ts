@@ -1,5 +1,5 @@
 import { Context } from 'https://deno.land/x/oak@v11.1.0/context.ts';
-import { getAllQueries } from '../repositories/userRepo';
+import { getAllQueries } from '../repositories/userRepo.ts';
 
 export default async (ctx: Context) => {
   const connectionId: string = await ctx.cookies.get('connectionId');

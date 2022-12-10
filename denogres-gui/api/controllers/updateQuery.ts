@@ -1,6 +1,6 @@
 import { Context } from 'https://deno.land/x/oak@v11.1.0/context.ts';
-import { updateQuery } from '../repositories/userRepo';
-import { formatQueryText } from '../utilities/formatQueryToSave.ts';
+import { updateQuery } from '../repositories/userRepo.ts';
+import formatQueryText from '../utilities/formatQueryToSave.ts';
 
 export default async (ctx: Context) => {
   const { queryName, queryText, queryId } = await ctx.request.body().value;
