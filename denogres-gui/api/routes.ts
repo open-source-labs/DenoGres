@@ -6,6 +6,10 @@ import signIn from "./controllers/signIn.ts";
 import signUp from "./controllers/signUp.ts";
 import userConnections from "./controllers/userConnections.ts";
 import addConnection from "./controllers/addConnection.ts";
+import getQuery from "./controllers/getQuery.ts";
+import addQuery from "./controllers/addQuery.ts";
+import updateQuery from "./controllers/updateQuery.ts";
+import deleteQuery from "./controllers/deleteQuery.ts";
 
 const router = new Router();
 
@@ -21,7 +25,12 @@ router
 
   //add a new connection to user's list of connections
   .post('/api/newConnection', addConnection)
-  
+
+  //console 
+  .get('/api/handleQuery', getQuery)
+  .post('/api/handleQuery', addQuery)
+  .patch('/api/handleQuery', updateQuery)
+  .delete('/api/handleQuery', deleteQuery)
   // user db routes:
   .post('/api/signin', signIn)
   .post('/api/signup', signUp)
