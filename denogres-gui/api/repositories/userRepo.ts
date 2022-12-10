@@ -89,6 +89,16 @@ export const getAllConnections = async (userID: string): Promise<any> => {
   return result.rows;
 };
 
+// get a specific connection for a user
+export const getOneConnection = async (userID: string, connectionID: string): Promise<any> => {
+  const result = await client.queryObject({
+    text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
+    args: [userID, connectionID],
+  });
+  console.log(result.rows[0].id);
+  return result.rows[0].id;
+}
+
 // addQuery
 export const getAllQueries = async (connectionId: string): Promise<any> => {
   const result = await client.queryObject({
@@ -140,4 +150,5 @@ export default {
   addConnection,
   getAllQueries,
   addQuery,
+  getOneConnection
 };
