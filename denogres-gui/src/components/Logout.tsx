@@ -1,13 +1,20 @@
-import { useEffect, useState } from "preact/hooks";
+import React, { useState, useEffect } from 'react';
+import logoutIcon from '../assets/logout-icon.svg';
+import { useNavigate } from "react-router-dom";
 
 export default function LogOut() {
   const [count, setCount] = useState<number>(3);
+  
+  const navigate = useNavigate(); 
 
-  const updateCount = () => {
-    setInterval(() => {
-      setCount((prevCount) => prevCount - 1);
-    }, 1000);
-  };
+  const navigateLogout = async () => {
+    
+    await fetch('http://localhost:8000/cookieRemove',{
+      credentials: 'include',
+    });
+    navigate('/')
+  }
+  
 
   useEffect(() => {
     const logout = async () => {
@@ -19,20 +26,32 @@ export default function LogOut() {
       });
       await fetch("/gui/api/logOut");
     };
-    logout();
-    updateCount();
+    
+    
   }, []);
 
   return (
     <div className="w-full flex flex-row">
+      <div className="logoutGui">
+        <div className="logoutHolder">
+        <img src={logoutIcon}></img>
+        </div>
+        <div className='logoutText'>
+          <p id='lm1'>Oh no! You're leaving...</p>
+          <p id='lm2'>Are you sure?</p>
+          <button 
+            id='lm3'
+            onClick={() => navigateLogout()}
+          >
+            Yes, Log Me Out
+          
+          </button>
+        </div>
+      </div>
       <div className="w-full bg-white rounded mx-3 p-3 items-center">
-        {/* <h2 className="mb-3">LogOut</h2> */}
-        <p>Thank you for using DenoGres. Logging out...</p>
-        <p>
-          Blasting off in <span className="font-bold text-lg">{count}</span>
-          {" "}
-          seconds!!
-        </p>
+        
+        
+       
       </div>
     </div>
   );

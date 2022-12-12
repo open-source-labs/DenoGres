@@ -103,6 +103,47 @@ button:focus-visible {
 .denogresLogo {
   max-width: 85vw;
 }
+
+.logoutGui {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8vw;
+  margin-left: 40vw;
+  display: flex;
+  border: 2px solid black;
+  border-radius: 15px;
+  height: 500px;
+  width: 400px;
+  background-color: rgb(190, 159, 200) ;
+}
+.logoutHolder {
+  height: 100px;
+  width: 100px;
+  margin-bottom: 1vw;
+  
+}
+.logoutText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+#lm1 {
+  font-size: 25px;
+}
+#lm2 {
+  font-size: 25px;
+}
+#lm3 {
+  border: 1px solid black;
+  margin-top: 5vw;
+  width: 390px;
+  border-radius: 15px;
+  
+  
+}
 /*react flow styles- default*/
 .react-flow__container {
   position: absolute;
