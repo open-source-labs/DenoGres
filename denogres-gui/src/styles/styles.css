@@ -679,18 +679,6 @@ tr {
   flex-direction: column;
   justify-content: space-between;
 }
-.results {
-  margin-top: 15px;
-  border: 2px solid rgb(113, 147, 169);
-  border-radius: 15px;
-  height: 40vh;
-  width: 750px;
-  margin-right: 20vh;
-  padding: 30px;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
 
 .query-buttons {
   display: flex;
@@ -932,4 +920,46 @@ tr {
   display: flex;
   justify-content: space-between;
   flex-direction: column;
+}
+
+.resultData {
+  margin-top: 15px;
+  background-color: white;
+  margin-right: 20vh;
+  border-radius: 3px;
+  padding: 3px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  height: 44vh;
+  width: 800px;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+}
+
+.results {
+  margin-top: 15px;
+
+  height: 40vh;
+  width: 750px;
+  margin-right: 20vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.resultDivs {
+  background-color: #f7fafc;
+  margin: 3px;
+  padding: 5px 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  color: #4a5568;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border-radius: 4px;
 }
