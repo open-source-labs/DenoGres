@@ -12,7 +12,7 @@ import updateQuery from './controllers/updateQuery.ts';
 import deleteQuery from './controllers/deleteQuery.ts';
 import setActiveConnection from './controllers/setActiveConnection.ts';
 import handleRequests from './controllers/handleRequests.ts';
-
+import removeCookie from './controllers/removeCookie.ts';
 const router = new Router();
 
 router
@@ -42,6 +42,8 @@ router
   .post('/api/signin', signIn)
   .post('/api/signup', signUp)
 
+  //removeCookies
+  .get('/cookieRemove', removeCookie)
   //test route for devs:
   .post('/api/test', async (ctx) => {
     if (!ctx.request.hasBody) {
