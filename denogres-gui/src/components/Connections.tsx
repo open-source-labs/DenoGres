@@ -91,7 +91,7 @@ export default function Connections() {
       displayErrorModal();
       return;
     }
-    // window.location.href = '/console';
+    window.location.href = '/console';
   };
 
   // create throttled versions of handler

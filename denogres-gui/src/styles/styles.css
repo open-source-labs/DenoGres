@@ -49,7 +49,7 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 0.25rem;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -58,6 +58,8 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 button:hover {
   border-color: #646cff;
@@ -112,23 +114,21 @@ button:focus-visible {
   margin-top: 8vw;
   margin-left: 40vw;
   display: flex;
-  border: 2px solid black;
+  border: 2px solid rgb(113, 147, 169);
   border-radius: 15px;
   height: 500px;
   width: 400px;
-  background-color: rgb(190, 159, 200) ;
+  /* background-color: rgb(190, 159, 200) ; */
 }
 .logoutHolder {
   height: 100px;
   width: 100px;
   margin-bottom: 1vw;
-  
 }
 .logoutText {
   display: flex;
   flex-direction: column;
   align-items: center;
-  
 }
 #lm1 {
   font-size: 25px;
@@ -141,8 +141,6 @@ button:focus-visible {
   margin-top: 5vw;
   width: 390px;
   border-radius: 15px;
-  
-  
 }
 /*react flow styles- default*/
 .react-flow__container {
@@ -552,7 +550,7 @@ tr {
 .connections-page {
   /* margin: auto; */
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   flex-direction: row;
   margin-left: 23vw;
@@ -567,7 +565,6 @@ tr {
   margin-right: 10vw;
   padding: 30px;
   display: flex;
-
   align-items: center;
   flex-direction: column;
 }
@@ -599,6 +596,7 @@ tr {
   /* align-items: space-between;
   justify-content: space-around; */
   flex-direction: column;
+  max-height: 200px;
 }
 .connections-button {
   margin-top: 20px;
@@ -653,6 +651,21 @@ tr {
   align-items: center;
   flex-direction: column;
 }
+
+.activeModelsNames {
+  overflow: scroll;
+}
+
+.model {
+  float: right;
+  overflow: scroll;
+  max-height: 18rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .query-console {
   margin-top: 30px;
   border: 2px solid rgb(113, 147, 169);
@@ -770,4 +783,153 @@ tr {
 
 .download-btn:hover {
   opacity: 0.9;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 60px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  z-index: 50;
+  outline: none;
+  focus: outline-none;
+  width: 25rem;
+}
+
+.modal-container {
+  position: relative;
+  width: auto;
+  margin: 6px auto;
+  padding: 20px;
+  /* max-width: 30rem; */
+  max-height: 60vh;
+}
+
+.modal {
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: between;
+  padding: 5px;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-close-button {
+  position: relative;
+  padding: 1px;
+  background-color: transparent;
+  border: 0;
+  color: currentColor;
+  opacity: 0.5;
+  float: right;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 6px;
+  border-top: 1px solid #ddd;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.modal-button {
+  background-color: gray;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-button:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+.resultsModel {
+  background-color: #f7fafc;
+  margin: 3px;
+  padding: 5px 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  color: #4a5568;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border-radius: 4px;
+  overflow-x: scroll;
+  width: 15rem;
+}
+
+.login {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 500px;
+  width: 400px;
+}
+
+.login-signup-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 300px;
+}
+
+.login-title {
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.username {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.password {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.login-infor {
+  height: 200px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
 }

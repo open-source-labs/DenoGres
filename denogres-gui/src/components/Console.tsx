@@ -230,13 +230,21 @@ export default function Console() {
     // map results to JSX elements with proper left-margin
     results = results.map((ele) => {
       const leftMarginClass = `mx-${ele.level}`;
-      return <li className={`${leftMarginClass}`}>{ele.content}</li>;
+      const leftMargin = {
+        marginLeft: (ele.level *= 8),
+      };
+      return (
+        <li
+          className={`${leftMarginClass}`}
+          style={leftMargin}
+        >
+          {ele.content}
+        </li>
+      );
     });
 
     return (
-      <div
-        className={`bg-gray-100 m-3 p-5 pr-10 max-h-60 overflow-y-auto text-gray-700 text-xs font-mono rounded`}
-      >
+      <div className={`resultsModel`}>
         <ul>{results}</ul>
       </div>
     );
@@ -261,34 +269,34 @@ export default function Console() {
           </div>
         </div>
         <div className="activeModels">
-          <h2 className="mb-3">Active Models</h2>
-          <div className="flex flex-col w-full overflow-y-auto">
-            {activeModelNames}
+          <h2>Active Models</h2>
+          <div className="activeModelsNames">
+            <div>{activeModelNames}</div>
           </div>
           {/* <-------- Model File MODAL--------> */}
           {showModal ? (
             <div>
-              <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
-                <div className="relative w-auto my-6 mx-auto px-20 max-w-3xl">
+              <div className="modal-overlay">
+                <div className="modal-container">
                   {/*content*/}
-                  <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
+                  <div className="modal">
                     {/*header*/}
-                    <div className="flex items-start justify-between p-5 rounded-t">
-                      <h2 className="text-xl font-semibold">
+                    <div className="modal-header">
+                      <h2 className="modal-title">
                         {/* Import Model File */}
                         {modelNames[indexToDisplay]}
                       </h2>
                       <button
-                        className="p-1 ml-auto bg-transparent border-0 text-black opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
+                        className="modal-close-button"
                         onClick={() => setShowModal(false)}
                       ></button>
                     </div>
                     {/*body*/}
                     {activeModelContent[indexToDisplay]}
                     {/*footer*/}
-                    <div className="flex items-center justify-end p-6 border-solid border-slate-200 rounded-b">
+                    <div className="modal-footer">
                       <button
-                        className="bg-gray-500 text-white font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-300"
+                        className="modal-button"
                         type="button"
                         onClick={() => {
                           setShowModal(false);

@@ -79,29 +79,33 @@ export default function Login() {
   const statusText: string = loginStatus.text;
 
   return (
-    <div className="flex flex-col px-5 z-10 w-5/12 h-96 m-auto bg-deno-blue-100 drop-shadow-2xl rounded">
-      <div className="flex-1">
-        <h2 className="py-5 font-extrabold text-lg">Denogres Login</h2>
-        <label className={labelStyle}>Username:</label>
-        <input
-          className={inputStyle}
-          onInput={(e) => {
-            setUsername(e.currentTarget.value);
-          }}
-          value={username}
-        ></input>
-        <label className={labelStyle}>Password</label>
-        <input
-          className={inputStyle}
-          onInput={(e) => {
-            setPassword(e.currentTarget.value);
-          }}
-          value={password}
-          type="password"
-        ></input>
+    <div className="login">
+      <div className="login-infor">
+        <h2 className="login-title">Denogres Login</h2>
+        <div className="username">
+          <label className={labelStyle}>Username:</label>
+          <input
+            className={inputStyle}
+            onInput={(e) => {
+              setUsername(e.currentTarget.value);
+            }}
+            value={username}
+          ></input>
+        </div>
+        <div className="password">
+          <label className={labelStyle}>Password</label>
+          <input
+            className={inputStyle}
+            onInput={(e) => {
+              setPassword(e.currentTarget.value);
+            }}
+            value={password}
+            type="password"
+          ></input>
+        </div>
         <div className={statusStyle}>{statusText}</div>
       </div>
-      <div className="flex flex-row justify-end pb-5">
+      <div className="login-signup-buttons">
         <button
           className="px-5 mx-1 py-3 text-sm font-medium tracking-wider text-gray-700 rounded-full hover:shadow-2xl hover:bg-deno-blue-200"
           onClick={login}
