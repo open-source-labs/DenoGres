@@ -82,15 +82,15 @@ export default function Connections() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(reqBody),
     });
+    console.log(response);
+    const responseData = await response.json();
+    console.log(responseData.status);
     if (response.status === 400) {
       const error = await response.json();
       setErrorMessage(error);
       displayErrorModal();
       return;
-    } else if (response.status === 200) {
-      console.log('pog');
     }
-    // console.log(connectionId);
     // window.location.href = '/console';
   };
 
