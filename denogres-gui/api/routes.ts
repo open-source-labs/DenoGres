@@ -42,6 +42,8 @@ router
   .post('/api/signin', signIn)
   .post('/api/signup', signUp)
 
+  //removeCookies
+  .get('/cookieRemove', removeCookie)
   //test route for devs:
   .post('/api/test', async (ctx) => {
     if (!ctx.request.hasBody) {
