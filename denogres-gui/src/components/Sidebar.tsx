@@ -64,21 +64,7 @@ const Sidebar = () => {
               </span>
             </NavLink>
           </li>
-          <li>
-            <NavLink
-              to={'/migrations'}
-              className={({ isActive }) =>
-                isActive ? 'navbuttons-active' : 'navbuttons'
-              }
-            >
-              <span id="logo-span">
-                <img
-                  id="logo-img"
-                  src={cloud}
-                />
-              </span>
-            </NavLink>
-          </li>
+          
           <li>
             <NavLink
               to={'/diagram'}
