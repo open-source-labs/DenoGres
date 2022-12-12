@@ -15,7 +15,6 @@ export default async (ctx: Context) => {
   const reqBodyObj = await ctx.request.body().value;
   console.log(reqBodyObj);
   const userId = await ctx.cookies.get('userId');
-  console.log(userId);
   if (!userId) {
     return (ctx.response.status = 400);
   } else {
@@ -45,23 +44,25 @@ export default async (ctx: Context) => {
         );
       } catch (_err) {
         delete queryCache[userId].dbUri;
-        return console.log('failed');
-        //   return (ctx.response.body =
-        //     (JSON.stringify([
-        //       {
-        //         Error: `Failed to retrieve database models. Please check your database credentials.`,
-        //       },
-        //     ]),
-        //     { status: 400 }));
+        // Set the response body and status code.
+        ctx.response.body = JSON.stringify({
+          success: false,
+          message:
+            'Failed to retrieve database models. Please check your database credentials.',
+          status: 400,
+        });
+        ctx.response.status = 400;
+        return;
       }
-
-      // ctx.response.body =
-      //   'Successfully cached connection URI & database models.';
+      // Set the response body and status code.
+      ctx.response.body = JSON.stringify({
+        success: true,
+        message: 'Successfully cached connection URI & database models.',
+        status: 200,
+      });
       ctx.response.status = 200;
       return;
-      // );
     }
-    // generates models in stringifiable plain text to render on FE
     case 'get models as text': {
       try {
         const modelsListObject = await generateModels(
@@ -76,12 +77,22 @@ export default async (ctx: Context) => {
           modelNamesArr.push(key);
           modelContentArr.push(modelsListObject[key]);
         }
-        return new Response(JSON.stringify([modelNamesArr, modelContentArr]));
+        // Set the response body and status code.
+        ctx.response.body = JSON.stringify({
+          success: true,
+          data: [modelNamesArr, modelContentArr],
+        });
+        ctx.response.status = 200;
+        return;
       } catch (err) {
-        console.log('not working');
-        return new Response(JSON.stringify([{ Error: `${err}` }]), {
+        // Set the response body and status code.
+        ctx.response.body = JSON.stringify({
+          success: false,
+          message: `${err}`,
           status: 400,
         });
+        ctx.response.status = 400;
+        return;
       }
     }
     default: {
@@ -92,22 +103,29 @@ export default async (ctx: Context) => {
 
       // handle missing uri (user did not connect before sending query request)
       if (!userUri) {
-        return new Response(
-          JSON.stringify([
-            {
-              Error: `
+        // Set the response body and status code.
+        ctx.response.body = JSON.stringify({
+          success: false,
+          message: `
             Missing database connection. Please be sure to connect before submitting queries.
           `,
-            },
-          ]),
-          { status: 400 }
-        );
+          status: 400,
+        });
+        ctx.response.status = 400;
+        return;
       }
 
       // handle query string errors
       const errorObj: IError | null = checkInput(queryStr, denogresModels);
       if (errorObj) {
-        return new Response(JSON.stringify([errorObj]), { status: 400 });
+        // Set the response body and status code.
+        ctx.response.body = JSON.stringify({
+          success: false,
+          error: errorObj,
+          status: 400,
+        });
+        ctx.response.status = 400;
+        return;
       }
 
       // extract type of query (e.g. select, edit, delete)
@@ -124,58 +142,42 @@ export default async (ctx: Context) => {
 
       // evaluate the function, passing in the denogres models
       // postgres will catch any db errors not previously caught via input validation (e.g. invalid column name)
+
       try {
         const response = await newFunc(denogresModels);
         if (queryType === 'insert') {
-          return new Response(
-            JSON.stringify([
-              {
-                Success: `
-              Inserted record into database.
-            `,
-              },
-            ]),
-            { status: 200 }
-          );
+          ctx.response.body = JSON.stringify({
+            Success: 'Inserted record into database.',
+          });
+          ctx.response.status = 200;
+          return;
         }
         if (queryType === 'edit') {
-          return new Response(
-            JSON.stringify([
-              {
-                Success: `
-              Updated record(s) in database.
-            `,
-              },
-            ]),
-            { status: 200 }
-          );
+          ctx.response.body = JSON.stringify({
+            Success: 'Updated record(s) in database.',
+          });
+          ctx.response.status = 200;
+          return;
         }
         if (queryType === 'delete') {
-          return new Response(
-            JSON.stringify([
-              {
-                Success: `
-              Deleted record(s) from database.
-            `,
-              },
-            ]),
-            { status: 200 }
-          );
+          ctx.response.body = JSON.stringify({
+            Success: 'Deleted record(s) from database.',
+          });
+          ctx.response.status = 200;
+          return;
         }
         if (response === undefined) {
-          return new Response(
-            JSON.stringify([
-              {
-                Error: `A database error has occurred. Please check your query syntax.`,
-              },
-            ])
-          );
+          ctx.response.body = JSON.stringify({
+            Error:
+              'A database error has occurred. Please check your query syntax.',
+          });
+          ctx.response.status = 200;
+          return;
         }
-        return new Response(response);
       } catch (err) {
-        return new Response(JSON.stringify([{ Error: `${err}` }]), {
-          status: 400,
-        });
+        ctx.response.body = JSON.stringify({ Error: `${err}` });
+        ctx.response.status = 400;
+        return;
       }
     }
   }

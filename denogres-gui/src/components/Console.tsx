@@ -34,16 +34,18 @@ export default function Console() {
 
   // retrieve models as stringifiable plain objects (i.e. not classes) to render
   const getModels = async (): Promise<any> => {
-    const res = await fetch('api/handleRequests', {
+    const res = await fetch('http://localhost:8000/api/handleRequests', {
       credentials: 'include',
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ task: 'get models as text' }),
     });
     if (res.status === 400) {
       return;
     }
     const parsed = await res.json();
-    return [parsed[0], parsed[1]];
+    console.log(parsed);
+    return [parsed.data[0], parsed.data[1]];
   };
 
   // on first load, make GET request to retrieve models names & content to display
@@ -117,13 +119,14 @@ export default function Console() {
   // Runs query and updates state to render result
   const handleRun = async (): Promise<void> => {
     const bodyObj = { queryText };
-    const res = await fetch('http://localhost:8000/api/handleQuery', {
+    const res = await fetch('http://localhost:8000/api/handleRequests', {
       method: 'POST',
       credentials: 'include',
       body: JSON.stringify(bodyObj),
     });
     const data: IQueryListItem[] = await res.json();
-    setRecords(data);
+    console.log(data);
+    // setRecords(data);
   };
 
   // create throttled versions of handlers
