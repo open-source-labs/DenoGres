@@ -11,9 +11,7 @@ TODO: stretch: can implement middleware pattern in Fresh.js
 TODO: and break down this handler into multiple specialized handlers
 */
 export default async (ctx: Context) => {
-  console.log('in router handle');
   const reqBodyObj = await ctx.request.body().value;
-  console.log(reqBodyObj);
   const userId = await ctx.cookies.get('userId');
   if (!userId) {
     return (ctx.response.status = 400);
@@ -97,10 +95,10 @@ export default async (ctx: Context) => {
     }
     default: {
       // otherwise receive query string from req body; retrieve uri & models from cache
-      const queryStr = reqBodyObj.queryText;
+      const queryStr = JSON.parse(reqBodyObj).queryText;
       const userUri = queryCache[userId].dbUri;
       const denogresModels = queryCache[userId].modelObj;
-
+      console.log(queryStr);
       // handle missing uri (user did not connect before sending query request)
       if (!userUri) {
         // Set the response body and status code.
@@ -127,25 +125,23 @@ export default async (ctx: Context) => {
         ctx.response.status = 400;
         return;
       }
-
       // extract type of query (e.g. select, edit, delete)
       const queryType: string = extractType(queryStr);
 
       // create string to write into function
       const funcStr: string = writeQueryText(userUri, queryStr);
-
       // Async Constructor - see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction
       const AsyncFunction = async function () {}.constructor;
-
       // construct the new function (as opposed to writing it to a separate file)
       const newFunc = AsyncFunction('input', funcStr);
-
       // evaluate the function, passing in the denogres models
       // postgres will catch any db errors not previously caught via input validation (e.g. invalid column name)
 
       try {
         const response = await newFunc(denogresModels);
+        console.log('this is response', response);
         if (queryType === 'insert') {
+          console.log('still working 1');
           ctx.response.body = JSON.stringify({
             Success: 'Inserted record into database.',
           });
@@ -153,6 +149,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (queryType === 'edit') {
+          console.log('still working 2');
           ctx.response.body = JSON.stringify({
             Success: 'Updated record(s) in database.',
           });
@@ -160,6 +157,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (queryType === 'delete') {
+          console.log('still working 3');
           ctx.response.body = JSON.stringify({
             Success: 'Deleted record(s) from database.',
           });
@@ -167,6 +165,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (response === undefined) {
+          console.log('still working 4');
           ctx.response.body = JSON.stringify({
             Error:
               'A database error has occurred. Please check your query syntax.',
@@ -174,7 +173,12 @@ export default async (ctx: Context) => {
           ctx.response.status = 200;
           return;
         }
+
+        return (ctx.response.body = 
+          response,
+        );
       } catch (err) {
+        console.log('still working 5');
         ctx.response.body = JSON.stringify({ Error: `${err}` });
         ctx.response.status = 400;
         return;

@@ -125,8 +125,7 @@ export default function Console() {
       body: JSON.stringify(bodyObj),
     });
     const data: IQueryListItem[] = await res.json();
-    console.log(data);
-    // setRecords(data);
+    setRecords(data);
   };
 
   // create throttled versions of handlers
@@ -168,7 +167,7 @@ export default function Console() {
 
     return (
       <Record>
-        <ul>{results}</ul>
+        <ul className="resultDivs">{results}</ul>
       </Record>
     );
   });
@@ -361,7 +360,7 @@ export default function Console() {
             </button>
           </div>
         </div>
-        <div className="bg-white h-full rounded p-3 overflow-y-scroll flex flex-col">
+        <div className="resultData">
           <h2 className="results">Results</h2>
           {queryRows}
         </div>
