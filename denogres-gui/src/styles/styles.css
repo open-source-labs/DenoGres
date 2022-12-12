@@ -49,7 +49,7 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 0.25rem;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -58,6 +58,8 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 button:hover {
   border-color: #646cff;
@@ -112,23 +114,21 @@ button:focus-visible {
   margin-top: 8vw;
   margin-left: 40vw;
   display: flex;
-  border: 2px solid black;
+  border: 2px solid rgb(113, 147, 169);
   border-radius: 15px;
   height: 500px;
   width: 400px;
-  background-color: rgb(190, 159, 200) ;
+  /* background-color: rgb(190, 159, 200) ; */
 }
 .logoutHolder {
   height: 100px;
   width: 100px;
   margin-bottom: 1vw;
-  
 }
 .logoutText {
   display: flex;
   flex-direction: column;
   align-items: center;
-  
 }
 #lm1 {
   font-size: 25px;
@@ -141,8 +141,6 @@ button:focus-visible {
   margin-top: 5vw;
   width: 390px;
   border-radius: 15px;
-  
-  
 }
 /*react flow styles- default*/
 .react-flow__container {
@@ -886,4 +884,52 @@ tr {
   border-radius: 4px;
   overflow-x: scroll;
   width: 15rem;
+}
+
+.login {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 500px;
+  width: 400px;
+}
+
+.login-signup-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 300px;
+}
+
+.login-title {
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.username {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.password {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.login-infor {
+  height: 200px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
 }
