@@ -12,6 +12,7 @@ import Console from './components/Console.tsx';
 import Migrations from './components/Migrations.tsx';
 import ReactFlow from './components/ReactFlow.jsx';
 import SidebarLayout from './components/SidebarLayout.tsx';
+import Logout from './components/Logout.tsx';
 
 export default function App(props) {
   return (
@@ -22,6 +23,7 @@ export default function App(props) {
           element={<Login />}
         />
         <Route element={<SidebarLayout />}>
+        
           <Route
             path="/home"
             element={<Home />}
@@ -42,12 +44,19 @@ export default function App(props) {
             exact
             path="/diagram"
             element={<ReactFlow />}
+            
+          />
+          <Route
+          path="/logout"
+          element={<Logout />}
           />
         </Route>
         <Route
           path="*"
           element={<Navigate to="/home" />}
         />
+        
+        
       </Routes>
     </Router>
   );
