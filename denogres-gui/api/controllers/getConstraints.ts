@@ -10,6 +10,5 @@ export default async (ctx: Context) => {
     ctx.response.body = 'Please log in to view your queries';
   }
   const connection = await getOneConnection(userId, connectionId);
-  console.log(connection)
   ctx.response.body = await allConstraints(connection);
 };
