@@ -76,13 +76,6 @@ export const addConnection = async (newConnection): Promise<any> => {
   const result = await client.queryObject({
     text: 'INSERT INTO connections (user_id, connection_name, connection_address, port_number, default_db, db_username, db_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
     args: [
-      // newConnection.user_id,
-      // newConnection.connection_name,
-      // newConnection.connection_address,
-      // newConnection.port_number,
-      // newConnection.default_db,
-      // newConnection.db_username,
-      // newConnection.db_password,
       newConnection.user_id,
       newConnection.connectionName,
       newConnection.address,
@@ -114,8 +107,8 @@ export const getOneConnection = async (
     text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
     args: [userID, connectionID],
   });
-  console.log(result.rows[0].id);
-  return result.rows[0].id;
+  console.log(result.rows);
+  return result.rows[0];
 };
 
 // addQuery
