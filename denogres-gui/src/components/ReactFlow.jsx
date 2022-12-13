@@ -149,8 +149,7 @@ function Flow() {
 
   return (
     <div className="react-flow-div">
-      <DownloadButton
-      />
+      <DownloadButton />
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
