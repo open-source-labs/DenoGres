@@ -103,11 +103,13 @@ export const getOneConnection = async (
   userID: string,
   connectionID: string
 ): Promise<any> => {
+  console.log(connectionID)
+  console.log(userID)
   const result = await client.queryObject({
     text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
     args: [userID, connectionID],
   });
-  console.log(result.rows);
+  console.log(result);
   return result.rows[0];
 };
 
