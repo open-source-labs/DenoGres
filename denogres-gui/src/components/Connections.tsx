@@ -272,7 +272,7 @@ export default function Connections() {
       </div>
       <div className="connections-form">
         <div className="flex flex-col h-full bg-white p-3 rounded">
-          <div>
+          <div className="connection-details">
             <h2>Connection Details</h2>
             {connectionForm('existing')}
           </div>
