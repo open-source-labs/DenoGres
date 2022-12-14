@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Record from '../components/Record.tsx';
 import throttle from '../../utils/throttle.ts';
-
+import { useNavigate } from "react-router-dom";
 export interface IQueryObject {
   queryName: string;
   queryText: string;
@@ -31,7 +31,17 @@ export default function Console() {
   const [modelContent, setModelContent] = useState<object[]>([]);
   const [indexToDisplay, setIndexToDisplay] = useState<number>(NaN);
   const [queryType, setQueryType] = useState<string>('new');
+  const navigate = useNavigate(); 
 
+  useEffect(() => {
+    fetch('http://localhost:8000/jwt', {credentials: 'include'})
+    .then(res => res.json())
+    .then((data) => {
+      if (data.success === false) {
+        navigate('/')
+      }
+    })
+  },[])
   // retrieve models as stringifiable plain objects (i.e. not classes) to render
   const getModels = async (): Promise<any> => {
     const res = await fetch('http://localhost:8000/api/handleRequests', {

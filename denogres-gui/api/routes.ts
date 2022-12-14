@@ -14,6 +14,7 @@ import setActiveConnection from './controllers/setActiveConnection.ts';
 import handleRequests from './controllers/handleRequests.ts';
 import removeCookie from './controllers/removeCookie.ts';
 import returnConnectionCookie from './controllers/returnConnectionCookie.ts';
+import jwt from './controllers/jwt.ts';
 const router = new Router();
 
 router
@@ -46,6 +47,9 @@ router
   //removeCookies
   .get('/cookieRemove', removeCookie)
   .get('/cookieId', returnConnectionCookie)
+
+  //verify jwt
+  .get('/jwt',jwt)
   //test route for devs:
   .post('/api/test', async (ctx) => {
     if (!ctx.request.hasBody) {
