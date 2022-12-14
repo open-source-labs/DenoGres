@@ -173,8 +173,7 @@ export default function Connections() {
       const reqBody = {
         connectionId,
       };
-
-      const deleteConnection = await fetch('/gui/api/handleConnectionSave', {
+      await fetch('http://localhost:8000/api/Connection', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reqBody),
@@ -231,12 +230,6 @@ export default function Connections() {
           type="password"
         ></input>
         <div className="connections-buttons">
-          <button
-            type="button"
-            className="connections-button"
-          >
-            Test Connection
-          </button>
           <button
             onClick={throttledHandleClick}
             type="button"

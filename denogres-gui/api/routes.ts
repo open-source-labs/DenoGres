@@ -6,6 +6,8 @@ import signIn from './controllers/signIn.ts';
 import signUp from './controllers/signUp.ts';
 import userConnections from './controllers/userConnections.ts';
 import addConnection from './controllers/addConnection.ts';
+import deleteConnection from './controllers/deleteConnection.ts';
+import updateConnection from './controllers/updateConnection.ts';
 import getQuery from './controllers/getQuery.ts';
 import addQuery from './controllers/addQuery.ts';
 import updateQuery from './controllers/updateQuery.ts';
@@ -29,6 +31,9 @@ router
 
   //add a new connection to user's list of connections
   .post('/api/newConnection', addConnection)
+  .delete('/api/Connection', deleteConnection)
+  .patch('/api/newConnection', updateConnection)
+
 
   //console
   .get('/api/handleQuery', getQuery)

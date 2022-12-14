@@ -6,8 +6,7 @@ export default async (ctx: Context) => {
   const connectionId: string = await ctx.cookies.get('connectionId');
   const userId: string = await ctx.cookies.get('userId');
   if (!connectionId) {
-    ctx.response.status = 401;
-    ctx.response.body = 'Please log in to view your queries';
+    ctx.response.body = await allConstraints();
     return;
   }
   const connection = await getOneConnection(userId, connectionId);

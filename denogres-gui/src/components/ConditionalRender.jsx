@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import ReactFlow from './ReactFlow.jsx';
 
 function ConditionalRender() {
   const [connection, setConnection] = useState(false);
-  const [ReactFlow, setReactFlow] = useState(null);
 
   const validate = async () => {
     const checkCookie = await fetch('http://localhost:8000/cookieId', {
@@ -12,20 +12,14 @@ function ConditionalRender() {
     setConnection(response.hasConnection);
   };
 
-  const loadReactFlow = async () => {
-    const flowModule = await import('./ReactFlow.jsx');
-    setReactFlow(flowModule.default);
-  };
-
-  useEffect(() => {
-    validate();
-    if (connection) {
-      loadReactFlow();
-    }
-  }, [connection]);
+  validate();
 
   if (connection === false) {
-    return <div>Hello, currently no database has been connected</div>;
+    return (
+      <div className="noDb">
+        Uh-oh, currently no database is currently connected
+      </div>
+    );
   }
 
   if (connection && !ReactFlow) {

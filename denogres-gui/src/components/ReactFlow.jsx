@@ -10,8 +10,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import TableNode from './TableNode.jsx';
 import DownloadButton from './Download.tsx';
-import { useNavigate } from "react-router-dom";
-const navigate = useNavigate();
+import { useNavigate } from 'react-router-dom';
 function iterateColors(colors) {
   let index = 0;
 
@@ -148,15 +147,16 @@ for (let key in constraints) {
 }
 
 function Flow() {
+  const navigate = useNavigate();
   useEffect(() => {
-    fetch('http://localhost:8000/jwt', {credentials: 'include'})
-    .then(res => res.json())
-    .then((data) => {
-      if (data.success === false) {
-        navigate('/')
-      }
-    })
-  },[])
+    fetch('http://localhost:8000/jwt', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success === false) {
+          navigate('/');
+        }
+      });
+  }, []);
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
 

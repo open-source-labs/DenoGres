@@ -748,66 +748,6 @@ tr {
   .react-flow-div {
     width: 80vw;
   }
-  :root {
-    max-height: 768px;
-  }
-  .connections-page {
-    height: 100vh;
-    margin: 0;
-    padding-left: 0;
-  }
-  .connections-list {
-    margin-right: 10px;
-    overflow-y: scroll;
-  }
-  .connections-form {
-    margin-right: 40px;
-  }
-
-  .connections-button {
-    margin-top: 0px;
-  }
-  #connectionHead {
-    max-height: 500px;
-  }
-  .connections-form {
-    overflow-y: scroll;
-  }
-  .results {
-    margin-right: 0;
-  }
-  .query-console-and-results {
-    max-width: 50vw;
-  }
-  .savedQueriesAndActiveModels {
-    max-width: 20vw;
-  }
-  .savedQueries {
-    max-width: 16vw;
-    margin: 0;
-    margin-top: 10px;
-  }
-  .activeModels {
-    max-width: 16vw;
-    margin: 0;
-    margin-top: 5px;
-  }
-  .query-console-and-results {
-    margin-left: 30px;
-  }
-  .query-console {
-    max-width: 50vw;
-    margin-top: 0px;
-    margin-right: 0px;
-  }
-  .resultData {
-    max-width: 55vw;
-    margin-top: 0px;
-  }
-  .results {
-    max-width: 50vw;
-    margin-right: 0px;
-  }
 }
 
 @media screen and (max-width: 917px) {
@@ -1058,7 +998,15 @@ tr {
   }
 
   .connections-button {
-    margin-top: 0px;
+    margin-top: 20px;
+  }
+  .connections-buttons {
+    margin-top: 30px;
+    display: flex;
+    /* align-items: space-between;
+    justify-content: space-around; */
+    flex-direction: column;
+    max-height: 200px;
   }
   #connectionHead {
     max-height: 500px;
@@ -1108,4 +1056,13 @@ tr {
     bottom: 15px;
     right: 25px;
   }
+}
+
+.noDb {
+  display: flex;
+  font-size: 20px;
+  justify-content: center;
+  position: absolute;
+  top: 400px;
+  left: 300px;
 }

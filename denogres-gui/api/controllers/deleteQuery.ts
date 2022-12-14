@@ -3,7 +3,6 @@ import { deleteQuery } from '../repositories/userRepo.ts';
 
 export default async (ctx: Context) => {
   const { queryId } = await ctx.request.body().value;
-  
   if (!queryId) {
     ctx.response.status = 401;
     ctx.response.body = 'Please log in to view your queries';
