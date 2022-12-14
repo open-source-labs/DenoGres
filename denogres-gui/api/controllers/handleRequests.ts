@@ -34,7 +34,7 @@ export default async (ctx: Context) => {
     // if successful, cache both uri and models under user
     // otherwise, delete uri key on user cache so it does not persist
     case 'cache uri and validate': {
-      console.log('in cache uri');
+      
       queryCache[userId]['dbUri'] = reqBodyObj.uri;
       try {
         queryCache[userId]['modelObj'] = await generateModels(
@@ -98,7 +98,7 @@ export default async (ctx: Context) => {
       const queryStr = JSON.parse(reqBodyObj).queryText;
       const userUri = queryCache[userId].dbUri;
       const denogresModels = queryCache[userId].modelObj;
-      console.log(queryStr);
+      
       // handle missing uri (user did not connect before sending query request)
       if (!userUri) {
         // Set the response body and status code.
@@ -139,9 +139,9 @@ export default async (ctx: Context) => {
 
       try {
         const response = await newFunc(denogresModels);
-        console.log('this is response', response);
+        
         if (queryType === 'insert') {
-          console.log('still working 1');
+          
           ctx.response.body = JSON.stringify({
             Success: 'Inserted record into database.',
           });
@@ -149,7 +149,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (queryType === 'edit') {
-          console.log('still working 2');
+          
           ctx.response.body = JSON.stringify({
             Success: 'Updated record(s) in database.',
           });
@@ -157,7 +157,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (queryType === 'delete') {
-          console.log('still working 3');
+          
           ctx.response.body = JSON.stringify({
             Success: 'Deleted record(s) from database.',
           });
@@ -165,7 +165,7 @@ export default async (ctx: Context) => {
           return;
         }
         if (response === undefined) {
-          console.log('still working 4');
+         
           ctx.response.body = JSON.stringify({
             Error:
               'A database error has occurred. Please check your query syntax.',
@@ -178,7 +178,7 @@ export default async (ctx: Context) => {
           response,
         );
       } catch (err) {
-        console.log('still working 5');
+        
         ctx.response.body = JSON.stringify({ Error: `${err}` });
         ctx.response.status = 400;
         return;

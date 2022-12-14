@@ -15,7 +15,7 @@ export default async (ctx: Context) => {
   const userID = await ctx.cookies.get('userId');
   const connectionBody: ConnectionSettings = await ctx.request.body().value;
   connectionBody.user_id = userID;
-  console.log(connectionBody);
+  
   const cookieID: string = connectionBody.user_id;
   if (userID !== cookieID) {
     ctx.response.status = 401;

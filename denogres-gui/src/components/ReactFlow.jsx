@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SmartBezierEdge } from '@tisoap/react-flow-smart-edge';
 import ReactFlow, {
   Controls,
@@ -42,8 +42,11 @@ const edgeTypes = {
 };
 
 async function getConstraints() {
-  const res = await fetch('http://localhost:8000/api/constraints');
+  const res = await fetch('http://localhost:8000/api/constraints', {
+    credentials: 'include',
+  });
   const data = await res.json();
+  console.log(data);
   let cstrObj = {};
   for (let i = 0; i < data.rows.length; i++) {
     if (!cstrObj[data.rows[i][0]]) {
@@ -61,41 +64,50 @@ async function getConstraints() {
       ];
     }
   }
+  console.log(cstrObj);
   return cstrObj;
 }
 
 const constraints = await getConstraints();
 
 async function getFullData() {
-  const res = await fetch('http://localhost:8000/api/tables');
+  const res = await fetch('http://localhost:8000/api/tables', {
+    credentials: 'include',
+  });
   const data = await res.json();
   return data.rows;
 }
 const data = await getFullData();
-
 const fullData = [];
 
 async function fullDataArray(data) {
-  for (let i = 0; i < data.length; i++) {
-    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`);
+  const fetchPromises = data.map(async (item) => {
+    const res = await fetch(`http://localhost:8000/api/columns/${item}`, {
+      credentials: 'include',
+    });
     const rowData = await res.json();
-    const newArray = [data[i]];
+
+    const newArray = [item];
+    console.log(rowData);
     for (let j = 0; j < rowData.rows.length; j++) {
       const dataObj = {};
       dataObj.name = rowData.rows[j][0];
       dataObj.type = rowData.rows[j][1];
-      dataObj.pk = constraints[data[i]].pk === dataObj.name ? 'True' : 'False';
-      dataObj.fk = constraints[data[i]]['fk'][dataObj.name] ? 'True' : 'False';
+      dataObj.pk = constraints[item].pk === dataObj.name ? 'True' : 'False';
+      dataObj.fk = constraints[item]['fk'][dataObj.name] ? 'True' : 'False';
       dataObj.constraint = 'None';
       newArray.push(dataObj);
     }
-    fullData.push(newArray);
-  }
+    return newArray;
+  });
 
+  const fullData = await Promise.all(fetchPromises);
+  console.log('fulldata', fullData);
   return fullData;
 }
 
 const rfData = await fullDataArray(data);
+console.log('rfData', rfData);
 
 const nodePositions = [];
 
@@ -111,9 +123,9 @@ const initialNodes = [];
 
 for (let i = 0; i < rfData.length; i++) {
   initialNodes.push({
-    id: `${fullData[i][0]}`,
+    id: `${rfData[i][0]}`,
     position: nodePositions[i],
-    data: { table: fullData[i] },
+    data: { table: rfData[i] },
     type: 'table',
   });
 }
@@ -149,8 +161,7 @@ function Flow() {
 
   return (
     <div className="react-flow-div">
-      <DownloadButton
-      />
+      <DownloadButton />
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
