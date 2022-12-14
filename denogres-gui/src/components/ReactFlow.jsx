@@ -42,8 +42,11 @@ const edgeTypes = {
 };
 
 async function getConstraints() {
-  const res = await fetch('http://localhost:8000/api/constraints');
+  const res = await fetch('http://localhost:8000/api/constraints', {
+    credentials: 'include',
+  });
   const data = await res.json();
+  console.log(data);
   let cstrObj = {};
   for (let i = 0; i < data.rows.length; i++) {
     if (!cstrObj[data.rows[i][0]]) {
@@ -61,24 +64,30 @@ async function getConstraints() {
       ];
     }
   }
+  console.log(cstrObj);
   return cstrObj;
 }
 
 const constraints = await getConstraints();
 
 async function getFullData() {
-  const res = await fetch('http://localhost:8000/api/tables');
+  const res = await fetch('http://localhost:8000/api/tables', {
+    credentials: 'include',
+  });
   const data = await res.json();
   return data.rows;
 }
 const data = await getFullData();
-
+console.log(data);
 const fullData = [];
 
 async function fullDataArray(data) {
   for (let i = 0; i < data.length; i++) {
-    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`);
+    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`, {
+      credentials: 'include',
+    });
     const rowData = await res.json();
+    console.log('rowData', rowData);
     const newArray = [data[i]];
     for (let j = 0; j < rowData.rows.length; j++) {
       const dataObj = {};
@@ -91,7 +100,6 @@ async function fullDataArray(data) {
     }
     fullData.push(newArray);
   }
-
   return fullData;
 }
 

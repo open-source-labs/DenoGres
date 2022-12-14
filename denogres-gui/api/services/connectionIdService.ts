@@ -10,7 +10,7 @@ const connectionIdService = async (connID: string, userID: string): Promise<stri
   if (!validNewConnection) {
     return null;
   }
-  return validNewConnection;
+  return validNewConnection.id;
 
 };
  
