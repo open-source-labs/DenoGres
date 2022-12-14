@@ -14,7 +14,6 @@ const connectionIdService = async (
   if (!validNewConnection) {
     return null;
   }
-  // await setClientInfo(validNewConnection);
   return validNewConnection.id;
 };
 
