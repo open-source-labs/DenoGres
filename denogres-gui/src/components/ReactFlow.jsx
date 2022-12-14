@@ -78,32 +78,36 @@ async function getFullData() {
   return data.rows;
 }
 const data = await getFullData();
-console.log(data);
 const fullData = [];
 
 async function fullDataArray(data) {
-  for (let i = 0; i < data.length; i++) {
-    const res = await fetch(`http://localhost:8000/api/columns/${data[i]}`, {
+  const fetchPromises = data.map(async (item) => {
+    const res = await fetch(`http://localhost:8000/api/columns/${item}`, {
       credentials: 'include',
     });
     const rowData = await res.json();
-    console.log('rowData', rowData);
-    const newArray = [data[i]];
+
+    const newArray = [item];
+    console.log(rowData);
     for (let j = 0; j < rowData.rows.length; j++) {
       const dataObj = {};
       dataObj.name = rowData.rows[j][0];
       dataObj.type = rowData.rows[j][1];
-      dataObj.pk = constraints[data[i]].pk === dataObj.name ? 'True' : 'False';
-      dataObj.fk = constraints[data[i]]['fk'][dataObj.name] ? 'True' : 'False';
+      dataObj.pk = constraints[item].pk === dataObj.name ? 'True' : 'False';
+      dataObj.fk = constraints[item]['fk'][dataObj.name] ? 'True' : 'False';
       dataObj.constraint = 'None';
       newArray.push(dataObj);
     }
-    fullData.push(newArray);
-  }
+    return newArray;
+  });
+
+  const fullData = await Promise.all(fetchPromises);
+  console.log('fulldata', fullData);
   return fullData;
 }
 
 const rfData = await fullDataArray(data);
+console.log('rfData', rfData);
 
 const nodePositions = [];
 
@@ -119,9 +123,9 @@ const initialNodes = [];
 
 for (let i = 0; i < rfData.length; i++) {
   initialNodes.push({
-    id: `${fullData[i][0]}`,
+    id: `${rfData[i][0]}`,
     position: nodePositions[i],
-    data: { table: fullData[i] },
+    data: { table: rfData[i] },
     type: 'table',
   });
 }
