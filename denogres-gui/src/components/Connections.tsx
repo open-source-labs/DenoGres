@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import throttle from '../../utils/throttle.ts';
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 export interface IConnectionObject {
   id: number;
   user_id: number;
@@ -33,7 +34,16 @@ export default function Connections() {
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage[]>([]);
   const [connectionType, setConnectionType] = useState<string>('new');
-
+  const navigate = useNavigate(); 
+  useEffect(() => {
+    fetch('http://localhost:8000/jwt', {credentials: 'include'})
+    .then(res => res.json())
+    .then((data) => {
+      if (data.success === false) {
+        navigate('/')
+      }
+    })
+  },[])
   // function to retrieve list of connections to render
   const getData = async (): Promise<void> => {
     const response = await fetch('http://localhost:8000/api/allConnections', {

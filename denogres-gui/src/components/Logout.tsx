@@ -2,10 +2,21 @@ import React, { useState, useEffect } from 'react';
 import logoutIcon from '../assets/logout-icon.svg';
 import { useNavigate } from "react-router-dom";
 
+
 export default function LogOut() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    fetch('http://localhost:8000/jwt', {credentials: 'include'})
+    .then(res => res.json())
+    .then((data) => {
+      if (data.success === false) {
+        navigate('/')
+      }
+    })
+  },[])
   const [count, setCount] = useState<number>(3);
   
-  const navigate = useNavigate(); 
+  
 
   const navigateLogout = async () => {
     
