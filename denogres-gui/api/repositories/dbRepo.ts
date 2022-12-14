@@ -1,4 +1,9 @@
 import { Client } from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import {
+  sampleConstraints,
+  sampleTables,
+  sampleColumns,
+} from '../connections/sampleDatabase.ts';
 
 interface ConnectionSettings {
   user_id: string;
@@ -10,6 +15,9 @@ interface ConnectionSettings {
   db_password: string;
 }
 export const allTables = async (connection: ConnectionSettings) => {
+  if (!connection) {
+    return sampleTables;
+  }
   const client = new Client({
     user: connection.db_username,
     database: connection.default_db,
@@ -28,6 +36,9 @@ export const columnNames = async (
   tableName: string,
   connection: ConnectionSettings
 ) => {
+  if (!connection) {
+    return sampleConstraints;
+  }
   const client = new Client({
     user: connection.db_username,
     database: connection.default_db,
@@ -44,6 +55,9 @@ export const columnNames = async (
 };
 
 export const allConstraints = async (connection: ConnectionSettings) => {
+  if (!connection) {
+    return sampleConstraints;
+  }
   console.log('in all constraints', connection);
   const client = new Client({
     user: connection.db_username,

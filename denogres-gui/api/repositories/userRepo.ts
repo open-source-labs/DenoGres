@@ -79,6 +79,36 @@ export const addConnection = async (newConnection): Promise<any> => {
   return result;
 };
 
+export const deleteConnection = async (connectionId): Promise<any> => {
+  console.log('IN DELETE CONNECTION', connectionId);
+  try {
+    const result = await client.queryObject({
+      text: 'DELETE FROM connections WHERE id = $1',
+      args: [connectionId.connectionId],
+    });
+    console.log('done');
+    return 'Successfully deleted connection';
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const updateConnection = async (updatedConnection): Promise<any> => {
+  const result = await client.queryObject({
+    text: 'UPDATE connections SET connection_name = $1, connection_address = $2, port_number = $3, default_db = $4, db_username = $5, db_password = $6 WHERE id = $7',
+    args: [
+      updatedConnection.connectionName,
+      updatedConnection.address,
+      updatedConnection.port,
+      updatedConnection.defaultDB,
+      updatedConnection.username,
+      updatedConnection.password,
+      updatedConnection.connectionId,
+    ],
+  });
+  return result;
+};
+
 // get all connections for a user
 export const getAllConnections = async (userID: string): Promise<any> => {
   const result = await client.queryObject({
