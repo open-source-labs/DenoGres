@@ -75,6 +75,7 @@ export default function Console() {
       credentials: 'include',
     });
     const queries = await response.json();
+    console.log('this is queries', queries);
     const sortedList = queries.sort(
       (a: IQueryListItem, b: IQueryListItem) => b.id - a.id
     );

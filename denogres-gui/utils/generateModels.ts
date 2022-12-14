@@ -1,9 +1,9 @@
 // import { introspect } from 'denogres-functions/introspect.ts';
-import { introspect } from '../../src/functions/introspect.ts';
+import { introspect } from 'https://deno.land/x/denogres@v2.0/src/functions/introspect.ts';
 // import { createClassName } from 'denogres-functions/StringFormat.ts';
-import { createClassName } from '../../src/functions/StringFormat.ts';
+import { createClassName } from 'https://deno.land/x/denogres@v2.0/src/functions/StringFormat.ts';
 // import { Model } from 'https://deno.land/x/denogres@v2.0/mod.ts';
-import { Model } from '../../src/class/Model.ts';
+import { Model } from 'https://deno.land/x/denogres@v2.0/src/class/Model.ts';
 
 // helper func to delete any keys in models with value of false
 // applies to k-v pairs such as "notNull: false" (i.e. no 'NOT NULL' constraint)

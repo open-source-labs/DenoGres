@@ -18,7 +18,7 @@ export const checkUser = async (
     }
   } catch (err) {
     // Handle the error and log it or throw it as needed
-    console.error(err);
+    console.error('ERROR', err);
     return undefined;
   }
 };
@@ -44,7 +44,7 @@ export const createUser = async (
       text: 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id',
       args: [username, hashedPW],
     });
-    console.log(result);
+
     const userID: string = result.rows[0].id;
     return userID;
   } else {
@@ -63,16 +63,6 @@ interface ConnectionSettings {
   db_password: string;
 }
 export const addConnection = async (newConnection): Promise<any> => {
-  console.log('hei 1', newConnection);
-  console.log('hello', [
-    newConnection.user_id,
-    newConnection.connection_name,
-    newConnection.connection_address,
-    newConnection.port_number,
-    newConnection.default_db,
-    newConnection.db_username,
-    newConnection.db_password,
-  ]);
   const result = await client.queryObject({
     text: 'INSERT INTO connections (user_id, connection_name, connection_address, port_number, default_db, db_username, db_password) VALUES ($1, $2, $3, $4, $5, $6, $7)',
     args: [
@@ -85,7 +75,7 @@ export const addConnection = async (newConnection): Promise<any> => {
       newConnection.password,
     ],
   });
-  console.log(result);
+
   return result;
 };
 
@@ -103,8 +93,6 @@ export const getOneConnection = async (
   userID: string,
   connectionID: string
 ): Promise<any> => {
-  console.log(connectionID)
-  console.log(userID)
   const result = await client.queryObject({
     text: 'SELECT * FROM connections WHERE user_id=$1 AND id=$2',
     args: [userID, connectionID],
@@ -119,6 +107,7 @@ export const getAllQueries = async (connectionId: string): Promise<any> => {
     text: 'SELECT * FROM queries WHERE connection_id=$1',
     args: [connectionId],
   });
+
   return result.rows;
 };
 
@@ -127,9 +116,6 @@ export const addQuery = async (
   queryName: string,
   formattedQuery: string
 ): Promise<string> => {
-  console.log(connectionId);
-  console.log(queryName);
-  console.log(formattedQuery);
   const result = await client.queryObject({
     text: `INSERT INTO queries (connection_id, query_name, query_text)
     VALUES ($1, $2, (E'${formattedQuery}')::text)`,
@@ -153,7 +139,6 @@ export const updateQuery = async (
 };
 
 export const deleteQuery = async (queryId: string): Promise<any> => {
-  console.log(queryId);
   const result = await client.queryObject({
     text: `DELETE FROM queries WHERE id = $1`,
     args: [queryId],
