@@ -150,13 +150,13 @@ abstraction functionality can be found here: https://denogres.deno.dev/
 ### Version 3.0
 
 - Azal Adeel | [GitHub](https://github.com/azaladeel) |
-  [LinkedIn](www.linkedin.com/in/azal-adeel)
+  [LinkedIn](https://www.linkedin.com/in/azal-adeel/)
 - Joe Hynan | [GitHub](https://github.com/JoeH1020) |
   [LinkedIn](https://www.linkedin.com/in/josephhynan/)
 - James Howat | [GitHub](https://github.com/jbhowat) |
   [LinkedIn](https://www.linkedin.com/in/jamesbhowat/)
 - Hao Ze Lin| [GitHub](https://github.com/LinHAO-1) |
-  [LinkedIn](https://www.linkedin.com/in/hao-ze-lin-411747216/)
+  [LinkedIn](https://www.linkedin.com/in/linhaoze/)
 
 ### Version 2.0
 
