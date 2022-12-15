@@ -87,7 +87,7 @@ SELECT tables.schemaname, class.relname AS table_name,
   INNER JOIN pg_tables tables on class.relname = tables.tablename
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   WHERE contype = 'p'
-  AND class.relname = 
+  AND class.relname =
 `
 
 export const tableUniqueQuery = `

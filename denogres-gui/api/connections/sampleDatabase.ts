@@ -1,0 +1,72 @@
+export const sampleConstraints = {
+  command: 'SELECT',
+  rowCount: 25,
+  warnings: [],
+  query: {
+    args: [],
+    result_type: 0,
+    text: 'SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name, ccu.column_name AS foreign_column_name FROM information_schema.table_constraints AS tc JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name',
+  },
+  rows: [
+    ['people', '_id', 'people', '_id'],
+    ['films', '_id', 'films', '_id'],
+    ['people_in_films', '_id', 'people_in_films', '_id'],
+    ['planets', '_id', 'planets', '_id'],
+    ['species', '_id', 'species', '_id'],
+    ['vessels', '_id', 'vessels', '_id'],
+    ['species_in_films', '_id', 'species_in_films', '_id'],
+    ['planets_in_films', '_id', 'planets_in_films', '_id'],
+    ['pilots', '_id', 'pilots', '_id'],
+    ['vessels_in_films', '_id', 'vessels_in_films', '_id'],
+    ['starship_specs', '_id', 'starship_specs', '_id'],
+    ['people', 'species_id', 'species', '_id'],
+    ['people', 'homeworld_id', 'planets', '_id'],
+    ['people_in_films', 'person_id', 'people', '_id'],
+    ['people_in_films', 'film_id', 'films', '_id'],
+    ['species', 'homeworld_id', 'planets', '_id'],
+    ['species_in_films', 'film_id', 'films', '_id'],
+    ['species_in_films', 'species_id', 'species', '_id'],
+    ['planets_in_films', 'film_id', 'films', '_id'],
+    ['planets_in_films', 'planet_id', 'planets', '_id'],
+    ['pilots', 'person_id', 'people', '_id'],
+    ['pilots', 'vessel_id', 'vessels', '_id'],
+    ['vessels_in_films', 'vessel_id', 'vessels', '_id'],
+    ['vessels_in_films', 'film_id', 'films', '_id'],
+    ['starship_specs', 'vessel_id', 'vessels', '_id'],
+  ],
+};
+
+export const sampleTables = {
+  command: 'SELECT',
+  rowCount: 11,
+  warnings: [],
+  query: {
+    args: [],
+    result_type: 0,
+    text: "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'",
+  },
+  rows: [['planets']],
+};
+
+export const sampleColumns = {
+  command: 'SELECT',
+  rowCount: 10,
+  warnings: [],
+  query: {
+    args: ['planets'],
+    result_type: 0,
+    text: 'SELECT column_name, data_type FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name=$1',
+  },
+  rows: [
+    ['_id', 'integer'],
+    ['rotation_period', 'integer'],
+    ['orbital_period', 'integer'],
+    ['diameter', 'integer'],
+    ['population', 'bigint'],
+    ['climate', 'character varying'],
+    ['name', 'character varying'],
+    ['gravity', 'character varying'],
+    ['terrain', 'character varying'],
+    ['surface_water', 'character varying'],
+  ],
+};

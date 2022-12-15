@@ -1,4 +1,4 @@
-import { Model } from "https://deno.land/x/denogresdev/mod.ts";
+import { Model } from "https://deno.land/x/denogresdev@v1.0.17/mod.ts";
 // user model definition comes here
 
 export interface Species {
