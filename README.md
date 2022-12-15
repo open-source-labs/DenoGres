@@ -76,6 +76,40 @@ Launch the DenoGres GUI by running the following CLI command:
 
 > `denogres --gui`
 
+
+![alt text](/denogres-gui/src/assets/NavBarImage.jpg?raw=true "NavBar")
+
+## Connections
+
+The Connections page allows users to connect to any database after providing its
+credentials. User can add and save multiple databases, but are only allowed to have
+one active connection at a time.
+
+![](/denogres-gui/src/assets/Connections.gif)
+
+## Console
+
+The Console page allows users to run database queries as needed. They can also be
+saved for later use.
+
+![](/denogres-gui/src/assets/Console.gif)
+
+The Console page also features active models for your databse tables. This allows 
+users to have a reference when inputting query strings properly.
+
+![](/denogres-gui/src/assets/Model.gif)
+
+## Diagram
+
+The Diagram page offers a live ERD which visualizes the database for the user.
+This includes relational mapping for all of the database tables.
+
+Some key features of the ERD are its ability to be adjusted to the user's preference with
+a live interface and the ability to save the diagram as an image.
+
+![](/denogres-gui/src/assets/ReactFlow.gif)
+
+
 ## Migration Logs and Restore
 
 Any time a user opts to make a request for --db-pull or --db-sync, Denogres

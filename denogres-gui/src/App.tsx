@@ -41,7 +41,7 @@ export default function App(props) {
             path="/migrations"
             element={<Migrations />}
           />
-          / <Route
+           /<Route
             exact
             path="/diagram"
             element={<ConditionalRender />}
