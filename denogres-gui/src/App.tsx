@@ -13,8 +13,7 @@ import Migrations from './components/Migrations.tsx';
 import ReactFlow from './components/ReactFlow.jsx';
 import SidebarLayout from './components/SidebarLayout.tsx';
 import Logout from './components/Logout.tsx';
-import ConditionalRender from './components/ConditionalRender';
-// import ConditionalRender from './components/ConditionalRender.jsx';
+import ConditionalRender from './components/ConditionalRender.jsx';
 
 export default function App(props) {
   return (
@@ -41,7 +40,7 @@ export default function App(props) {
             path="/migrations"
             element={<Migrations />}
           />
-           {/* /<Route
+          {/* <Route
             exact
             path="/diagram"
             element={<ConditionalRender />}

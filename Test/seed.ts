@@ -141,10 +141,6 @@ Deno.test(
       ],
     };
 
-    // await Deno.run({
-    //   cmd: ["deno", "fmt", path],
-    // }).status();
-
     const output: any = {};
 
     let data = sampleTextFile;
@@ -158,7 +154,6 @@ Deno.test(
 
     for (const table of tables) {
       const tableName = table.replace(/(\w+).*/, "$1");
-      // const tableName = table.match(/\w+/)
       let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
 
       tableData = tableData.replace(/\,\}/g, "}");

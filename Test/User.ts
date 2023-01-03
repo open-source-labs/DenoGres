@@ -16,7 +16,3 @@ class User extends Model {
 const user1 = new User();
 user1.user_name = 'one';
 user1.test();
-
-// console.log(user1.save()) // Insert SQL statement
-// user1.user_name = 'two'
-// console.log(user1.update())

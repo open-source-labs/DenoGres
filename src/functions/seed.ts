@@ -1,10 +1,9 @@
 import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
-// TODO import { modelParser } from "./modelParser.ts";
 import { introspect } from "./introspect.ts";
 import modelParser from "./modelParser.ts";
 
-export default async function seed(path: string = "./seed.ts") {
+export default async function seed(path = "./seed.ts") {
   path = resolve(path);
 
   await Deno.run({
@@ -15,11 +14,13 @@ export default async function seed(path: string = "./seed.ts") {
   const [dbTables] = await introspect();
   const models: any = await modelParser();
 
-  const modelNameSet: Set<string> = new Set(Object.keys(models));
-  const dbTableNameSet: Set<string> = new Set(Object.keys(dbTables));
+  const modelNameSet: Set<string> = new Set(Object.keys(models)); // set of all table names in the model schema
+  const dbTableNameSet: Set<string> = new Set(Object.keys(dbTables)); // set of all table names in the db schema
 
+  // turns seed.ts into an object where each property is a table name set to info about that table's columns
   const seedTables = parseSeed(path);
 
+  // determines whether a given table already exists in the user's db or needs to be created
   const getOperation = (
     seedTableName: string,
     modelNameSet: Set<string>,
@@ -43,13 +44,16 @@ export default async function seed(path: string = "./seed.ts") {
       case "Create + Insert": {
         let modelColumns = models[seedTableName];
 
+        // get the query string for creating that table in the user's db
         const createTableQuery = getCreateTableQuery(
           seedTableName,
           modelColumns,
         );
 
+        // send that query string to the db
         await db.queryObject(createTableQuery);
 
+        // insert values into the newly created table and send query to db
         const insertQuery = getInsertQuery(
           seedTables[seedTableName],
           seedTableName,
@@ -59,6 +63,7 @@ export default async function seed(path: string = "./seed.ts") {
         break;
       }
       case "Insert": {
+        // if table already exists in user's db, just insert new values into the table
         const insertQuery = getInsertQuery(
           seedTables[seedTableName],
           seedTableName,
@@ -77,7 +82,11 @@ export default async function seed(path: string = "./seed.ts") {
   DisconnectDb(db);
 }
 
-const parseSeed = (path: string = "./seed.ts") => {
+// EXPECTS seed.ts file to be a set of variable declarations where each variable has the name of a table
+// which is assigned an array of objects, where each object represents a row (with column names as properties
+// and the value at that column in that row as the associated value); RETURNS an object where each property
+// is a table name set to an array of objects representing each row
+const parseSeed = (path = "./seed.ts") => {
   path = resolve(path);
 
   const output: any = {};
@@ -97,7 +106,8 @@ const parseSeed = (path: string = "./seed.ts") => {
     const tableName = table.replace(/(\w+).*/, "$1");
     let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
 
-    tableData = tableData.replace(/\,\}/g, "}");
+    // make JSON parsable (get rid of trailing commas and put double quotes around property names)
+    tableData = tableData.replace(/\,\}/g, "}"); 
     tableData = tableData.replace(/\,\]/g, "]");
     tableData = tableData.replace(
       /([\w\_]+)\:/g,
@@ -111,6 +121,7 @@ const parseSeed = (path: string = "./seed.ts") => {
   return output;
 };
 
+// returns a query string for creating a table in the user's db and establishing any necessary constraints
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
@@ -211,6 +222,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
   return createTableQuery;
 };
 
+// returns a query string for inserting a set of values into their corresponding columns in a table in the user's db
 const getInsertQuery = (data: any, tableName: string) => {
   let columns = "";
 

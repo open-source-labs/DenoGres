@@ -32,10 +32,7 @@ TEST_DB_URI=" "
 import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here    
     `;
-  //   const modelFileContent = `
-  // import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
-  // // user model definition comes here
-  //     `;
+
   ensureDir(modelFilePath).then(() => {
     Deno.writeTextFile(modelFilePath + "model.ts", modelFileContent);
     console.log("model.ts file created under model folder");

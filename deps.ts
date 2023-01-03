@@ -1,3 +1,5 @@
+/* This module should re-export all remote dependencies for use in other modules */
+
 export { config, parse } from "https://deno.land/std@0.148.0/dotenv/mod.ts"; // mod.ts
 
 export { Pool, PoolClient } from "https://deno.land/x/postgres@v0.17.0/mod.ts"; // Db.ts

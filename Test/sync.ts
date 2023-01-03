@@ -9,7 +9,6 @@ import {
 } from "./deps.ts";
 import { dbPull } from "../src/functions/dbPull.ts";
 import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
-// ! Used to be { sync } which referred to the previous version of sync
 import sync from "../src/functions/sync.ts";
 import { introspect } from "../src/functions/introspect.ts";
 import { enumQuery } from "../src/queries/introspection.ts";
@@ -39,7 +38,6 @@ Deno.test("Sync/Enum/New", async () => {
     enumQuery.slice(0, -1) + ` WHERE enum_name = 'weather';`,
   ); // retrieve new enum from db
   await db.queryObject("DROP type weather;"); // remove new enum from database
-  //await DisconnectDb(db);
   assert(dbEnum.rows.length === 1, "1 Row");
   assert(
     typeof dbEnum.rows[0] === "object" && dbEnum.rows[0] !== null &&
@@ -139,13 +137,13 @@ Deno.test("Sync/Table/Create", async () => {
   const [tableObj] = await introspect();
   await db.queryObject(
     "DROP TABLE testtable; DROP table payme; DROP table invoice",
-  ); // remove new enum from database
+  ); // remove new table from database
 
   const id = tableObj.testtable.columns._id;
   const username = tableObj.testtable.columns.username;
   const payment = tableObj.payme;
   const invoice = tableObj.invoice;
-  //await DisconnectDb(db);
+
   assert(Object.keys(tableObj.testtable.columns).length === 2);
   assert(id);
   assert(username);
@@ -221,11 +219,11 @@ Deno.test("Sync/Table/Create - Checks, Association, Enum Type", async () => {
   Deno.writeTextFileSync("./models/model.ts", checksTableStr, { append: true });
   await sync();
   const [tableObj] = await introspect();
-  await db.queryObject("DROP TABLE randompeople; DROP table zipcode_table;"); // remove new enum from database
+  await db.queryObject("DROP TABLE randompeople; DROP table zipcode_table;"); // remove new table from database
 
   const zip = tableObj.zipcode_table;
   const rando = tableObj.randompeople;
-  //await DisconnectDb(db);
+
   assert(zip);
   assert(rando);
   assertEquals(rando.columns.zipcode.association, {
@@ -271,10 +269,10 @@ Deno.test("Sync/Table/Create - Unique", async () => {
   Deno.writeTextFileSync("./models/model.ts", uniqueTableStr, { append: true });
   await sync();
   const [tableObj] = await introspect();
-  await db.queryObject("DROP TABLE randompeople; "); // remove new enum from database
+  await db.queryObject("DROP TABLE randompeople; "); // remove new table from database
 
   const rando = tableObj.randompeople;
-  //await DisconnectDb(db);
+  
   assert(rando.unique);
   assert(rando.unique.length === 1);
   assertEquals(rando.unique[0], ["avg_mood", "person_id"]);
