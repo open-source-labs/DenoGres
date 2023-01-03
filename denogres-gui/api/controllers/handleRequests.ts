@@ -1,7 +1,6 @@
 import writeQueryText from '../../utils/writeQueryText.ts';
 import { checkInput, extractType, IError } from '../../utils/checkInputs.ts';
 import { generateModels } from '../../utils/generateModels.ts';
-// import * as cookie from 'cookie/cookie.ts';
 import { Context } from 'https://deno.land/x/oak@v11.1.0/context.ts';
 
 const queryCache: any = {};

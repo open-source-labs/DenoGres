@@ -1,7 +1,21 @@
 import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
 
-// * reads the given model.ts file (at ./models/model.ts) and converts it into an object that contains information about a given schema inside model.ts
-export default async function modelParser(path: string = "./models/model.ts") {
+// reads the given model.ts file (at ./models/model.ts) and converts it into an object w/ info about db schema
+// output ex:
+// {
+//   table_name1: {
+//     column_name1: {
+//       type: "varchar"
+//     },
+//     column_name2: {...}
+//   },
+//   table_name2: {
+//     column_name1: {...},
+//     column_name2: {...}
+//   }
+// };
+
+export default async function modelParser(path = "./models/model.ts") {
   path = resolve(path);
 
   // * format the document for consistent parsing functionality

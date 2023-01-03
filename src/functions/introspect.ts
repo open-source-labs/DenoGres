@@ -27,36 +27,6 @@ interface IConstraint {
   conname: string;
 }
 
-// ! Previous Code
-// const indexNames = Object.keys(sqlDataTypes)
-
-// interface ITableListObj {
-//   [key: string]: {
-//     columns: {
-//       [key: string]: {
-//         type: keyof typeof sqlDataTypes;
-//         primaryKey?: boolean;
-//         notNull?: boolean;
-//         unique?: boolean;
-//         checks?: any; // used to be string[]
-//         defaultVal?: unknown;
-//         autoIncrement?: boolean;
-//         length?: number;
-//         association?: { rel_type?: string; table: string; mappedCol: string };
-//       };
-//     };
-//     checks: string[];
-//     unique?: Array<string[]>;
-//     primaryKey?: string[];
-//     foreignKey?: {
-//       columns: string[];
-//       mappedColumns: string[];
-//       rel_type?: string;
-//       table: string;
-//     }[];
-//   };
-// }
-
 type ITableListObj = any;
 
 interface IEnumObj {
@@ -89,12 +59,17 @@ const enumElType = (record: object): record is IEnumEl => {
     "enum_value" in record;
 };
 
+// returns the following information about each table in the user's db:
+// schemaname (ex: 'public'), table_name (ex: 'planets'),
+// condef (short for constraint definition, for ex: primary key/foreign key)
+// contype (ex: 'p' for primary, 'f' for foreign), conname (ex: 'planets_pk')
 const tableConstQuery = `SELECT tables.schemaname, class.relname AS table_name,
 pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
 FROM pg_class class
 INNER JOIN pg_tables tables on class.relname = tables.tablename
 INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid;`;
 
+// returns all the user-defined table names in the db
 const tableListQuery = `SELECT table_name FROM information_schema.tables
 WHERE table_schema='public'
 AND table_type='BASE TABLE';`;
@@ -179,9 +154,6 @@ export const introspect = async (
           if (String(defaultVal).slice(-2) === "()") {
             defaultVal = "'" + defaultVal + "'";
           }
-
-          // * Might have to change this to...
-          // refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
 
           refObj["defaultVal"] = JSON.parse(JSON.stringify(defaultVal));
         }
@@ -286,13 +258,6 @@ export const introspect = async (
             table: tableName,
           };
 
-          // ! Previous Code
-          // if (!tableListObj[el.table_name].foreignKey) {
-          //   tableListObj[el.table_name].foreignKey = [];
-          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
-          // } else {
-          //   tableListObj[el.table_name].foreignKey?.push(fKObj);
-          // }
         } else {
           condef = condef.replace("FOREIGN KEY (", "").replace(
             ") REFERENCES",

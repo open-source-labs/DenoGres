@@ -1,3 +1,4 @@
+// accepts a plural noun and returns that noun in the singular form
 const singularize = (noun: string): string => {
     noun = noun.toLowerCase();
 
@@ -22,6 +23,8 @@ const singularize = (noun: string): string => {
         noun
 }
 
+// accepts the name of a db table (snake case and plural by convention)
+// returns the appropriate class name for that table (singular, pascal case)
 export const createClassName = (tableName: string): string => {
     const tableNameArr = tableName.split('_');
 

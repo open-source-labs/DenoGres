@@ -92,7 +92,7 @@ describe('Abstraction Test', () => {
 
     const db = await ConnectDb(); 
     console.log('reset the DB and creating a new table')
-    await db.queryObject(before_all)
+    await db.queryObject(before_all) // executes the query defined above to set up the test db
     await DisconnectDb(db)
   })
 

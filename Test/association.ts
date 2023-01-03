@@ -1,4 +1,4 @@
-import "https://deno.land/x/dotenv/load.ts";
+import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
 
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
@@ -152,10 +152,8 @@ class Member_Club extends Model {
 
 
 describe('Testing Associations and Methods ', () => {
-  
 
   beforeAll(async () => {
-
     if(Deno.env.get('ENVIRONMENT')!=='test') throw new Error('Not in test environment')
     
     console.log('reset the DB and creating new tables')
@@ -169,8 +167,6 @@ describe('Testing Associations and Methods ', () => {
     const db = await ConnectDb(); 
     await db.queryObject(after_all)
     await DisconnectDb(db)
-
-    //console.log("Deno.resources(): ", Deno.resources())
   })
 
   it('creates new belongsTo association if not exist', async () => {
