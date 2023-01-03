@@ -163,8 +163,6 @@ Deno.test(
 
     const classes: any = data.match(/class\w+extendsModel.*\s/g);
 
-    // console.log(classes);
-
     const currentClass: any = classes[0];
 
     const tableName = currentClass.replace(/.*statictable=\"(\w+)\".*\n/, "$1");

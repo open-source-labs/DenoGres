@@ -45,6 +45,9 @@ SELECT tables.schemaname, class.relname AS table_name,
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema');`
 
+// returns information about the columns in each table in the user's db,
+// including column_name (ex: birth_year), column_type (ex: varchar),
+// and not_null (true/false)
 export const columnInfoQuery = `
 WITH enum_table as (
   select n.nspname as enum_schema,  
@@ -99,6 +102,8 @@ SELECT tables.schemaname, class.relname AS table_name,
   WHERE contype = 'u'
   AND pg_get_constraintdef(pg_constraint.oid) LIKE '%,%'
 `
+
+// returns information about enum types (if user's db includes any)
 export const enumQuery = `
 WITH enum_table as (
   select n.nspname as enum_schema,  

@@ -33,7 +33,7 @@ export default async function sync(overwrite = false) {
   // * schema information from the local model.ts file
   const models = await modelParser();
 
-  await enumSync();
+  await enumSync(); // syncs changes made to enum types in model.ts with database
 
   const modelTableNames: Set<string> = new Set(Object.keys(models));
   const dbTableNames: Set<string> = new Set(Object.keys(dbTables));
@@ -83,6 +83,8 @@ export default async function sync(overwrite = false) {
   // console.log("List of TABLES to DELETE", deleteTablesList);
   // console.log("List of TABLES to UPDATE", updateTablesList);
 
+  // use helper functions to get query strings for updating database and
+  // append query strings to master query string
   const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
   deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
 
@@ -98,8 +100,6 @@ export default async function sync(overwrite = false) {
   updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
 
   // * Single query that will be sent to PostgreSQL Database (sync will send only ONE query to the PSQL DB for ACID compliance)
-  // console.log("masterQuery:", await masterQuery);
-
   await db.queryObject(masterQuery);
 
   // * Used for migration feature (backing up/restoring data)
@@ -222,6 +222,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
   return createTableQuery;
 };
 
+// helper function returns query string for deleting all necessary tables from db
 const getDeleteTablesQuery = (
   deleteTablesList: string[],
   overwrite: Boolean,
@@ -266,6 +267,7 @@ const getDeleteTablesQuery = (
   return deleteTablesQuery;
 };
 
+// helper function returns query string for updating all necessary tables in db
 const getUpdateTablesQuery = async (
   updateTablesList: string[],
   models: any,
@@ -397,6 +399,7 @@ const getUpdateTablesQuery = async (
   return updateTablesQuery;
 };
 
+// helper function returns query string for deleting desired columns from db
 const getDeleteColumnsQuery = (
   tableName: string,
   deleteColumnsList: string[],
@@ -450,6 +453,7 @@ const getDeleteColumnsQuery = (
   return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : "";
 };
 
+// helper function returns query string for creating desired columns in db
 const getCreateColumnsQuery = (
   tableName: string,
   createColumnList: string[],
@@ -558,6 +562,7 @@ const getCreateColumnsQuery = (
   return createColumnsQuery;
 };
 
+// helper function returns query string for updating columns in db
 const getUpdateColumnsQuery = async (
   tableName: string,
   updateColumnsList: string[],

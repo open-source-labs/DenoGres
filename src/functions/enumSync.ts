@@ -11,16 +11,16 @@ interface IEnumRow {
 const enumRowGuard = (record: object): record is IEnumRow => {
     return 'enum_schema' in record && 'enum_name' in record && 'enum_value' in record;
 }
-// ! This is the main function to worry about
+
+// syncs changes made to enum types in model.ts with the database
 export const enumSync = async () => {
     let enumCreateAlter = ``;
 
     const modelEnum = enumParser(); //* This runs through the model.ts file and returns an object with all enum types as keys, and their values as array of strings
     const db = await ConnectDb(); 
 
-    const results = await db.queryObject(enumQuery); 
-    const dbEnum = results.rows;
-    // console.log('This is dbEnum', dbEnum);//* returns an array of objects with each object being an enumerable that matches the shape of IEnumRow
+    const results = await db.queryObject(enumQuery);
+    const dbEnum = results.rows; //* returns an array of objects with each object being an enumerable that matches the shape of IEnumRow
 
     interface IEnumObj {
         enum_schema: string,
@@ -34,11 +34,8 @@ export const enumSync = async () => {
     dbEnum.forEach(el => {
         if(typeof el === 'object' && el !== null && enumRowGuard(el)){
             dbEnumObj[el.enum_name] = {enum_schema: el.enum_schema, enum_value: el.enum_value.split(/, */)};
-            // console.log('This is the new dbEnumObj value: ', dbEnumObj[el.enum_name]);
-            // console.log('stringified el', JSON.stringify(el));
-            // console.log('stringified modelEnum', JSON.stringify(modelEnum));
 
-            //* database enum doesn't exist in model - remove database enum
+            //* if enum in database doesn't exist on model, remove enum from database
             if(!modelEnum[el.enum_name]) { // TESTED
                 enumCreateAlter += `DROP type ${el.enum_name} CASCADE; `
             } 

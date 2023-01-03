@@ -17,7 +17,8 @@ export async function promptString(question: string) {
   }
 }
 
-//* Within this function we want to pass in the users comment and have it fire off.
+// Invoked with either 'db-sync' or 'db-pull', prompts user for a comment and appends
+// message to migration_log.txt in user's 'Migrations' directory (added by 'denogres --init')
 export async function uniqueLog(method: string): Promise<void> {
   const input = await promptString("What is your comment? ");
   if (method === "db-sync") {
