@@ -2,6 +2,7 @@
   "tasks": {
     "app": "deno run -Ar --unstable ./webview/webview.ts",
     "appDEV": "deno run -Ar --unstable \"https://deno.land/x/denogresdev/webview/webview.ts\"",
-    "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogres/webview/webview.ts\""
+    "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogres/webview/webview.ts\"",
+    "test": "deno test --no-check --allow-read --allow-write --allow-net --allow-env"
   }
 }

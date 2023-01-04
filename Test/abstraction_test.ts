@@ -45,7 +45,8 @@ INSERT INTO users (firstName, points, team_id, gender) VALUES('user_eight', 80, 
 `
 // drop tables (afterAll)
 const after_all = `
---DROP TABLE users;
+DROP TABLE users CASCADE;
+DROP TABLE teams CASCADE;
 `
 
 interface User {
@@ -108,7 +109,6 @@ describe('Abstraction Test', () => {
     const user0 = new User();
     user0.firstname = 'Test'
     const saved = await user0.save()
-    //assertThrows(async () => await user0.save())
     console.log("saved?:", saved)
     assertStrictEquals(saved.firstname, user0.firstname)
   })
@@ -204,7 +204,7 @@ describe('Abstraction Test', () => {
   })
 
   // 8. innerJoin
-  it('Select record that have matching values from both tables', async()=>{
+  it('selects records that have matching values from both tables', async()=>{
     const innerjoin = await User.select('users.*').innerJoin('team_id', 'id', 'teams').where('points = 60').query() as IObj
     console.log("INNERJOIN", innerjoin)
 
