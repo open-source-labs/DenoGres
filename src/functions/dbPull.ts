@@ -12,7 +12,6 @@ export async function dbPull() {
 
   let autoCreatedModels =
     `import { Model } from 'https://deno.land/x/denogres/mod.ts'\n// user model definition comes here\n\n`;
-    // `import { Model } from 'https://deno.land/x/denogresdev/mod.ts'\n// user model definition comes here\n\n`;
 
   // iterate over the properties of tableListObj
   Object.keys(tableListObj).forEach((el) => {
@@ -41,17 +40,7 @@ export async function dbPull() {
       } else {
         interfaceCode += `  ${colName}: ${sqlDataTypes[columnObj.type]}\n`;
       }
-      // ! Previous Code
-      // add the column as a property to the class, remove enum column name if enum type is found
-      // if (columnObj.type.includes("enum:")) {
-      //   const enumName = columnObj.type.replaceAll("enum: ", "");
-      //   classCode += `    ${colName}: {\n` +
-      //     `      type: 'enum',\n`;
-      //   classCode += `      enumName: '${enumName}'\n`;
-      // } else {
-      //   classCode += `    ${colName}: {\n` +
-      //     `      type: '${columnObj.type}',\n`;
-      // }
+
       // * if a given column is typed as ENUM
       if (columnObj.type.includes("enum")) {
         classCode += `    ${colName}: {\n` +
@@ -100,39 +89,6 @@ export async function dbPull() {
     classCode += `  }\n`;
     // add the interface and class code to the autoCreatedModels string
     autoCreatedModels += interfaceCode + classCode;
-    // ! Previous Code (for having another set of static properties for PSQL constraints (i.e. checks, unique, primaryKey, ForeignKey))
-    // for each table constraint add as properties onto the autoCreatedModels query
-    // if (tableObj.checks.length > 0) {
-    //   autoCreatedModels += `  static checks = ${
-    //     JSON.stringify(tableObj.checks)
-    //   }\n`;
-    // }
-    // if (tableObj.unique) {
-    //   autoCreatedModels += `  static unique = ${
-    //     JSON.stringify(tableObj.unique)
-    //   }\n`;
-    // }
-    // if (tableObj.primaryKey) {
-    //   autoCreatedModels += `  static primaryKey = ${
-    //     JSON.stringify(tableObj.primaryKey)
-    //   }\n`;
-    // }
-    // if (tableObj.foreignKey) {
-    //   autoCreatedModels += `  static foreignKey = [`;
-
-    //   tableObj.foreignKey.forEach((fkObj, idx) => {
-    //     const delimiter = idx === 0 ? "" : ", ";
-
-    //     autoCreatedModels += `${delimiter}\n    {columns: ${
-    //       JSON.stringify(fkObj.columns)
-    //     },
-    //             mappedColumns: ${
-    //       JSON.stringify(fkObj.mappedColumns)
-    //     }, table: '${fkObj.table}'}`;
-    //   });
-
-    //   autoCreatedModels += `]\n`;
-    // }
     // close the query for this table
     autoCreatedModels += `}\n\n`;
   });

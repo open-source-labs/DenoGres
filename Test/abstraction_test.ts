@@ -86,19 +86,14 @@ interface IObj { // work-around
 
 
 describe('Abstraction Test', () => {
-
   beforeAll(async () => {
-
     if(Deno.env.get('ENVIRONMENT')!=='test') throw new Error('Not in test environment')
-
     const db = await ConnectDb(); 
-    console.log('reset the DB and creating a new table')
-    await db.queryObject(before_all)
+    await db.queryObject(before_all) // executes the query defined above to set up the test db
     await DisconnectDb(db)
   })
 
   afterAll(async () => {
-    console.log('Deleting the table in DB')
     const db = await ConnectDb(); 
     await db.queryObject(after_all)
     await DisconnectDb(db)
@@ -109,7 +104,6 @@ describe('Abstraction Test', () => {
     const user0 = new User();
     user0.firstname = 'Test'
     const saved = await user0.save()
-    console.log("saved?:", saved)
     assertStrictEquals(saved.firstname, user0.firstname)
   })
 
@@ -118,9 +112,7 @@ describe('Abstraction Test', () => {
     let user0 = new User();
     user0.firstname = "Deno"
     const saved = await user0.save()
-    console.log("=====SAVED=====: ", saved)
     assertStrictEquals(saved.firstname, user0.firstname)
-
 
     user0.firstname = 'Deno Updated'
     user0.lastname = 'Deno Land'
@@ -133,10 +125,6 @@ describe('Abstraction Test', () => {
     await DisconnectDb(db)
 
     const updatedConfrim = Object.assign(new User(), q1.rows[0])
-    //console.log("=== USER0 INSTANCE===", user0)
-
-    console.log("update?:", updatedConfrim)
-
     assertStrictEquals(updatedConfrim.firstname, user0.firstname)
     assertStrictEquals(updatedConfrim.lastname, user0.lastname)
 
@@ -152,7 +140,6 @@ describe('Abstraction Test', () => {
     await DisconnectDb(db)
 
     const inserted = Object.assign(new User(), q1.rows[0])
-    console.log("=== inserted ===",inserted)
     assertStrictEquals(inserted.firstname, 'temp')
     assertStrictEquals(inserted.lastname, 'temp')
   })
@@ -168,7 +155,6 @@ describe('Abstraction Test', () => {
     await DisconnectDb(db)
 
     const editted = Object.assign(new User(), q1.rows[0])
-    console.log("=== editted ===",editted)
     assertStrictEquals(editted.firstname, 'Deno')
     assertStrictEquals(editted.lastname, 'Land')   
   })
@@ -184,62 +170,48 @@ describe('Abstraction Test', () => {
     const db = await ConnectDb(); 
     const q1 = await db.queryObject(`SELECT * FROM users WHERE firstname = 'temp'`)
     await DisconnectDb(db)
-    //console.log("Q1", q1.rows)
     assertEquals(q1.rows[0], undefined)
   })
 
   // 6. selecting all / and part of existing users 
   it('select the record', async () =>{
     const selected = await User.select('firstname, lastname').query() as IObj
-    console.log("========= selected ===========", selected)
-    // ============= NEED ASSERTION!!!!!! ==============
     assertEquals(selected.length, 8)
   })
 
   // 7. limit
   it('limit outcome of the record', async () => {
     const limit = await User.select('firstname, lastname').limit(3).query()
-    console.log("LIMIT:", limit.length)
     assertEquals(limit.length, 3)
   })
 
   // 8. innerJoin
   it('selects records that have matching values from both tables', async()=>{
     const innerjoin = await User.select('users.*').innerJoin('team_id', 'id', 'teams').where('points = 60').query() as IObj
-    console.log("INNERJOIN", innerjoin)
-
     assertEquals(innerjoin[0].points, 60);
   })
 
   // 9. leftJoin
   it('selects records from first table and matching values on second table', async()=>{
     const leftjoin = await User.select('users.*').leftJoin('team_id', 'id', 'teams').where('points = 60').query() as IObj
-    console.log("LEFTJOIN", leftjoin)
-
     assertEquals(leftjoin[0].points, 60);
   })
 
   // 10. rightJoin
   it('selects records from first table and matching values on second table', async()=>{
     const rightjoin = await User.select('users.*').rightJoin('team_id', 'id', 'teams').where('points = 60').query() as IObj
-    console.log("RIGHTJOIN", rightjoin)
-
     assertEquals(rightjoin[0].points, 60);
   })
 
   // 11. fullJoin = outerJoin
   it('selects all records when a match exists in either table', async()=>{
     const fulljoin = await User.select('users.*').fullJoin('team_id', 'id', 'teams').where('points = 60').query() as IObj
-    console.log("FullJoin", fulljoin)
-
     assertEquals(fulljoin[0].points, 60);
   })
   
   // 12. group is used with aggregation functions
   it('group rows with same values', async() =>{
     const group = await User.select('SUM(points), gender').group('gender').query()
-    console.log("GROUP", group)
-    
     assertEquals(group[0], { sum: 140n, gender: "M" })
     assertEquals(group[1], { sum: 220n, gender: "F" }) 
   })
@@ -247,7 +219,6 @@ describe('Abstraction Test', () => {
   // 13. order
   it('sort column(s) by ascending or descending order', async() =>{
     const order = await User.select('firstname, points').order('DESC', 'points').query() as IObj;
-    console.log("ORDER: ", order);
     assertEquals(order[0].points, 80)
     assertEquals(order[1].points, 70)
     assertEquals(order[2].points, 60)
@@ -256,14 +227,12 @@ describe('Abstraction Test', () => {
   // 14. count
   it('calculate aggregate functions - COUNT', async() =>{
     const count = await User.count('id').query();
-    console.log("COUNT: ", count);
     assertEquals(count[0], { count: 8n }) 
   })
 
   // 15. sum 
   it('calculate aggregate functions - SUM', async() =>{
     const sum = await User.sum('points').query();
-    console.log("SUM: ", sum);
     assertEquals(sum[0], { sum: 360n }) 
   })
 
@@ -271,24 +240,21 @@ describe('Abstraction Test', () => {
   // 16. avg
   it('calculate aggregate functions - AVG', async() =>{
     const avg = await User.avg('points').query() as IObj
-    console.log("AVG: ", avg);
     assertEquals(Math.trunc(avg[0].avg), 45) 
   })
   // 17. min
   it('calculate aggregate functions - MIN', async() =>{
     const min = await User.min('points').query() as IObj
-    console.log("MIN: ", min);
     assertEquals(min[0].min, 10) 
   })
   // // 18. max
   it('calculate aggregate functions - MAX', async() =>{
     const max = await User.max('points').query() as IObj
-    console.log("MAX: ", max);
     assertEquals(max[0].max, 80) 
   })
 
 
   // *** Methods that cannot have stand-alone test ***
-  // : 'where', 'having', 'query','queryInstance'
+  // 'where', 'having', 'query','queryInstance'
 
 })

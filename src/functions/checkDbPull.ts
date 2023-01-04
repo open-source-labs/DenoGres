@@ -1,6 +1,5 @@
 import { resolve } from 'https://deno.land/std/path/mod.ts';
 import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
-// import { promptString } from './checkDbSync.ts';
 import { uniqueLog } from './myLog.ts';
 
 

@@ -1,14 +1,7 @@
-import "https://deno.land/x/dotenv/load.ts";
+import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { assert, assertEquals } from './deps.ts'
 import { Pool, PoolClient } from '../deps.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
-
-// Deno.test("Test Assert", () => {
-//   assert(1);
-//   assert("Hello");
-//   assert(true);
-// });
-
 
 async function ping (db:PoolClient) {
   try {
