@@ -48,51 +48,75 @@ export class Model {
     table: string;
   }[];
 
-  private record = {}; // stores properties already set on instance by user
+  // the only non-static property that exists on the user's model classes by default
+  // not directly changeable by the user; when a user invokes the 'save' method on a
+  // model instance, the result (i.e. the new row/contents of the instance will be stored here)
+  private record = {};
 
-  // inserts properties created by user on instance object into user's db
+  // inserts properties created by user on instance object (representing a single row) into user's db
   async save() {
-    const table = Object.getPrototypeOf(this).constructor.table;
-    const keys = Object.keys(this).filter((keys) => keys !== "record");
-    const values = Object.values(this).filter((values) =>
+    const table = Object.getPrototypeOf(this).constructor.table; // ex: class 'Species' would have table set to 'species'
+    const keys = Object.keys(this).filter((keys) => keys !== "record"); // keys added by the user (representing column names)
+    const values = Object.values(this).filter((values) => // values added by the user (to be added at those columns)
       !(typeof values === "object" && values !== null)
     );
 
+    // builds query string to insert new key/value pairs onto table in user's db
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
       Model.sql += `'${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ", ";
       else Model.sql += ")";
     }
+    // ensures that the query will return the newly created row
     Model.sql += ` RETURNING *`;
-    const results: any = await Model.query();
-    if (typeof results[0] === "object" && results[0] !== null) {
+    // sends query to user's database by invoking 'query' method on the model
+    const results = await Model.query();
+    // stores the newly added row object at the 'record' property of the instance
+    if (results && typeof results[0] === "object" && results[0] !== null) {
       this.record = results[0];
     }
     return this;
   }
 
-  // updates database with properties reassigned by user on instance
+  // updates database with properties (i.e. columns) reassigned by user on instance ALREADY added to db by user
   async update() {
-    const newKeys = Object.keys(this).filter((keys) => keys !== "record");
-    const newValues = Object.values(this).filter((values) =>
+    const table = Object.getPrototypeOf(this).constructor.table;
+    const newKeys = Object.keys(this).filter((keys) => keys !== "record"); // new keys added by user
+    const newValues = Object.values(this).filter((values) => // new values added by user
       !(typeof values === "object" && values !== null)
     );
-    const keys = Object.keys(this.record);
-    const values = Object.values(this.record);
+    const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
+    const values = Object.values(this.record); // values previously added by user
 
-    Model.sql = "";
-    Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
+    Model.sql = ""; // ensures that sql-query-in-progress is empty
+
+    // builds query string to update table in user's db, setting newly assigned keys (columns) to their values
+    Model.sql += `UPDATE ${table} SET`;
     for (let i = 0; i < newKeys.length; i++) {
       Model.sql += ` ${newKeys[i]} = '${newValues[i]}'`;
       if (i !== newValues.length - 1) Model.sql += ",";
     }
+
+    // adds the condition that the update only be made to the row that this model instance represents
+    // i.e. model instance must already have been saved to the db (only includes non-null values in condition)
     Model.sql += ` WHERE`;
     for (let i = 0; i < keys.length; i++) {
-      Model.sql += ` ${keys[i]} = '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += " AND";
+      if (values[i]) {
+        if (i > 0) Model.sql += " AND";
+        Model.sql += ` ${keys[i]} = '${values[i]}'`;
+      }
     }
-    return await Model.query();
+    Model.sql += ` RETURNING *`;
+    // sends query to user's database by invoking 'query' method on the model
+    const updatedRows = await Model.query();
+    // clears the in-progress-query-string now that the query has been executed
+    Model.sql = "";
+    // stores the newly updated row object at the 'record' property of the instance
+    if (updatedRows && typeof updatedRows[0] === "object" && updatedRows[0] !== null) {
+      this.record = updatedRows[0];
+    }
+    return this;
   }
 
   // inserts row(s) into the db table associated with the current model

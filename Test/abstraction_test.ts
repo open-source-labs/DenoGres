@@ -2,7 +2,7 @@ import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, befo
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 import { Model } from '../src/class/Model.ts'
 
-// test tables (beforeAll)
+// test tables (beforeAll) https://dbschema.com/2019/04/14/postgresql-drop-all-tables/
 const before_all = `
 DO $$ DECLARE
   r RECORD;
@@ -108,7 +108,7 @@ describe('Abstraction Test', () => {
   })
 
   // 2. saving a user 'Deno' and updating it to 'Deno updated'
-  it('update the record', async () =>{
+  it.only('update the record', async () =>{
     let user0 = new User();
     user0.firstname = "Deno"
     const saved = await user0.save()
@@ -117,7 +117,8 @@ describe('Abstraction Test', () => {
     user0.firstname = 'Deno Updated'
     user0.lastname = 'Deno Land'
 
-    const updated = await user0.update() as IObj
+    const updated = await user0.update()
+    console.log(updated);
 
     // bring the saved record from db
     const db = await ConnectDb(); 
