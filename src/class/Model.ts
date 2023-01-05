@@ -76,6 +76,7 @@ export class Model {
     if (results && typeof results[0] === "object" && results[0] !== null) {
       this.record = results[0];
     }
+    Model.sql = "";
     return this;
   }
 

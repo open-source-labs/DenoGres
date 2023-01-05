@@ -108,7 +108,7 @@ describe('Abstraction Test', () => {
   })
 
   // 2. saving a user 'Deno' and updating it to 'Deno updated'
-  it.only('update the record', async () =>{
+  it('update the record', async () =>{
     let user0 = new User();
     user0.firstname = "Deno"
     const saved = await user0.save()
@@ -117,10 +117,10 @@ describe('Abstraction Test', () => {
     user0.firstname = 'Deno Updated'
     user0.lastname = 'Deno Land'
 
-    const updated = await user0.update()
-    console.log(updated);
+    const updatedModel = await user0.update()
+    assertStrictEquals(updatedModel.firstname, user0.firstname)
+    assertStrictEquals(updatedModel.lastname, user0.lastname)
 
-    // bring the saved record from db
     const db = await ConnectDb(); 
     const q1 = await db.queryObject(`SELECT * FROM users WHERE firstname = '${user0.firstname}'`)
     await DisconnectDb(db)
@@ -128,7 +128,6 @@ describe('Abstraction Test', () => {
     const updatedConfrim = Object.assign(new User(), q1.rows[0])
     assertStrictEquals(updatedConfrim.firstname, user0.firstname)
     assertStrictEquals(updatedConfrim.lastname, user0.lastname)
-
   })
 
   // 3. inserting a new record 'temp'
