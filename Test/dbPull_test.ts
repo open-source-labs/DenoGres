@@ -1,4 +1,4 @@
-import { assert } from './deps.ts';
+import { assert } from '../deps.ts';
 import { dbPull } from '../src/functions/dbPull.ts';
 
 const generatedModel = 

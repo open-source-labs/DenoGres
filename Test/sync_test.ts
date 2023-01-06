@@ -6,7 +6,7 @@ import {
   beforeEach,
   describe,
   it,
-} from "./deps.ts";
+} from "../deps.ts";
 import { dbPull } from "../src/functions/dbPull.ts";
 import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
 import sync from "../src/functions/sync.ts";

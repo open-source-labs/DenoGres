@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, afterEach } from './deps.ts';
+import { beforeAll, afterAll, afterEach } from '../deps.ts';
 import { Model } from '../src/class/Model.ts'
 
 beforeAll(async () => {
