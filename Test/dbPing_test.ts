@@ -1,5 +1,5 @@
 import "https://deno.land/x/dotenv@v3.2.0/load.ts";
-import { assert, assertEquals } from './deps.ts'
+import { assert, assertEquals } from '../deps.ts'
 import { Pool, PoolClient } from '../deps.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 
