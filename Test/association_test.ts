@@ -1,4 +1,4 @@
-import "https://deno.land/x/dotenv@v3.2.0/load.ts";
+import "https://deno.land/x/dotenv/load.ts";
 import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
 
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
@@ -79,8 +79,11 @@ CREATE TABLE teams (
 `
 // drop tables (afterAll)
 const after_all = `
---DROP TABLE users; DROP TABLE teams;
-INSERT INTO users (firstName) VALUES('user_three');
+DROP TABLE users CASCADE;
+DROP TABLE teams CASCADE;
+DROP TABLE clubs CASCADE; 
+DROP TABLE members CASCADE;
+DROP TABLE clubs_members CASCADE;
 `
 
 interface User {
@@ -152,11 +155,11 @@ class Member_Club extends Model {
 
 
 describe('Testing Associations and Methods ', () => {
-
   beforeAll(async () => {
+
     if(Deno.env.get('ENVIRONMENT')!=='test') throw new Error('Not in test environment')
     
-    console.log('reset the DB and creating new tables')
+    console.log('reseting the DB and creating new tables')
     const db = await ConnectDb(); 
     await db.queryObject(before_all)
     await DisconnectDb(db)
@@ -169,7 +172,7 @@ describe('Testing Associations and Methods ', () => {
     await DisconnectDb(db)
   })
 
-  it('creates new belongsTo association if not exist', async () => {
+  it('creates new belongsTo association if doesn\'t exist', async () => {
     const userTeamAssociation = await User.belongsTo(Team)
     await userTeamAssociation.syncAssociation();
     // check to see if the users table has foreign key field referencing teams table
@@ -201,7 +204,7 @@ describe('Testing Associations and Methods ', () => {
     assertEquals(user1Team[0].teamname, 'team A')
   })
 
-  it('forms hasMany association based on existing belongsTo relationsip, then returns associated data', async () => {
+  it('forms hasMany association based on existing belongsTo relationship, then returns associated data', async () => {
 
     // getting instances for test
     const db = await ConnectDb(); 
