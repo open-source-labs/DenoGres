@@ -56,6 +56,7 @@ interface User {
   points?: number;
   team_id:number;
 }
+
 class User extends Model {
   static table = 'users';
   static columns = {
