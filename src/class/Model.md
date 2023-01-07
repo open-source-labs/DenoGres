@@ -93,7 +93,7 @@
 
 #### Expected Behavior:
 > when a user invokes the `where` method on a model class with one or more conditions of the form
-> `column_name = value`, `column_name > value`, or `column_name LIKE value`...
+> `column_name = value`, `AND column_name > value`, or `OR column_name LIKE value`...
 > - if not chained onto another method, the query `SELECT * FROM table_name` is stored at the `sql` property on the class
 > - conditions are split on the following characters: =, >, <, >=, <=, LIKE
 > - the second half of the condition is wrapped in single quotes
@@ -113,6 +113,8 @@
 > - can't use `BETWEEN` keyword, ex: `WHERE column_name BETWEEN value1 AND value2`
 > - can't chain with `select` subquery, ex: `WHERE column_name = (SELECT ....)`
 > - can't use the not equal operators `<>` or `!=`
+> - with more than one condition, the user must provide connecting words like `AND` and `OR`
+> - user must know SQL syntax for specifications like 'starts with' or 'contains'
 
 ### **Limit**
 
