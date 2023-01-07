@@ -61,6 +61,8 @@ export class Model {
       !(typeof values === "object" && values !== null)
     );
 
+    Model.sql = ""; // ensures that sql-query-in-progress is empty
+
     // builds query string to insert new key/value pairs onto table in user's db
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
@@ -90,8 +92,7 @@ export class Model {
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
 
-    Model.sql = ""; // ensures that sql-query-in-progress is empty
-
+    Model.sql = "";
     // builds query string to update table in user's db, setting newly assigned keys (columns) to their values
     Model.sql += `UPDATE ${table} SET`;
     for (let i = 0; i < newKeys.length; i++) {
@@ -120,7 +121,7 @@ export class Model {
     return this;
   }
 
-  // inserts row(s) into the db table associated with the current model
+  // inserts row into the db table associated with the current model
   // accepts as arguments 1 or more strings of the form 'column_name = value'
   // builds query of the form 'INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
   // must be chained with invocation of 'query' method in order to execute query
