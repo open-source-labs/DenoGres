@@ -1,3 +1,18 @@
 This model was created with db-pull and was created on Thu Jan 05 2023 09:17:20 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230105_161720790'
  denogres init and pull in this branch 
 
+This model was created with db-pull and was created on Sat Jan 07 2023 12:58:10 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_195810759'
+ pull2
+
+This model was created with db-pull and was created on Sat Jan 07 2023 12:59:04 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_195904865'
+ ok
+
+This model was created with db-pull and was created on Sat Jan 07 2023 13:01:39 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_200139779'
+ n
+
+This model was created with db-pull and was created on Sat Jan 07 2023 13:21:40 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_202140892'
+ oops
+
+This model was created with db-pull and was created on Sat Jan 07 2023 14:14:21 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_211421903'
+ 
+
