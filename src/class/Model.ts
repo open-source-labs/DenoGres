@@ -1,6 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
+import { checkUnsentQuery } from '../functions/errorMessages.ts';
 
 interface IrecordPk {
   attname: string;
@@ -134,6 +135,9 @@ export class Model {
   // builds query of the form 'INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
   // must be chained with invocation of 'query' method in order to execute query
   static insert(...value: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'insert', this.name);
+
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
       // split each argument into column name (before '=') and value (after '=')
@@ -157,6 +161,8 @@ export class Model {
   // this method is like the 'update' method above but without the WHERE clause
   // therefore it updates the value(s) of the given column(s) for all records in the table
   static edit(...condition: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'edit', this.name);
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
@@ -170,6 +176,8 @@ export class Model {
   // can also be chained with 'where' method to delete only rows where condition is met
   // either way, must be chained with 'query' method to execute query
   static delete() {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'delete', this.name);
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -178,12 +186,6 @@ export class Model {
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
     this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
-    return this;
-  }
-
-  // executed by itself, clears the sql string from the model
-  static clear() {
-    this.sql = '';
     return this;
   }
 
