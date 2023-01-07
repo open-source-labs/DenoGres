@@ -1,5 +1,5 @@
 import "https://deno.land/x/dotenv/load.ts";
-import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
+import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from '../deps.ts'
 
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 import { Model, getMappingKeys, manyToMany } from '../src/class/Model.ts'

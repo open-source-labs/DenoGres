@@ -1,4 +1,4 @@
-import { assert, assertEquals } from './deps.ts';
+import { assert, assertEquals } from '../deps.ts';
 import { introspect } from '../src/functions/introspect.ts';
  
 // All tests to be ran with DenoGres Test DB
