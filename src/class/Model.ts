@@ -195,10 +195,16 @@ export class Model {
   static select(...column: string[]) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'select', this.name);
-    // check that the input column is one that is in the table
-    checkColumns(this.columns, column);
-    this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
-    return this;
+    // check for empty arguments and *
+    if (arguments.length === 0 || arguments[0] === '*') {
+      this.sql += `SELECT * FROM ${this.table}`;
+      return this;
+    } else {
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, column.toString());
+      this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
+      return this;
+    }
   }
 
   // this method can be chained onto other methods to add 1 or more conditions to the existing query
@@ -212,23 +218,30 @@ export class Model {
 
     // converts conditions from the form "column_name = value" into "column_name = 'value'"
     for (let i = 0; i < condition.length; i++) {
+      // check that the input column is one that is in the table
       if (condition[i].includes(' = ')) {
         words = condition[i].toString().split(' = ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} = '${words[1]}'`;
       } else if (condition[i].includes(' > ')) {
         words = condition[i].toString().split(' > ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} > '${words[1]}'`;
       } else if (condition[i].includes(' < ')) {
         words = condition[i].toString().split(' < ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} < '${words[1]}'`;
       } else if (condition[i].includes(' >= ')) {
         words = condition[i].toString().split(' >= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} >= '${words[1]}'`;
       } else if (condition[i].includes(' <= ')) {
         words = condition[i].toString().split(' <= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} <= '${words[1]}'`;
       } else if (condition[i].includes(' LIKE ')) {
         words = condition[i].toString().split(' LIKE ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
@@ -278,6 +291,7 @@ export class Model {
   // puts all rows with same value for passed in column(s) into one 'summary row'
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
+    checkColumns(this.columns, column.toString());
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
   }
@@ -286,6 +300,7 @@ export class Model {
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
   static order(order: string, ...column: string[]) {
+    checkColumns(this.columns, column.toString());
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
@@ -303,6 +318,7 @@ export class Model {
   static count(column: string) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'count', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
   }
@@ -310,6 +326,7 @@ export class Model {
   static sum(column: string) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'sum', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
@@ -317,6 +334,7 @@ export class Model {
   static avg(column: string) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'avg', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
@@ -324,6 +342,7 @@ export class Model {
   static min(column: string) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'min', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
@@ -331,6 +350,7 @@ export class Model {
   static max(column: string) {
     // If the sql string already exists, throw an error to the user
     checkUnsentQuery(this.sql.length, 'max', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
