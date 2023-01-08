@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from './deps.ts'
+import { assert, assertEquals, assertStrictEquals, assertThrows, beforeAll, beforeEach, afterEach, afterAll, describe, it } from '../deps.ts'
 import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
 import { Model } from '../src/class/Model.ts'
 
