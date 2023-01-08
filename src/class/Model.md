@@ -247,4 +247,47 @@
 > - the user invokes without a valid uri in the input or .env file
 > - the user's query doesn't yield any results from the database
 
+## Association Methods
+
+### **Belongs To**
+
+#### Expected Behavior:
+> when user invokes the `belongsTo` method on a model class, passing in a target model (i.e. table to form the association with) and NOT passing in an options object...
+> - a new property is added to the columns object on the model
+>     - the property's name is the new foreign key column name (of the form `target_id`)
+>     - the corresponding value is an object with the propreties:
+>         - `type` set to the type of the primary id on the target model
+>         - `association` set to an object with the following properties:
+>             - `rel_type` set to `belongsTo`
+>             - `table` set to the name of the target table
+>             - `mappedCol` set to the name of the primary id on the target table (usually `id` or `_id`)
+> - an new instance of the `BelongsTo` class is returned with the following passed to the constructor:
+>     - the current model and the target model
+>     - a `mappingDetails` object with the properties:
+>         - `association_type` set to `belongsTo`
+>         - `association_name` set to `table_name_belongsTo_target_table`
+>         - `targetModel` set to the target model itself
+>         - `foreignKey_ColumnName` set to a foreign key of the form `target_id`
+>         - `mapping_ColumnName` set to the name of the primary key on the target table
+>     - an `associationQuery` string with two queries (separated by a semicolon):
+>         - `ALTER TABLE current_table ADD foreignKey_ColumnName type`
+>         - `ALTER TABLE current_table ADD CONSTRAINT fk_foreignKey_ColumnName FOREIGN KEY (foreignKey_ColumnName) REFERENCES target_table ON DELETE SET NULL ON UPDATE CASCADE`
+> - note that, to send the `associationQuery` to the user's database, fully establishing the new association, the user must then invoke the `syncAssociation` method on the `BelongsTo` instance returned (see below)
+
+#### Resulting Methods:
+
+> the new instance of the `BelongsTo` class will contain a method called `syncAssociation`, which, when invoked...
+> - opens a connection with the user's database
+> - sends the `associationQuery` passed to the instance (see above) to the database
+> - disconnects from the user's database
+> - returns undefined (regardless of success or failure)
+
+> instantiation of this new `BelongsTo` instance also triggers the addition of a getter method (of the form `getModel`, ex: `getSpecies` or `getPlanet`) onto the current model, which, when invoked on an instance of that model...
+> - opens a connection with the user's database
+> - sends a query string of the form `SELECT * FROM target_table WHERE target_primaryKey = 'foreignKey_ColumnName'` to the user's database
+> - returns the row(s) returned from the database, which should be the row associated with the current model instance, ex:
+>     - step 1. `await Country.hasOne(Capital)`
+>     - step 2. `const canada = await Country.where('name = Canada').queryInstance()`
+>     - step 3. `const canadaCapital = await canada.getCapital()`
+>     - should return an array with a single object representing the row for the capital of Canada, Ottowa
 
