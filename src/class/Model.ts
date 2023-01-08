@@ -1,7 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
-import { checkUnsentQuery } from '../functions/errorMessages.ts';
+import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
 
 interface IrecordPk {
   attname: string;
@@ -143,7 +143,11 @@ export class Model {
       // split each argument into column name (before '=') and value (after '=')
       const words = value[i].toString().split(' = ');
       // every words[0] should represent a column name (separated by commas to form query string)
-      this.sql += ` ${words[0]}`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+
+      this.sql += ` ${inputColumn}`;
       if (i !== value.length - 1) this.sql += ' ,';
       else this.sql += ')';
     }
@@ -166,7 +170,11 @@ export class Model {
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
-      this.sql += ` ${words[0]} = '${words[1]}'`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+      // words[1] is the input value
+      this.sql += ` ${inputColumn} = '${words[1]}'`;
       if (i !== condition.length - 1) this.sql += ' ,';
     }
     return this;
@@ -185,6 +193,10 @@ export class Model {
   // accepts 1 or more column names to select from table associated with given model
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'select', this.name);
+    // check that the input column is one that is in the table
+    checkColumns(this.columns, column);
     this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
     return this;
   }
@@ -289,26 +301,36 @@ export class Model {
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   static count(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'count', this.name);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
   }
 
   static sum(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'sum', this.name);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
 
   static avg(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'avg', this.name);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
 
   static min(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'min', this.name);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
 
   static max(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'max', this.name);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
