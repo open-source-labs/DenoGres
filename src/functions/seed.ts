@@ -1,4 +1,4 @@
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
+import { resolve } from "../../deps.ts";
 import { ConnectDb, DisconnectDb } from "./Db.ts";
 import { introspect } from "./introspect.ts";
 import modelParser from "./modelParser.ts";
