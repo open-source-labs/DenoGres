@@ -108,8 +108,8 @@ export class Model {
     Model.sql = '';
     // stores the newly updated row object at the 'record' property of the instance
     if (
-      updatedRows &&
-      typeof updatedRows[0] === 'object' &&
+      updatedRows && typeof updatedRows[0] === 'object' &&
+
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
