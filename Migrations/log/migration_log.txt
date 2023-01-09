@@ -16,3 +16,6 @@ This model was created with db-pull and was created on Sat Jan 07 2023 13:21:40 
 This model was created with db-pull and was created on Sat Jan 07 2023 14:14:21 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230107_211421903'
  
 
+This model was created with db-pull and was created on Mon Jan 09 2023 09:34:27 GMT-0700 (Mountain Standard Time). It's currently stored in the directory './Migrations/modelBuild_20230109_163427656'
+ 
+

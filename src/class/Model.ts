@@ -116,13 +116,12 @@ export class Model {
     const db = this.connectTran;
     try {
       console.log(this.sql);
-      db.queryObject(this.sql);
+      db.queryObject(this.sql + ';');
       db.queryObject('COMMIT;');
       //DisconnectDb(db) it does not like this
-      
     } catch (err) {
       db.queryObject('ROLLBACK');
-      DisconnectDb(db); 
+      DisconnectDb(db);
       console.log(err, 'error in final query in transaction'); // we dont throw an error when theres an error
     }
 
