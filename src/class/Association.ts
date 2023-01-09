@@ -63,6 +63,8 @@ abstract class Association {
   }
 }//end of abstract class Association
 
+// when the 'hasOne' method is invoked on modelA, passing in modelB, this invokes the 'belongsTo' method on modelB,
+// which returns a new instance of this 'HasOne' class, where the source is modelB and the target is modelA
 export class HasOne extends Association {
   constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query); 
@@ -237,6 +239,7 @@ export class ManyToMany extends Association {
     super(source, target, mappingDetails, query);    
     this.attachAssociationMethodsToModels()
   } // end of constructor
+
   modelA = this.source
   modelB = this.target
   throughModel = this.mappingDetails.throughModel
@@ -249,11 +252,9 @@ export class ManyToMany extends Association {
   getAccesorName_B = `get${this.modelA.name[0].toUpperCase()}${this.modelA.name.slice(1)}s`
   addAccesorName_A = `add${this.modelB.name[0].toUpperCase()}${this.modelB.name.slice(1)}s`
   addAccesorName_B = `add${this.modelA.name[0].toUpperCase()}${this.modelA.name.slice(1)}s`
-  // console.log("getAccesorName_A & B: ", getAccesorName_A, getAccesorName_B)
+
   // add instance methods for create, get, update, delete
   private attachAssociationMethodsToModels() {
-    //console.log("getAccesorName_A & B: ", this.getAccesorName_A, this.getAccesorName_B)
-
     addMethodToModel(this, this.modelA, this.getAccesorName_A)
     addMethodToModel(this, this.modelB, this.getAccesorName_B)
     //addAddMethodToModel(this, this.target, this.addAccesorName_A)
@@ -288,7 +289,6 @@ export class ManyToMany extends Association {
       } finally {
         DisconnectDb(db)
     }
-    //console.log(queryResult.rows)
     return queryResult.rows
   }
 

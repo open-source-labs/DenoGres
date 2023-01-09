@@ -490,36 +490,17 @@ export class Model {
     return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
-  // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
-  static async hasMany(targetModel: typeof Model, options?: hasManyOptions) {
-    let mapping_ColumnName = ''; // mapping key in this model
-    let targetModel_foreignKey = ''; // foreign key in targetModel
-    let associationQuery = '';
-
+  // does NOT establish a new relationship between tables--returns a new instance of the HasMany class (defined in Association.ts)
+  // based on information returned about an existing one-to-many relationship between current and target models
+  static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (mappings !== undefined && mappings !== null) {
-      //console.log('========== EXISTING ASSOCIATION ===========');
-      mapping_ColumnName = mappings.target_keyname;
-      targetModel_foreignKey = mappings.source_keyname;
-      const columnAtt = {
-        //type: this.columns[mapping_ColumnName].type,
-        association: {
-          rel_type: 'belongsTo',
-          table: this.table,
-          mappedCol: mapping_ColumnName,
-        },
-      };
-      //console.log("columnAtt: ", columnAtt)
-      //Object.assign(targetModel.columns[targetModel_foreignKey], columnAtt)
-      //console.log(targetModel.columns[targetModel_foreignKey])
-    } else {
-      // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      //console.log('========== FORMING NEW ASSOCIATION ===========');
-      //console.log('========== need to execute belongsTo first ===========');
-    }
-    // ========= WHEN COMPOSITE FOREIGN KEYS ...============
+    if (!mappings)
+      throw new Error(
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
+      );
+    const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
+    const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 
-    // ======== BUILDING FOR ASSOCIATION INSTANCE =======
     const mappingDetails = {
       association_type: 'hasMany',
       association_name: `${this.name}_hasMany_${targetModel.name}`,
@@ -528,12 +509,7 @@ export class Model {
       mapping_ColumnName: mapping_ColumnName,
     };
 
-    return new HasMany(this, targetModel, mappingDetails, associationQuery);
-  }
-
-  test() {
-    console.log(Object.keys(this));
-    console.log(Object.getPrototypeOf(this).constructor.table);
+    return new HasMany(this, targetModel, mappingDetails, ''); // empty string passed in for association query
   }
 }
 //end of Model class
@@ -666,13 +642,12 @@ export async function manyToMany(
   options: manyToManyOptions
 ) {
   let associationQuery = '';
-  // for existing one (x-table also exist)
+
   if (options?.through) {
-    const throughModel = options.through;
-    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table);
-    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table);
-    // console.log("mapKeysA: ",mapKeysA)
-    // console.log("mapKeysB: ",mapKeysB)
+    const throughModel = options.through; // ex: 'people_in_films'
+    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
+    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table); // keys linking the join table and modelB
+
     if (mapKeysA && mapKeysB) {
       const mappingDetails = {
         association_type: 'ManyToMany',
@@ -680,19 +655,19 @@ export async function manyToMany(
         modelA,
         modelB,
         throughModel,
-        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname,
-        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
-        modelA_mappingKey: mapKeysA.target_keyname,
-        modelB_mappingKey: mapKeysB.target_keyname,
+        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname, // ex: 'person_id'
+        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname, // ex: 'film_id'
+        modelA_mappingKey: mapKeysA.target_keyname, // ex: '_id' (primary key name on the people table)
+        modelB_mappingKey: mapKeysB.target_keyname, // ex: '_id' (primary key name on the films table)
       };
-      //console.log("mappingDetails:", mappingDetails)
-      //// return out association instance
+
+      // return out association instance
       return new ManyToMany(modelA, modelB, mappingDetails, associationQuery);
     } else {
       throw new Error('This association does not exist');
     }
   } else if (options?.createThrough) {
-    //// creating new x-table & new x-model
+    // creating new x-table & new x-model: WIP
     const modelA_foreignKey_inThroughModel = modelA.primaryKey;
   }
 }
