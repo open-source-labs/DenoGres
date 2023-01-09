@@ -35,7 +35,7 @@ WITH RECURSIVE depTable AS (
     AND class.relname NOT IN (SELECT relname FROM depTable)
   
   ORDER BY max_level DESC
-  ) AS TableList;`
+  ) AS TableList;`;
 
 export const tableConstQuery = `
 SELECT tables.schemaname, class.relname AS table_name, 
@@ -43,7 +43,7 @@ SELECT tables.schemaname, class.relname AS table_name,
   FROM pg_class class
   INNER JOIN pg_tables tables on class.relname = tables.tablename
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
-  WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema');`
+  WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema');`;
 
 // returns information about the columns in each table in the user's db,
 // including column_name (ex: birth_year), column_type (ex: varchar),
@@ -81,7 +81,7 @@ character_maximum_length
   WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema')
   AND attr.attnum > -1
   
-  ORDER BY table_name`
+  ORDER BY table_name`;
 
 export const primaryKeyQuery = `
 SELECT tables.schemaname, class.relname AS table_name, 
@@ -91,7 +91,7 @@ SELECT tables.schemaname, class.relname AS table_name,
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   WHERE contype = 'p'
   AND class.relname =
-`
+`;
 
 export const tableUniqueQuery = `
 SELECT tables.schemaname, class.relname AS table_name, 
@@ -101,7 +101,7 @@ SELECT tables.schemaname, class.relname AS table_name,
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   WHERE contype = 'u'
   AND pg_get_constraintdef(pg_constraint.oid) LIKE '%,%'
-`
+`;
 
 // returns information about enum types (if user's db includes any)
 export const enumQuery = `
@@ -116,4 +116,4 @@ WITH enum_table as (
   )
 
 select *
-from enum_table;`
+from enum_table;`;

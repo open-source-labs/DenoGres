@@ -1,6 +1,6 @@
-import { ConnectDb, DisconnectDb } from "../functions/Db.ts";
-import { BelongsTo, HasMany, HasOne, ManyToMany } from "./Association.ts";
-import { FIELD_TYPE } from "../constants/sqlDataTypes.ts";
+import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
+import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
+import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 
 interface IrecordPk {
   attname: string;
@@ -12,11 +12,11 @@ interface IpkObj {
 // TYPE GUARD FUNCTIONS
 // confirms the input follows the exepcted shape of a primary key record (see interface above)
 const recordPk = (record: object): record is IrecordPk => {
-  return "attname" in record;
+  return 'attname' in record;
 };
 
 export class Model {
-  [k: string]: any // index signature
+  [k: string]: any; // index signature
   static table: string;
   static columns: {
     [key: string]: {
@@ -40,7 +40,7 @@ export class Model {
   static checks?: any;
   static unique?: Array<string[]>;
   static primaryKey?: string[];
-  private static sql = ""; // stores current db query here until done executing
+  private static sql = ''; // stores current db query here until done executing
   static foreignKey?: {
     columns: string[];
     mappedColumns: string[];
@@ -56,48 +56,50 @@ export class Model {
   // inserts properties created by user on instance object (representing a single row) into user's db
   async save() {
     const table = Object.getPrototypeOf(this).constructor.table; // ex: class 'Species' would have table set to 'species'
-    const keys = Object.keys(this).filter((keys) => keys !== "record"); // keys added by the user (representing column names)
-    const values = Object.values(this).filter((values) => // values added by the user (to be added at those columns)
-      !(typeof values === "object" && values !== null)
+    const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
+    const values = Object.values(this).filter((values) =>
+      // values added by the user (to be added at those columns)
+      !(typeof values === 'object' && values !== null)
     );
 
-    Model.sql = ""; // ensures that sql-query-in-progress is empty
+    Model.sql = ''; // ensures that sql-query-in-progress is empty
 
     // builds query string to insert new key/value pairs onto table in user's db
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
       Model.sql += `'${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ", ";
-      else Model.sql += ")";
+      if (i !== values.length - 1) Model.sql += ', ';
+      else Model.sql += ')';
     }
     // ensures that the query will return the newly created row
     Model.sql += ` RETURNING *`;
     // sends query to user's database by invoking 'query' method on the model
     const results = await Model.query();
     // stores the newly added row object at the 'record' property of the instance
-    if (results && typeof results[0] === "object" && results[0] !== null) {
+    if (results && typeof results[0] === 'object' && results[0] !== null) {
       this.record = results[0];
     }
-    Model.sql = "";
+    Model.sql = '';
     return this;
   }
 
   // updates database with properties (i.e. columns) reassigned by user on instance ALREADY added to db by user
   async update() {
     const table = Object.getPrototypeOf(this).constructor.table;
-    const newKeys = Object.keys(this).filter((keys) => keys !== "record"); // new keys added by user
-    const newValues = Object.values(this).filter((values) => // new values added by user
-      !(typeof values === "object" && values !== null)
+    const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
+    const newValues = Object.values(this).filter((values) =>
+      // new values added by user
+      !(typeof values === 'object' && values !== null)
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
 
-    Model.sql = "";
+    Model.sql = '';
     // builds query string to update table in user's db, setting newly assigned keys (columns) to their values
     Model.sql += `UPDATE ${table} SET`;
     for (let i = 0; i < newKeys.length; i++) {
       Model.sql += ` ${newKeys[i]} = '${newValues[i]}'`;
-      if (i !== newValues.length - 1) Model.sql += ",";
+      if (i !== newValues.length - 1) Model.sql += ',';
     }
 
     // adds the condition that the update only be made to the row that this model instance represents
@@ -105,7 +107,7 @@ export class Model {
     Model.sql += ` WHERE`;
     for (let i = 0; i < keys.length; i++) {
       if (values[i]) {
-        if (i > 0) Model.sql += " AND";
+        if (i > 0) Model.sql += ' AND';
         Model.sql += ` ${keys[i]} = '${values[i]}'`;
       }
     }
@@ -113,9 +115,12 @@ export class Model {
     // sends query to user's database by invoking 'query' method on the model
     const updatedRows = await Model.query();
     // clears the in-progress-query-string now that the query has been executed
-    Model.sql = "";
+    Model.sql = '';
     // stores the newly updated row object at the 'record' property of the instance
-    if (updatedRows && typeof updatedRows[0] === "object" && updatedRows[0] !== null) {
+    if (
+      updatedRows && typeof updatedRows[0] === 'object' &&
+      updatedRows[0] !== null
+    ) {
       this.record = updatedRows[0];
     }
     return this;
@@ -129,19 +134,19 @@ export class Model {
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
       // split each argument into column name (before '=') and value (after '=')
-      const words = value[i].toString().split(" = ");
+      const words = value[i].toString().split(' = ');
       // every words[0] should represent a column name (separated by commas to form query string)
       this.sql += ` ${words[0]}`;
-      if (i !== value.length - 1) this.sql += " ,";
-      else this.sql += ")";
+      if (i !== value.length - 1) this.sql += ' ,';
+      else this.sql += ')';
     }
-    this.sql += " VALUES (";
+    this.sql += ' VALUES (';
     for (let i = 0; i < value.length; i++) {
-      const words = value[i].toString().split(" = ");
+      const words = value[i].toString().split(' = ');
       // every words[1] should represent a value (in same order as column names above)
       this.sql += ` '${words[1]}'`;
-      if (i !== value.length - 1) this.sql += " ,";
-      else this.sql += ")";
+      if (i !== value.length - 1) this.sql += ' ,';
+      else this.sql += ')';
     }
     return this;
   }
@@ -151,9 +156,9 @@ export class Model {
   static edit(...condition: string[]) {
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
-      const words = condition[i].toString().split(" = ");
+      const words = condition[i].toString().split(' = ');
       this.sql += ` ${words[0]} = '${words[1]}'`;
-      if (i !== condition.length - 1) this.sql += " ,";
+      if (i !== condition.length - 1) this.sql += ' ,';
     }
     return this;
   }
@@ -178,29 +183,29 @@ export class Model {
   // operators 'AND', 'OR', 'NOT', and 'LIKE' can be added to the beginning of any args
   // must be chained with 'query' method to finish executing
   static where(...condition: string[]) {
-    if (this.sql === "") this.sql += `SELECT * FROM ${this.table}`;
-    this.sql += " WHERE";
+    if (this.sql === '') this.sql += `SELECT * FROM ${this.table}`;
+    this.sql += ' WHERE';
     let words: string[];
 
     // converts conditions from the form "column_name = value" into "column_name = 'value'"
     for (let i = 0; i < condition.length; i++) {
-      if (condition[i].includes(" = ")) {
-        words = condition[i].toString().split(" = ");
+      if (condition[i].includes(' = ')) {
+        words = condition[i].toString().split(' = ');
         this.sql += ` ${words[0]} = '${words[1]}'`;
-      } else if (condition[i].includes(" > ")) {
-        words = condition[i].toString().split(" > ");
+      } else if (condition[i].includes(' > ')) {
+        words = condition[i].toString().split(' > ');
         this.sql += ` ${words[0]} > '${words[1]}'`;
-      } else if (condition[i].includes(" < ")) {
-        words = condition[i].toString().split(" < ");
+      } else if (condition[i].includes(' < ')) {
+        words = condition[i].toString().split(' < ');
         this.sql += ` ${words[0]} < '${words[1]}'`;
-      } else if (condition[i].includes(" >= ")) {
-        words = condition[i].toString().split(" >= ");
+      } else if (condition[i].includes(' >= ')) {
+        words = condition[i].toString().split(' >= ');
         this.sql += ` ${words[0]} >= '${words[1]}'`;
-      } else if (condition[i].includes(" <= ")) {
-        words = condition[i].toString().split(" <= ");
+      } else if (condition[i].includes(' <= ')) {
+        words = condition[i].toString().split(' <= ');
         this.sql += ` ${words[0]} <= '${words[1]}'`;
-      } else if (condition[i].includes(" LIKE ")) {
-        words = condition[i].toString().split(" LIKE ");
+      } else if (condition[i].includes(' LIKE ')) {
+        words = condition[i].toString().split(' LIKE ');
         this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
@@ -264,12 +269,12 @@ export class Model {
   static order(order: string, ...column: string[]) {
     this.sql += ` ORDER BY ${column.toString()}`;
 
-    if (order !== "ASC" && order !== "DESC") {
+    if (order !== 'ASC' && order !== 'DESC') {
       console.log(
         `Error in sort method: order argument should be 'ASC' or 'DESC'`,
       );
     }
-    if (order === "ASC" || order === "DESC") {
+    if (order === 'ASC' || order === 'DESC') {
       this.sql += ` ${order}`;
     }
     return this;
@@ -313,7 +318,7 @@ export class Model {
       console.log(err);
     }
     // clear the query string and return the resulting rows from the query if any
-    this.sql = "";
+    this.sql = '';
     await DisconnectDb(db);
     return (queryResult) ? queryResult.rows : undefined;
   }
@@ -323,9 +328,9 @@ export class Model {
   // ex: const droid = await Species.where('name = Droid').queryInstance()
   static async queryInstance(uri?: string, print?: string) {
     const db = await ConnectDb(uri);
-    if (!this.sql.includes("SELECT a.attname") && print) console.log(this.sql);
+    if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
-    this.sql = "";
+    this.sql = '';
     DisconnectDb(db);
     return Object.assign(new this(), queryResult.rows[0]);
   }
@@ -339,10 +344,10 @@ export class Model {
   static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
-    let associationQuery = "";
+    let associationQuery = '';
     let rel_type = options?.associationName
       ? options?.associationName
-      : "belongsTo";
+      : 'belongsTo';
 
     // if the current table already has a foreign key from the target table, 'getMappingKeys'
     // returns information about that relationship--otherwise returns undefined
@@ -367,7 +372,7 @@ export class Model {
       // the column mapped to in target table is that table's primary key
       foreignKey_ColumnName = `${targetModel.name.toLocaleLowerCase()}_id`;
       const tempPrime = await getprimaryKey(targetModel.table);
-      mappingTarget_ColumnName = tempPrime ? tempPrime : "id" || "_id"; // << hard coded
+      mappingTarget_ColumnName = tempPrime ? tempPrime : 'id' || '_id'; // << hard coded
 
       // create object representing new foreign key column
       const columnAtt: any = {
@@ -404,7 +409,7 @@ export class Model {
     // })
 
     const mappingDetails = {
-      association_type: "belongsTo",
+      association_type: 'belongsTo',
       association_name: `${this.name}_belongsTo_${targetModel.name}`,
       targetModel: targetModel,
       foreignKey_ColumnName: foreignKey_ColumnName,
@@ -416,7 +421,7 @@ export class Model {
     // call the 'syncAssociation' method on the returned instance, ex:
     // STEP 1) const userProfileAssociation = await Profile.belongsTo(User)
     // STEP 2) userProfileAssociation.syncAssociation()
-    if (options?.associationName === "hasOne") {
+    if (options?.associationName === 'hasOne') {
       return new HasOne(this, targetModel, mappingDetails, associationQuery);
     } else {
       return new BelongsTo(this, targetModel, mappingDetails, associationQuery);
@@ -429,21 +434,23 @@ export class Model {
   // const canada = await Country.where('name = Canada').queryInstance();
   // const canadaCapital = await canada.getCapital();
   static async hasOne(targetModel: typeof Model, options?: hasOneOptions) {
-    return await targetModel.belongsTo(this, { associationName: "hasOne" });
+    return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
   // does NOT establish a new relationship between tables--returns a new instance of the HasMany class (defined in Association.ts)
   // based on information returned about an existing one-to-many relationship between current and target models
   static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (!mappings) throw new Error(
-      'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
-    );
+    if (!mappings) {
+      throw new Error(
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
+      );
+    }
     const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
     const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 
     const mappingDetails = {
-      association_type: "hasMany",
+      association_type: 'hasMany',
       association_name: `${this.name}_hasMany_${targetModel.name}`,
       targetModel: targetModel,
       foreignKey_ColumnName: targetModel_foreignKey,
@@ -494,7 +501,7 @@ export async function getMappingKeys<T>(
     DisconnectDb(db);
   }
 
-  if (typeof result === "object" && "rows" in result) {
+  if (typeof result === 'object' && 'rows' in result) {
     return result.rows[0] as IgetMappingKeysResult;
   }
 } // end of getMappingKeys
@@ -520,10 +527,10 @@ async function getForeignKey<T>(
     DisconnectDb(db);
   }
   if (
-    typeof result === "object" &&
-    "rows" in result &&
+    typeof result === 'object' &&
+    'rows' in result &&
     result.rows[0] !== null &&
-    typeof result.rows[0] === "object" &&
+    typeof result.rows[0] === 'object' &&
     recordPk(result.rows[0])
   ) {
     return result.rows[0].attname;
@@ -551,10 +558,10 @@ export async function getprimaryKey<T>(
     DisconnectDb(db);
   }
   if (
-    typeof result === "object" &&
-    "rows" in result &&
+    typeof result === 'object' &&
+    'rows' in result &&
     result.rows[0] !== null &&
-    typeof result.rows[0] === "object" &&
+    typeof result.rows[0] === 'object' &&
     recordPk(result.rows[0])
   ) {
     return result.rows[0].attname;
@@ -582,7 +589,7 @@ export async function manyToMany(
   modelB: typeof Model,
   options: manyToManyOptions,
 ) {
-  let associationQuery = "";
+  let associationQuery = '';
 
   if (options?.through) {
     const throughModel = options.through; // ex: 'people_in_films'
@@ -591,7 +598,7 @@ export async function manyToMany(
 
     if (mapKeysA && mapKeysB) {
       const mappingDetails = {
-        association_type: "ManyToMany",
+        association_type: 'ManyToMany',
         association_name: `${modelA.name}_hasMany_${modelB.name}`,
         modelA,
         modelB,
@@ -605,7 +612,7 @@ export async function manyToMany(
       // return out association instance
       return new ManyToMany(modelA, modelB, mappingDetails, associationQuery);
     } else {
-      throw new Error("This association does not exist");
+      throw new Error('This association does not exist');
     }
   } else if (options?.createThrough) {
     // creating new x-table & new x-model: WIP
