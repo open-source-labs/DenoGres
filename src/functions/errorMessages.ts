@@ -22,7 +22,6 @@ export function checkUnsentQuery(
 // checks that the user is accessing a column that already exists in the model
 export function checkColumns(columns, input: string | string[]): boolean {
   const columnsArr: string[] = Object.keys(columns);
-  console.log(input);
   // checks for if input is an array of columns
   if (Array.isArray(input)) {
     input.forEach((c) => {
