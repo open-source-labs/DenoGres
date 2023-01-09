@@ -1,7 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
-import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
+import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
 
 export class Model {
   [k: string]: any; // index signature
@@ -47,8 +47,8 @@ export class Model {
     const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
     const values = Object.values(this).filter(
       (
-        values // values added by the user (to be added at those columns)
-      ) => !(typeof values === 'object' && values !== null)
+        values, // values added by the user (to be added at those columns)
+      ) => !(typeof values === 'object' && values !== null),
     );
 
     Model.sql = ''; // ensures that sql-query-in-progress is empty
@@ -78,8 +78,8 @@ export class Model {
     const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
     const newValues = Object.values(this).filter(
       (
-        values // new values added by user
-      ) => !(typeof values === 'object' && values !== null)
+        values, // new values added by user
+      ) => !(typeof values === 'object' && values !== null),
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -253,25 +253,29 @@ export class Model {
   // INNER JOIN: selects records with matching values on both tables
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -292,7 +296,7 @@ export class Model {
 
     if (order !== 'ASC' && order !== 'DESC') {
       throw new Error(
-        `Error in sort method: order argument should be 'ASC' or 'DESC'`
+        `Error in sort method: order argument should be 'ASC' or 'DESC'`,
       );
     }
     if (order === 'ASC' || order === 'DESC') {
@@ -377,7 +381,10 @@ export class Model {
   // await Capital.belongsTo(Country);
   // const ottawa = await Capital.where('name = Ottawa').queryInstance();
   // const ottawaCountry = await ottawa.getCountry();
-  static async belongsTo(targetModel: typeof Model, options?: { associationName: string }) {
+  static async belongsTo(
+    targetModel: typeof Model,
+    options?: { associationName: string },
+  ) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = '';
@@ -424,11 +431,7 @@ export class Model {
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
         FIELD_TYPE[columnAtt.type]
       };
-      ALTER TABLE ${
-        this.table
-      } ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${
-        targetModel.table
-      } ON DELETE SET NULL ON UPDATE CASCADE
+      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
 
@@ -465,10 +468,11 @@ export class Model {
   // based on information returned about an existing one-to-many relationship between current and target models
   static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (!mappings)
+    if (!mappings) {
       throw new Error(
-        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
       );
+    }
     const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
     const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 
@@ -493,7 +497,7 @@ export class Model {
 export async function getMappingKeys<T>(
   sourcTable: string,
   targetTable: string,
-  uri?: string
+  uri?: string,
 ): Promise<{ [key: string]: string } | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
@@ -528,7 +532,7 @@ export async function getMappingKeys<T>(
 // helper function to find primary key of target table (often '_id' or 'id')
 export async function getprimaryKey<T>(
   tableName: string,
-  uri?: string
+  uri?: string,
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -560,7 +564,7 @@ export async function getprimaryKey<T>(
 export async function manyToMany(
   modelA: typeof Model,
   modelB: typeof Model,
-  options: { through: typeof Model }
+  options: { through: typeof Model },
 ) {
   const throughModel = options.through; // ex: 'people_in_films'
   const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
