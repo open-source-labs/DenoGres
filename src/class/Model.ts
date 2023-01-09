@@ -2,7 +2,7 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { Pool, PoolClient } from '../../deps.ts';
-import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
+import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
 
 interface IrecordPk {
   attname: string;
@@ -16,20 +16,6 @@ interface IpkObj {
 const recordPk = (record: object): record is IrecordPk => {
   return 'attname' in record;
 };
-
-// export async function transaction(){
-//   Model.sql
-//   //starts transaction
-//   //begin??
-//   const db = await ConnectDb();
-//   const transaction = db.createTransaction("transaction_1", {
-//     isolation_level: "repeatable_read",
-//   });
-//   await db.transaction.begin();
-//   return db;
-//   [query1,query2,query3].transcaction();
-//   BEGIN;  await quer1.query(); await query2.query(); await query3.query();
-// }
 
 export class Model {
   [k: string]: any; // index signature
@@ -58,7 +44,7 @@ export class Model {
   static primaryKey?: string[];
   private static sql = ''; // stores current db query here until done executing
   private static openTran = false; // flag for whether transaction is on first run or not
-  private static tranFailed = false;
+  private static tranFailed = false; // flag for whether query in a transaction has failed
   private static connectTran?: PoolClient;
   static foreignKey?: {
     columns: string[];
@@ -67,66 +53,44 @@ export class Model {
     table: string;
   }[];
 
-  // public getTran(){
-  //   return this.tran;
-  // }
-  // public setTran(){
-  //   return this.tran === true ? false: true;
-  // }
-
+  /**
+   * params: uri | void
+   * Begins and continues adding queries to the transaction. 
+   * 
+   * Note: Initially checking the tranFailed state solves the issue of duplicate error handling messages appearing
+   */
   static async tran(uri?: string) {
-    // if variable is false then connect to db and run BEGIN; db.queryObject(firstquery)
-    //if db.queryObject(firsyquery) fails, then db.queryObject('ROLLBACK') and reset this.sql ='' and send error and close db
-    //else reset this.sql =''
-
-    //if variable is true, run db.queryObject(this.sql);
-    //if db.queryObject(this.sql) fails, then we db.queryObject('ROLLBACK') and reset this.sql =''  send error and close db
-    //else reset this.sql =''
-    // console.log(Model.openTran, 'This SHOULD BE MODEL OPENTRAN INITIALLY');
-    if(!Model.tranFailed){
-    if (!Model.openTran) {
-      this.sql = 'BEGIN;' + this.sql;
-      const db = (Model.connectTran = await ConnectDb(uri));
-      try {
-        const queryResult = await db.queryObject(this.sql);
-        // console.log(queryResult, ' FIRST QUERY RESULT VARIABLE');
-        // this.openTran = true;
-        Model.openTran = true;
-      } catch (err) {
-        Model.tranFailed = true;
-        // await db.queryObject('ROLLBACK;');
-        // DisconnectDb(db);
-        // Model.openTran = false;
-        // console.log(err, 'ERROR IN FIRST QUERY OF TRANSACTION');
-      }
-    } else {
+    if (!Model.tranFailed) {
       const db = Model.connectTran;
-      try {
-        // console.log(this.sql, "the query that's not first");
-        const queryResult = await db.queryObject(this.sql);
-        // console.log(queryResult, 'MIDDLE QUERY RESULT VARIABLE');
-      } catch (err) {
-        Model.tranFailed = true;
-        // console.log(db, 'db in CATCH');
-        // await db.queryObject('ROLLBACK');
-        // DisconnectDb(db);
-        // Model.openTran = false;
-        console.log(err, 'ERROR IN TRANSACTION');
+      if (!Model.openTran) {
+        this.sql = 'BEGIN;' + this.sql;
+        // create connection to db
+        Model.connectTran = await ConnectDb(uri);
+        try {
+          await db.queryObject(this.sql);
+          Model.openTran = true;
+        } catch (err) {
+          Model.tranFailed = true;
+        }
+      } else {
+        try {
+          await db.queryObject(this.sql);
+        } catch (err) {
+          Model.tranFailed = true;
+          console.log(err, 'ERROR IN TRANSACTION');
+        }
       }
     }
-  }
     this.sql = '';
   }
-
+  /**
+   * params: uri | void
+   * If no previous queries have failed endTran() will send one last query to the database, commiting if it passes, rollback if it fails
+   * If previous query has failed, Rollback and disconnect from the db
+   * Reset tranFailed and openTran Booleans and this.sql
+   */
   static async endTran() {
-    //queries the last string
-    //if no error then add commit and query to end transaction
-    //disconnect from db
-
-    //if error, rollback and disconnect from db
-
     const db = Model.connectTran;
-    //always at end of function set sql = '', set boolean to false
     if (Model.tranFailed) {
       try {
         await db.queryObject('ROLLBACK;');
@@ -139,15 +103,12 @@ export class Model {
         console.log(this.sql);
         await db.queryObject(this.sql + ';');
         await db.queryObject('COMMIT;');
-        //DisconnectDb(db) it does not like this
       } catch (err) {
         await db.queryObject('ROLLBACK');
         DisconnectDb(db);
         console.log(err, 'ERROR IN FINAL QUERY OF TRANSACTION');
       }
     }
-    // DisconnectDb(db); also doesnt like this
-    // this.openTran = false;
     Model.tranFailed = false;
     Model.openTran = false;
     this.sql = '';
@@ -196,7 +157,6 @@ export class Model {
     const newValues = Object.values(this).filter((values) =>
       // new values added by user
       !(typeof values === 'object' && values !== null)
-
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -226,7 +186,6 @@ export class Model {
     // stores the newly updated row object at the 'record' property of the instance
     if (
       updatedRows && typeof updatedRows[0] === 'object' &&
-
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
@@ -370,25 +329,29 @@ export class Model {
   // INNER JOIN: selects records with matching values on both tables
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -409,7 +372,7 @@ export class Model {
 
     if (order !== 'ASC' && order !== 'DESC') {
       console.log(
-        `Error in sort method: order argument should be 'ASC' or 'DESC'`
+        `Error in sort method: order argument should be 'ASC' or 'DESC'`,
       );
     }
     if (order === 'ASC' || order === 'DESC') {
@@ -547,11 +510,7 @@ export class Model {
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
         FIELD_TYPE[columnAtt.type]
       };
-      ALTER TABLE ${
-        this.table
-      } ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${
-        targetModel.table
-      } ON DELETE SET NULL ON UPDATE CASCADE
+      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
 
@@ -631,7 +590,7 @@ interface IgetMappingKeysResult {
 export async function getMappingKeys<T>(
   sourcTable: string,
   targetTable: string,
-  uri?: string
+  uri?: string,
 ): Promise<IgetMappingKeysResult | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
@@ -668,7 +627,7 @@ export async function getMappingKeys<T>(
 async function getForeignKey<T>(
   thisTable: string,
   targetTable: string,
-  uri?: string
+  uri?: string,
 ) {
   const queryText = `SELECT a.attname
   FROM pg_constraint c 
@@ -697,7 +656,7 @@ async function getForeignKey<T>(
 // helper function to find primary key of target table (often '_id' or 'id')
 export async function getprimaryKey<T>(
   tableName: string,
-  uri?: string
+  uri?: string,
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -744,7 +703,7 @@ interface manyToManyOptions {
 export async function manyToMany(
   modelA: typeof Model,
   modelB: typeof Model,
-  options: manyToManyOptions
+  options: manyToManyOptions,
 ) {
   let associationQuery = '';
   if (options?.through) {

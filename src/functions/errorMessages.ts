@@ -9,11 +9,11 @@ class IncorrectData extends Error {
 export function checkUnsentQuery(
   length: number,
   method: string,
-  model: string
+  model: string,
 ): boolean {
   if (length > 0) {
     throw new IncorrectData(
-      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`
+      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`,
     );
   }
   return true;

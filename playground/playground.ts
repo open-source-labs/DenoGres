@@ -61,9 +61,7 @@ await model.Duck.insert('name = octopus').endTran();
 /**
  * Model.ts private static transactionState = false;
  *
- *
  * 1. user does transaction();
  *  Model.flipTransaction();
  *  add conditional to query() to change behavior for transaction queries and regular autocommit queries
- *
  */
