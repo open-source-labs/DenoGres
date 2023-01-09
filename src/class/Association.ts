@@ -26,7 +26,12 @@ abstract class Association {
   associationQuery: string; // query string to be executed in order to establish association in db
   mappingDetails: mappingDetails; // interface defined above
 
-  constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, associationQuery:string) {
+  constructor(
+    source: typeof Model,
+    target: typeof Model,
+    mappingDetails: mappingDetails,
+    associationQuery: string,
+  ) {
     this.source = source;
     this.target = target;
     this.associationQuery = associationQuery;
@@ -102,7 +107,9 @@ export class HasOne extends Association {
     let queryResult: any;
     if (this.targetModel_MappindColumnName) { // type checking
       query = `SELECT * FROM ${this.source.table} 
-        WHERE ${this.foreignKey_ColumnName} ='${instance[this.targetModel_MappindColumnName]}'`
+        WHERE ${this.foreignKey_ColumnName} ='${
+        instance[this.targetModel_MappindColumnName]
+      }'`;
     }
     const db = await ConnectDb(uri);
     try {
@@ -110,9 +117,9 @@ export class HasOne extends Association {
     } catch (error) {
       console.log(error);
     } finally {
-      DisconnectDb(db)
+      DisconnectDb(db);
     }
-    return queryResult.rows
+    return queryResult.rows;
   }
 
   // invoked by the setter method on the target model to add related row on the source table
@@ -328,24 +335,23 @@ export class ManyToMany extends Association {
           instance[this.modelB_mappingKey]
         }' ORDER BY ${this.modelA.table}.${this.modelA_mappingKey}`;
       }
-    }  
-      const db = await ConnectDb(uri)      
-      try {
-        queryResult = await db.queryObject(query);
-      } catch (error) {
-        console.log(error)
-      } finally {
-        DisconnectDb(db)
     }
-    return queryResult.rows
+    const db = await ConnectDb(uri);
+    try {
+      queryResult = await db.queryObject(query);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      DisconnectDb(db);
+    }
+    return queryResult.rows;
   }
 
   // WIP
-  async addAssociatedData(){
-    console.log("ManyToMany's addAssociatedData")
+  async addAssociatedData() {
+    console.log('ManyToMany\'s addAssociatedData');
   }
 } // end of ManyToMany class
-
 
 // accepts an association class (like 'HasOne'), the target model (like 'Country'), and the ModelMethod (like 'getCapital')
 // adds a method with the given name to the target model's prototype, which will act as a getter to retrieve a given model
@@ -356,11 +362,11 @@ function addGetterToModel<T extends Association>(
   ModelMethod: string,
 ) {
   Object.defineProperty(targetModel.prototype, ModelMethod, {
-    enumerable: false, 
-    value(options:any) {
-      return association.getAssociatedData(this, options)
-    } // 'this' is the instance calling 'ModelMethod' method
-  }) 
+    enumerable: false,
+    value(options: any) {
+      return association.getAssociatedData(this, options);
+    }, // 'this' is the instance calling 'ModelMethod' method
+  });
 }
 
 // just like 'addGetterToModel' but used to add a setter method, like 'addCapital'
@@ -370,11 +376,9 @@ function addSetterToModel<T extends Association>(
   ModelMethod: string,
 ) {
   Object.defineProperty(targetModel.prototype, ModelMethod, {
-    enumerable: false, 
-    value(val:any, options:any) {
-      return association.addAssociatedData(this, val, options)
-    } // 'this' is the instance calling 'ModelMethod' method
-  }) 
+    enumerable: false,
+    value(val: any, options: any) {
+      return association.addAssociatedData(this, val, options);
+    }, // 'this' is the instance calling 'ModelMethod' method
+  });
 }
-
-

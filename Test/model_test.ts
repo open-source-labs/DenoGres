@@ -24,7 +24,7 @@ describe('model methods', () => {
       const actualQuery = Planet.insert(
         'name = testPlanet',
         'climate = arid',
-        'terrain = bumpy'
+        'terrain = bumpy',
       )['sql'];
       const expectedQuery =
         /INSERT\sINTO\splanets\s\(\s*name\s*,\s*climate\s*,\s*terrain\)\sVALUES\s\(\s*'testPlanet'\s*,\s*'arid'\s*,\s*'bumpy'\)/;
@@ -41,17 +41,17 @@ describe('model methods', () => {
   describe('edit method', () => {
     it('appends appropriate query string to model when invoked with one property', () => {
       const actualQuery = Planet.edit('name = testPlanet')['sql'];
-      const expectedQuery = "UPDATE planets SET name = 'testPlanet'";
+      const expectedQuery = 'UPDATE planets SET name = \'testPlanet\'';
       assertEquals(actualQuery, expectedQuery);
     });
     it('appends appropriate query string to model when invoked with several properties', () => {
       const actualQuery = Planet.edit(
         'name = testPlanet',
         'climate = arid',
-        'terrain = bumpy'
+        'terrain = bumpy',
       )['sql'];
       const expectedQuery =
-        "UPDATE planets SET name = 'testPlanet' , climate = 'arid' , terrain = 'bumpy'";
+        'UPDATE planets SET name = \'testPlanet\' , climate = \'arid\' , terrain = \'bumpy\'';
       assertEquals(actualQuery, expectedQuery);
     });
     it('throws an error when invoked with an incorrect column name', () => {
