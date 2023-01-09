@@ -1,10 +1,10 @@
-import { introspect } from "./introspect.ts";
-import { ConnectDb, DisconnectDb } from "./Db.ts";
-import modelParser from "./modelParser.ts";
-import { enumSync } from "./enumSync.ts";
-import { checkDbSync } from "./checkDbSync.ts";
+import { introspect } from './introspect.ts';
+import { ConnectDb, DisconnectDb } from './Db.ts';
+import modelParser from './modelParser.ts';
+import { enumSync } from './enumSync.ts';
+import { checkDbSync } from './checkDbSync.ts';
 
-const removeWhitespaces = (string: string) => string.replace(/\s/g, "");
+const removeWhitespaces = (string: string) => string.replace(/\s/g, '');
 
 const objectLooselyEquals = (modelObject: any, dbObject: any) => {
   return JSON.stringify(Object.keys(modelObject).sort()) ===
@@ -19,7 +19,7 @@ export default async function sync(overwrite = false) {
   // * if the optional -x flag wasn't passed in, alert the user
   if (!overwrite) {
     console.log(
-      "To avoid all potential prompts, please consider running your command with the -x flag.",
+      'To avoid all potential prompts, please consider running your command with the -x flag.',
     );
   }
 
@@ -123,20 +123,20 @@ const getCreateTablesQuery = (createTablesList: string[], models: any) => {
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
-  let constraints = "";
+  let constraints = '';
 
   const associations = [];
 
   const checks: any = [];
 
   for (const column in columns) {
-    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+    if (columns[column].autoIncrement) columns[column].type = 'SERIAL';
 
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
       switch (constraint) {
         // * association: foreign keys
-        case "association": {
+        case 'association': {
           associations.push({
             columnName: column,
             mappedTable: columns[column].association?.mappedTable,
@@ -144,26 +144,26 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
           });
           break;
         }
-        case "checks": {
+        case 'checks': {
           checks.push(columns[column].checks);
         }
-        case "primaryKey": {
+        case 'primaryKey': {
           if (columns[column].primaryKey === true) {
-            constraints += " PRIMARY KEY";
+            constraints += ' PRIMARY KEY';
           }
           break;
         }
-        case "notNull": {
+        case 'notNull': {
           if (columns[column].notNull === true) {
-            constraints += " NOT NULL";
+            constraints += ' NOT NULL';
           }
           break;
         }
-        case "unique": {
-          constraints += " UNIQUE";
+        case 'unique': {
+          constraints += ' UNIQUE';
           break;
         }
-        case "defaultVal": {
+        case 'defaultVal': {
           constraints += ` DEFAULT ${columns[column].defaultVal}`;
           break;
         }
@@ -173,11 +173,11 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
       }
     }
     createTableQuery += `${constraints}, `;
-    constraints = "";
+    constraints = '';
   }
 
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
-    "); ";
+    '); ';
 
   // * association: foreign keys
   let associationsQuery = ``;
@@ -200,18 +200,18 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
       for (const definition of check[constraintName]) {
         const arrayRegex = /\[.*\]/;
         if (arrayRegex.test(definition)) {
-          const newDefinition = definition.replace("=", " in ").replace(
-            "[",
-            "(",
+          const newDefinition = definition.replace('=', ' in ').replace(
+            '[',
+            '(',
           )
-            .replace("]", ")");
+            .replace(']', ')');
 
           checkQuery += `${newDefinition} AND `;
         } else {
           checkQuery += `${definition} AND `;
         }
       }
-      checkQuery = checkQuery.slice(0, -5) + "); ";
+      checkQuery = checkQuery.slice(0, -5) + '); ';
 
       checksQuery += checkQuery;
     }
@@ -245,15 +245,15 @@ const getDeleteTablesQuery = (
       input = prompt(
         `Are you sure you want to delete the ${table} table? [y/n]`,
       );
-      const formattedInput = input?.toLowerCase().replace(/\s/g, "");
+      const formattedInput = input?.toLowerCase().replace(/\s/g, '');
 
       switch (formattedInput) {
-        case "y": {
+        case 'y': {
           deleteTablesQuery += `DROP TABLE ${table} CASCADE; `;
           properInput = true;
           break;
         }
-        case "n": {
+        case 'n': {
           properInput = true;
           break;
         }
@@ -415,9 +415,9 @@ const getDeleteColumnsQuery = (
     }
 
     deleteColumnsQuery =
-      deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
+      deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ';';
 
-    return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : "";
+    return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : '';
   }
 
   for (const columnName of deleteColumnsList) {
@@ -428,15 +428,15 @@ const getDeleteColumnsQuery = (
       input = prompt(
         `Are you sure you want to delete the ${columnName} column? [y/n]`,
       );
-      const formattedInput = input?.toLowerCase().replace(/\s/g, "");
+      const formattedInput = input?.toLowerCase().replace(/\s/g, '');
 
       switch (formattedInput) {
-        case "y": {
+        case 'y': {
           deleteColumnsQuery += `DROP COLUMN ${columnName} CASCADE, `;
           properInput = true;
           break;
         }
-        case "n": {
+        case 'n': {
           properInput = true;
           break;
         }
@@ -448,9 +448,9 @@ const getDeleteColumnsQuery = (
   }
 
   deleteColumnsQuery =
-    deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ";";
+    deleteColumnsQuery.slice(0, deleteColumnsQuery.length - 2) + ';';
 
-  return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : "";
+  return deleteColumnsQuery.length > originalLength ? deleteColumnsQuery : '';
 };
 
 // helper function returns query string for creating desired columns in db
@@ -463,10 +463,10 @@ const getCreateColumnsQuery = (
 
   for (const columnName of createColumnList) {
     if (model[columnName].autoIncrement) {
-      model[columnName].type = "SERIAL";
+      model[columnName].type = 'SERIAL';
     }
 
-    if (model[columnName].type === "enum") {
+    if (model[columnName].type === 'enum') {
       model[columnName].type = model[columnName].enumName;
     }
 
@@ -481,7 +481,7 @@ const getCreateColumnsQuery = (
 
     for (const constraint in model[columnName]) {
       switch (constraint) {
-        case "association": {
+        case 'association': {
           associations.push({
             tableName: tableName,
             columnName: columnName,
@@ -490,28 +490,28 @@ const getCreateColumnsQuery = (
           });
           break;
         }
-        case "checks": {
+        case 'checks': {
           checks.push(model[columnName].checks);
           break;
         }
-        case "primaryKey": {
+        case 'primaryKey': {
           createColumnQuery += `PRIMARY KEY `;
           break;
         }
-        case "notNull": {
+        case 'notNull': {
           createColumnQuery += `NOT NULL `;
           break;
         }
-        case "unique": {
+        case 'unique': {
           createColumnQuery += `UNIQUE `;
           break;
         }
-        case "defaultVal": {
+        case 'defaultVal': {
           createColumnQuery += `DEFAULT ${model[columnName].defaultVal} `;
           break;
         }
         // TODO upcoming feature
-        case "length": {
+        case 'length': {
           break;
         }
         default: {
@@ -521,7 +521,7 @@ const getCreateColumnsQuery = (
     }
 
     createColumnQuery =
-      createColumnQuery.slice(0, createColumnQuery.length - 1) + "; ";
+      createColumnQuery.slice(0, createColumnQuery.length - 1) + '; ';
 
     let associationIndex = 0;
     for (const association of associations) {
@@ -539,18 +539,18 @@ const getCreateColumnsQuery = (
           const arrayRegex = /\[.*\]/;
           // * if the check has list of categories (i.e. gender in ('F', 'M'))
           if (arrayRegex.test(definition)) {
-            const newDefinition = definition.replace("=", " in ").replace(
-              "[",
-              "(",
+            const newDefinition = definition.replace('=', ' in ').replace(
+              '[',
+              '(',
             )
-              .replace("]", ")");
+              .replace(']', ')');
 
             checkQuery += `${newDefinition} AND `;
           } else {
             checkQuery += `${definition} AND `;
           }
         }
-        checkQuery = checkQuery.slice(0, -5) + "); ";
+        checkQuery = checkQuery.slice(0, -5) + '); ';
 
         createColumnQuery += checkQuery;
       }
@@ -592,43 +592,43 @@ const getUpdateColumnsQuery = async (
     const { contype, conname, condef } = constraint;
     let columnName;
 
-    if (contype === "c") {
+    if (contype === 'c') {
       columnName = condef.match(/\w+/g)[1];
     } else {
-      const start = constraint.condef.indexOf("(");
-      const end = constraint.condef.indexOf(")");
+      const start = constraint.condef.indexOf('(');
+      const end = constraint.condef.indexOf(')');
       columnName = constraint.condef.slice(start + 1, end);
     }
 
     if (!tableConstraints[columnName]) tableConstraints[columnName] = {};
     if (!tableConstraints[columnName][contype]) {
-      if (contype === "c" || contype === "u") {
+      if (contype === 'c' || contype === 'u') {
         tableConstraints[columnName][contype] = {};
       } else tableConstraints[columnName][contype] = [];
     }
 
     switch (contype) {
-      case "f": {
+      case 'f': {
         tableConstraints[columnName][contype].push({
           name: conname,
           definition: condef,
         });
         break;
       }
-      case "p": {
+      case 'p': {
         tableConstraints[columnName][contype] = conname;
         break;
       }
-      case "c": {
-        let parsedCondef: any = condef.slice(6).replace(/[\(\)]/g, "");
-        parsedCondef = parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, "");
-        parsedCondef = parsedCondef.split(" AND ");
+      case 'c': {
+        let parsedCondef: any = condef.slice(6).replace(/[\(\)]/g, '');
+        parsedCondef = parsedCondef.replace(/\:\:\w+\s?\w+(\[\])?/g, '');
+        parsedCondef = parsedCondef.split(' AND ');
 
         for (let i = 0; i < parsedCondef.length; i++) {
           const arrayRegex = /\[(.*)\]/;
           // * if the check has categories
           if (arrayRegex.test(parsedCondef[i])) {
-            const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, "$1");
+            const parsedCondef1 = parsedCondef[i].replace(/(.*\s\=\s).*/, '$1');
             const parsedCondef2 = parsedCondef[i].match(arrayRegex)[0];
             parsedCondef[i] = parsedCondef1 + parsedCondef2;
           }
@@ -640,7 +640,7 @@ const getUpdateColumnsQuery = async (
 
         break;
       }
-      case "u": {
+      case 'u': {
         tableConstraints[columnName][contype][conname] = condef;
       }
       default: {
@@ -685,8 +685,8 @@ const getUpdateColumnsQuery = async (
         if (tableConstraints[column].u) {
           const uniqueConstraints = tableConstraints[column].u;
           for (const uniqueName in uniqueConstraints) {
-            const start = uniqueConstraints[uniqueName].indexOf("(");
-            const end = uniqueConstraints[uniqueName].indexOf(")") + 1;
+            const start = uniqueConstraints[uniqueName].indexOf('(');
+            const end = uniqueConstraints[uniqueName].indexOf(')') + 1;
             if (
               uniqueConstraints[uniqueName].slice(start, end) === columnName
             ) {
@@ -745,16 +745,16 @@ const getUpdateColumnsQuery = async (
           for (const definition of modelChecks[checkName]) {
             const arrayRegex = /\[.*\]/;
             if (arrayRegex.test(definition)) {
-              const newDefinition = definition.replace("=", " in ")
-                .replace("[", "(")
-                .replace("]", ")");
+              const newDefinition = definition.replace('=', ' in ')
+                .replace('[', '(')
+                .replace(']', ')');
 
               checkQuery += `${newDefinition} AND `;
             } else {
               checkQuery += `${definition} AND `;
             }
           }
-          checkQuery = checkQuery.slice(0, -5) + "); ";
+          checkQuery = checkQuery.slice(0, -5) + '); ';
 
           updateColumnsQuery += checkQuery;
         }
@@ -774,16 +774,16 @@ const getUpdateColumnsQuery = async (
           for (const definition of modelChecks[checkName]) {
             const arrayRegex = /\[.*\]/;
             if (arrayRegex.test(definition)) {
-              const newDefinition = definition.replace("=", " in ")
-                .replace("[", "(")
-                .replace("]", ")");
+              const newDefinition = definition.replace('=', ' in ')
+                .replace('[', '(')
+                .replace(']', ')');
 
               checkQuery += `${newDefinition} AND `;
             } else {
               checkQuery += `${definition} AND `;
             }
           }
-          checkQuery = checkQuery.slice(0, -5) + "); ";
+          checkQuery = checkQuery.slice(0, -5) + '); ';
 
           updateColumnsQuery += checkQuery;
         }
@@ -814,18 +814,18 @@ const getUpdateColumnsQuery = async (
           for (const definition of modelChecks[checkName]) {
             const arrayRegex = /\[.*\]/;
             if (arrayRegex.test(definition)) {
-              const newDefinition = definition.replace("=", " in ").replace(
-                "[",
-                "(",
+              const newDefinition = definition.replace('=', ' in ').replace(
+                '[',
+                '(',
               )
-                .replace("]", ")");
+                .replace(']', ')');
 
               checkQuery += `${newDefinition} AND `;
             } else {
               checkQuery += `${definition} AND `;
             }
           }
-          checkQuery = checkQuery.slice(0, -5) + "); ";
+          checkQuery = checkQuery.slice(0, -5) + '); ';
 
           updateColumnsQuery += checkQuery;
         }

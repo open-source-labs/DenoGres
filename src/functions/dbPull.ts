@@ -1,8 +1,8 @@
-import { sqlDataTypes } from "../constants/sqlDataTypes.ts";
-import { createClassName } from "../functions/StringFormat.ts";
-import { introspect } from "./introspect.ts";
-import { checkDbPull } from "./checkDbPull.ts";
-import { resolve } from "../../deps.ts";
+import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
+import { createClassName } from '../functions/StringFormat.ts';
+import { introspect } from './introspect.ts';
+import { checkDbPull } from './checkDbPull.ts';
+import { resolve } from '../../deps.ts';
 
 export let wasFired: boolean;
 
@@ -32,7 +32,7 @@ export async function dbPull() {
       // console.log(columnObj);
 
       // add the column as a property to the interface, checking for enums first
-      if (columnObj.type.includes("enum")) {
+      if (columnObj.type.includes('enum')) {
         const enumName = columnObj.enumName;
 
         const enumCapitalized = enumName[0].toUpperCase() + enumName.slice(1);
@@ -42,7 +42,7 @@ export async function dbPull() {
       }
 
       // * if a given column is typed as ENUM
-      if (columnObj.type.includes("enum")) {
+      if (columnObj.type.includes('enum')) {
         classCode += `    ${colName}: {\n` +
           `      type: 'enum',\n`;
         classCode += `      enumName: '${columnObj.enumName}',\n`;
@@ -52,7 +52,7 @@ export async function dbPull() {
       }
 
       if (columnObj.notNull) classCode += `      notNull: true,\n`;
-      else if (!columnObj.type.includes("enum")) {
+      else if (!columnObj.type.includes('enum')) {
         classCode += `      notNull: false,\n`;
       }
       // for each 'property' of the column add it to the object
@@ -102,11 +102,11 @@ export async function dbPull() {
     autoCreatedModels += `}\n\n`;
   });
   // Create the model.ts file
-  Deno.writeTextFileSync("./models/model.ts", autoCreatedModels);
+  Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 
   // * format the newly created model.ts file
   await Deno.run({
-    cmd: ["deno", "fmt", resolve("./models/model.ts")],
+    cmd: ['deno', 'fmt', resolve('./models/model.ts')],
   }).status();
   checkDbPull(); //* Added this in for migration log
 }

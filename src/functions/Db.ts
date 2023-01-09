@@ -1,6 +1,6 @@
-import "https://deno.land/x/dotenv@v3.2.0/load.ts";
+import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
 
-import { Pool, PoolClient } from "../../deps.ts";
+import { Pool, PoolClient } from '../../deps.ts';
 
 const POOL_CONNECTIONS = 3;
 
@@ -14,10 +14,10 @@ export const ConnectDb = async (inputUri?: string) => {
   let dbUri: string | undefined;
   if (inputUri) {
     dbUri = inputUri;
-  } else if(Deno.env.get('ENVIRONMENT')==='test') {
-    dbUri = Deno.env.get('TEST_DB_URI')
-  } else if(Deno.env.get('ENVIRONMENT')==='development') {
-    dbUri = Deno.env.get('DATABASE_URI')
+  } else if (Deno.env.get('ENVIRONMENT') === 'test') {
+    dbUri = Deno.env.get('TEST_DB_URI');
+  } else if (Deno.env.get('ENVIRONMENT') === 'development') {
+    dbUri = Deno.env.get('DATABASE_URI');
   }
 
   const pool = new Pool(dbUri, POOL_CONNECTIONS, true);

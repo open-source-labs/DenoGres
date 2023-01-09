@@ -4,33 +4,33 @@ import {
   assertNotEquals,
   assertStrictEquals,
   assertThrows,
-} from "https://deno.land/std@0.150.0/testing/asserts.ts";
-import { Model } from "../src/class/Model.ts";
-import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
-import * as denogres from "../models/model.ts";
-import { Person } from "../models/model.ts";
-import { sqlDataTypes } from "../src/constants/sqlDataTypes.ts";
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
+} from 'https://deno.land/std@0.150.0/testing/asserts.ts';
+import { Model } from '../src/class/Model.ts';
+import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
+import * as denogres from '../models/model.ts';
+import { Person } from '../models/model.ts';
+import { sqlDataTypes } from '../src/constants/sqlDataTypes.ts';
+import { resolve } from 'https://deno.land/std@0.141.0/path/mod.ts';
 
 const sampleData: any[] = [
   {
-    name: "john",
+    name: 'john',
     _id: 10,
     species_id: BigInt(2),
   },
   {
-    name: "david",
+    name: 'david',
     _id: 12,
     species_id: BigInt(2),
   },
   {
-    name: "jessica",
+    name: 'jessica',
     _id: 13,
     species_id: BigInt(2),
   },
 ];
 
-const sampleTableName = "people";
+const sampleTableName = 'people';
 
 const sampleTextFile = `
 const people = [
@@ -92,49 +92,49 @@ Deno.test(
     const expectedOutput = {
       people: [
         {
-          name: "Anthony",
+          name: 'Anthony',
           _id: 10,
           species_id: 2,
         },
         {
-          name: "Carlos",
+          name: 'Carlos',
           _id: 12,
           species_id: 2,
         },
         {
-          name: "Eddie",
+          name: 'Eddie',
           _id: 13,
           species_id: 2,
         },
         {
-          name: "Henry",
+          name: 'Henry',
           _id: 14,
           species_id: 2,
         },
       ],
       dog: [
         {
-          name: "Nico",
+          name: 'Nico',
           _id: 10,
           species_id: 5,
         },
         {
-          name: "Momo",
+          name: 'Momo',
           _id: 11,
           species_id: 5,
         },
         {
-          name: "Kong",
+          name: 'Kong',
           _id: 12,
           species_id: 5,
         },
         {
-          name: "Seven",
+          name: 'Seven',
           _id: 13,
           species_id: 5,
         },
         {
-          name: "Eleven",
+          name: 'Eleven',
           _id: 14,
           species_id: 5,
         },
@@ -147,17 +147,17 @@ Deno.test(
 
     const whitespaces = /\s/g;
 
-    data = data.replace(whitespaces, "");
-    data = data.replace(/(const|let|var)/g, "\n");
+    data = data.replace(whitespaces, '');
+    data = data.replace(/(const|let|var)/g, '\n');
 
     const tables: any = data.match(/\n.*/g)?.map((table) => table.slice(1, -1));
 
     for (const table of tables) {
-      const tableName = table.replace(/(\w+).*/, "$1");
-      let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
+      const tableName = table.replace(/(\w+).*/, '$1');
+      let tableData = table.replace(/.*\=(\[.*\]\.*)/, '$1');
 
-      tableData = tableData.replace(/\,\}/g, "}");
-      tableData = tableData.replace(/\,\]/g, "]");
+      tableData = tableData.replace(/\,\}/g, '}');
+      tableData = tableData.replace(/\,\]/g, ']');
       tableData = tableData.replace(
         /([\w\_]+)\:/g,
         '"$1":',
@@ -172,7 +172,7 @@ Deno.test(
 );
 
 Deno.test(function parseSeedSingle() {
-  let data = Deno.readTextFileSync("./Test/seedDataTest.ts");
+  let data = Deno.readTextFileSync('./Test/seedDataTest.ts');
 
   // const tableName = data.replace(/\w+ (\w+)[\s\S]*/, "$1");
 
@@ -183,12 +183,12 @@ Deno.test(function parseSeedSingle() {
   // console.log(tableNames);
 
   for (let i = 0; i < tableNames.length; i++) {
-    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
+    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, '$2');
   }
 
   // console.log(tableNames);
 
-  data = data.replace(/\s*/g, "");
+  data = data.replace(/\s*/g, '');
 
   const tablesData: any = data.match(/\{.*\,\}/g);
 
@@ -196,14 +196,14 @@ Deno.test(function parseSeedSingle() {
 
   const regex = /[\{\,\}]/g;
 
-  tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+  tableData = tableData.replace(regex, ' ').replace(/\s*(.*)\s*/, '$1');
 
   tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
 
   for (let i = 0; i < tableData.length; i++) {
-    tableData[i] = tableData[i].split(" ");
+    tableData[i] = tableData[i].split(' ');
     for (let j = 0; j < tableData[i].length; j++) {
-      tableData[i][j] = tableData[i][j].split(":");
+      tableData[i][j] = tableData[i][j].split(':');
     }
   }
 
@@ -214,9 +214,9 @@ Deno.test(function parseSeedSingle() {
     columnData = {};
     for (const column of entry) {
       const [columnName, columnValue] = column;
-      if (columnValue.includes("BigInt")) {
+      if (columnValue.includes('BigInt')) {
         columnData[columnName] = BigInt(
-          columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
+          columnValue.replace(/BigInt\((\d+)\).*/, '$1'),
         );
       } else columnData[columnName] = JSON.parse(columnValue);
     }
@@ -239,39 +239,39 @@ Deno.test(function parseSeedSingle() {
 });
 
 Deno.test(async function parseSeedMultiple() {
-  let data: any = Deno.readTextFileSync("./Test/seedData2Test.ts");
+  let data: any = Deno.readTextFileSync('./Test/seedData2Test.ts');
   const output: any = {};
   const expectedOutput: any = {
     people: [
       {
-        name: "john",
+        name: 'john',
         _id: 10,
         species_id: BigInt(2),
       },
       {
-        name: "david",
+        name: 'david',
         _id: 12,
         species_id: BigInt(2),
       },
       {
-        name: "jessica",
+        name: 'jessica',
         _id: 13,
         species_id: BigInt(2),
       },
     ],
     people2: [
       {
-        name: "john2",
+        name: 'john2',
         _id: 10,
         species_id: BigInt(2),
       },
       {
-        name: "david2",
+        name: 'david2',
         _id: 12,
         species_id: BigInt(2),
       },
       {
-        name: "jessica2",
+        name: 'jessica2',
         _id: 13,
         species_id: BigInt(2),
       },
@@ -281,16 +281,16 @@ Deno.test(async function parseSeedMultiple() {
   const tableNames: any = data.match(/(const|let|var)\s\w+:/g);
 
   for (let i = 0; i < tableNames.length; i++) {
-    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, "$2");
+    tableNames[i] = tableNames[i].replace(/(const|let|var)\s(\w+)\:/g, '$2');
   }
 
   // console.log(tableNames);
 
-  let tablesData = data.replace(/\s*/g, "");
+  let tablesData = data.replace(/\s*/g, '');
 
-  tablesData = tablesData.replace(/(const|let|var)/g, " ").slice(1);
+  tablesData = tablesData.replace(/(const|let|var)/g, ' ').slice(1);
 
-  tablesData = tablesData.split(" ");
+  tablesData = tablesData.split(' ');
 
   // console.log(data);
 
@@ -301,14 +301,14 @@ Deno.test(async function parseSeedMultiple() {
 
     const regex = /[\{\,\}]/g;
 
-    tableData = tableData.replace(regex, " ").replace(/\s*(.*)\s*/, "$1");
+    tableData = tableData.replace(regex, ' ').replace(/\s*(.*)\s*/, '$1');
 
     tableData = tableData.slice(0, tableData.length - 2).split(/\s{2,}/);
 
     for (let i = 0; i < tableData.length; i++) {
-      tableData[i] = tableData[i].split(" ");
+      tableData[i] = tableData[i].split(' ');
       for (let j = 0; j < tableData[i].length; j++) {
-        tableData[i][j] = tableData[i][j].split(":");
+        tableData[i][j] = tableData[i][j].split(':');
       }
     }
 
@@ -319,9 +319,9 @@ Deno.test(async function parseSeedMultiple() {
       columnData = {};
       for (const column of entry) {
         const [columnName, columnValue] = column;
-        if (columnValue.includes("BigInt")) {
+        if (columnValue.includes('BigInt')) {
           columnData[columnName] = BigInt(
-            columnValue.replace(/BigInt\((\d+)\).*/, "$1"),
+            columnValue.replace(/BigInt\((\d+)\).*/, '$1'),
           );
         } else columnData[columnName] = JSON.parse(columnValue);
       }
@@ -360,23 +360,23 @@ Deno.test(async function createTableQuery(
 
   const people: any[] = [
     {
-      name: "john",
+      name: 'john',
       _id: 10,
       species_id: BigInt(2),
     },
     {
-      name: "david",
+      name: 'david',
       _id: 12,
       species_id: BigInt(2),
     },
     {
-      name: "jessica",
+      name: 'jessica',
       _id: 13,
       species_id: BigInt(2),
     },
   ];
 
-  let constraints = "";
+  let constraints = '';
 
   const columns: any = denogres.Person.columns;
 
@@ -386,12 +386,12 @@ Deno.test(async function createTableQuery(
 
   for (const column in columns) {
     // console.log(typeof columns[column].type);
-    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+    if (columns[column].autoIncrement) columns[column].type = 'SERIAL';
 
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
       switch (constraint) {
-        case "association": {
+        case 'association': {
           associations.push({
             columnName: column,
             table: columns[column].association?.table,
@@ -399,19 +399,19 @@ Deno.test(async function createTableQuery(
           });
           break;
         }
-        case "primaryKey": {
-          constraints += " PRIMARY KEY";
+        case 'primaryKey': {
+          constraints += ' PRIMARY KEY';
           break;
         }
-        case "notNull": {
-          constraints += " NOT NULL";
+        case 'notNull': {
+          constraints += ' NOT NULL';
           break;
         }
-        case "unique": {
-          constraints += " UNIQUE";
+        case 'unique': {
+          constraints += ' UNIQUE';
           break;
         }
-        case "defaultVal": {
+        case 'defaultVal': {
           constraints += ` DEFAULT ${columns[column].defaultVal}`;
           break;
         }
@@ -421,11 +421,11 @@ Deno.test(async function createTableQuery(
       }
     }
     createTableQuery += `${constraints}, `;
-    constraints = "";
+    constraints = '';
   }
 
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
-    ");";
+    ');';
 
   // console.log("EXPECTED QUERY");
   // console.log(expectedCreateTableQuery);
@@ -484,7 +484,7 @@ Deno.test(
     // denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
     // denogres.Person.insert(`'name = Deno', 'hair_color = purple'`).query();
 
-    let columns = "";
+    let columns = '';
 
     for (const column in sampleData[0]) {
       columns += `${column}, `;
@@ -495,20 +495,20 @@ Deno.test(
     let insertQuery = `INSERT INTO ${sampleTableName} (${columns}) VALUES `;
 
     let value;
-    let values = "";
+    let values = '';
 
     for (const datum of sampleData) {
-      value = "(";
+      value = '(';
       for (const key in datum) {
         value += `'${datum[key]}', `;
       }
-      value = value.slice(0, value.length - 2) + "), ";
+      value = value.slice(0, value.length - 2) + '), ';
       values += value;
     }
 
     // console.log(columns, values);
 
-    values = values.slice(0, values.length - 2) + ";";
+    values = values.slice(0, values.length - 2) + ';';
 
     // console.log(values);
     //
