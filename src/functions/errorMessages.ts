@@ -20,10 +20,21 @@ export function checkUnsentQuery(
 }
 
 // checks that the user is accessing a column that already exists in the model
-export function checkColumns(columns, input: string): boolean {
+export function checkColumns(columns, input: string | string[]): boolean {
   const columnsArr: string[] = Object.keys(columns);
-  if (!columnsArr.includes(input)) {
-    throw new IncorrectData(`Column: ${input} does not exist on this model.`);
+  console.log(input);
+  // checks for if input is an array of columns
+  if (Array.isArray(input)) {
+    input.forEach((c) => {
+      if (!columnsArr.includes(c)) {
+        throw new IncorrectData(`Column: ${c} does not exist on this model.`);
+      }
+    });
+  } else {
+    // checks value of a single column
+    if (!columnsArr.includes(input)) {
+      throw new IncorrectData(`Column: ${input} does not exist on this model.`);
+    }
   }
   return true;
 }

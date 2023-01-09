@@ -201,7 +201,7 @@ export class Model {
       return this;
     } else {
       // check that the input column is one that is in the table
-      checkColumns(this.columns, column.toString());
+      checkColumns(this.columns, column);
       this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
       return this;
     }
@@ -291,7 +291,7 @@ export class Model {
   // puts all rows with same value for passed in column(s) into one 'summary row'
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
-    checkColumns(this.columns, column.toString());
+    checkColumns(this.columns, column);
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
   }
@@ -300,7 +300,7 @@ export class Model {
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
   static order(order: string, ...column: string[]) {
-    checkColumns(this.columns, column.toString());
+    checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
