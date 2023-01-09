@@ -2,6 +2,7 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
+import { PoolClient } from '../../deps';
 
 export class Model {
   [k: string]: any; // index signature
@@ -29,9 +30,9 @@ export class Model {
   static unique?: Array<string[]>;
   static primaryKey?: string[];
   private static sql = ''; // stores current db query here until done executing
-  private static openTran = false; // flag for whether transaction is on first run or not
-  private static tranFailed = false; // flag for whether query in a transaction has failed
-  private static connectTran?: PoolClient;
+  private static transactionInProgress = false; // flag for whether transaction is on first run or not
+  private static transactionFailed = false; // flag for whether query in a transaction has failed
+  private static transactionConnection?: PoolClient;
   static foreignKey?: {
     columns: string[];
     mappedColumns: string[];
@@ -43,26 +44,26 @@ export class Model {
    * params: uri | void
    * Begins and continues adding queries to the transaction.
    *
-   * Note: Initially checking the tranFailed state solves the issue of duplicate error handling messages appearing
+   * Note: Initially checking the transactionFailed state solves the issue of duplicate error handling messages appearing
    */
-  static async tran(uri?: string) {
-    if (!Model.tranFailed) {
-      const db = Model.connectTran;
-      if (!Model.openTran) {
+  static async transaction(uri?: string) {
+    if (!Model.transactionFailed) {
+      const db = Model.transactionConnection;
+      if (!Model.transactionInProgress) {
         this.sql = 'BEGIN;' + this.sql;
         // create connection to db
-        Model.connectTran = await ConnectDb(uri);
+        Model.transactionConnection = await ConnectDb(uri);
         try {
           await db.queryObject(this.sql);
-          Model.openTran = true;
+          Model.transactionInProgress = true;
         } catch (err) {
-          Model.tranFailed = true;
+          Model.transactionFailed = true;
         }
       } else {
         try {
           await db.queryObject(this.sql);
         } catch (err) {
-          Model.tranFailed = true;
+          Model.transactionFailed = true;
           console.log(err, 'ERROR IN TRANSACTION');
         }
       }
@@ -73,11 +74,11 @@ export class Model {
    * params: uri | void
    * If no previous queries have failed endTran() will send one last query to the database, commiting if it passes, rollback if it fails
    * If previous query has failed, Rollback and disconnect from the db
-   * Reset tranFailed and openTran Booleans and this.sql
+   * Reset transactionFailed and transactionInProgess Booleans and this.sql
    */
-  static async endTran() {
-    const db = Model.connectTran;
-    if (Model.tranFailed) {
+  static async endTransaction() {
+    const db = Model.transactionConnection;
+    if (Model.transactionFailed) {
       try {
         await db.queryObject('ROLLBACK;');
         DisconnectDb(db);
@@ -86,7 +87,6 @@ export class Model {
       }
     } else {
       try {
-        console.log(this.sql);
         await db.queryObject(this.sql + ';');
         await db.queryObject('COMMIT;');
       } catch (err) {
@@ -95,8 +95,8 @@ export class Model {
         console.log(err, 'ERROR IN FINAL QUERY OF TRANSACTION');
       }
     }
-    Model.tranFailed = false;
-    Model.openTran = false;
+    Model.transactionFailed = false;
+    Model.transactionInProgress = false;
     this.sql = '';
   }
 

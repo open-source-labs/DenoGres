@@ -1,5 +1,0 @@
-This model was created when the command --db-pull was invoked on Mon Jan 09 2023 09:34:27 GMT-0700 (Mountain Standard Time).
-    
- This model is a reference to the shape of your SQL Database on Mon Jan 09 2023 09:34:27 GMT-0700 (Mountain Standard Time). 
-    
- If you'd like a more recent model please check the Migrations directory for synced versions of the model.
