@@ -13,49 +13,45 @@ describe('model methods', () => {
       assertEquals(actualQuery, expectedQuery);
     });
   
-    // it('throws an error if invoked on a model with an already in-progress sql query', () => {
-    //   Planet['sql'] = 'SELECT climate FROM planets';
-    //   assertThrows(() => Planet.delete(), Error);
-    // });
+    it('throws an error if invoked on a model with an already in-progress sql query', () => {
+      Planet['sql'] = 'SELECT climate FROM planets';
+      assertThrows(() => Planet.delete(), Error);
+    });
   });
 
   describe('select method', () => {
-    beforeEach(() => {
-      Planet['sql'] = '';
-    });
-  
     it('appends appropriate query string to model when invoked with an asterisk', () => {
       const actualQuery = Planet.select('*')['sql'];
       const expectedQuery = 'SELECT * FROM planets';
       assertEquals(actualQuery, expectedQuery);
     });
   
-    it('works when invoked with one valid column name', () => {
+    it('appends appropriate query string to model when invoked with one valid column name', () => {
       const actualQuery = Planet.select('climate')['sql'];
       const expectedQuery = 'SELECT climate FROM planets';
       assertEquals(actualQuery, expectedQuery);
     });
   
-    it('works with multiple valid column names', () => {
+    it('appends appropriate query string to model when invoked with multiple valid column names', () => {
       const actualQuery = Planet.select('climate', 'terrain')['sql'];
       const expectedQuery = /SELECT\s+climate,\s*terrain\s+FROM\s+planets/i; // ignore missing or extra spaces where inconsequential
       assertMatch(actualQuery, expectedQuery);
     });
   
-    // it('defaults to "SELECT *" when invoked without any arguments', () => {
-    //   const actualQuery = Planet.select()['sql'];
-    //   const expectedQuery = 'SELECT * FROM planets';
-    //   assertEquals(actualQuery, expectedQuery);
-    // });
+    it('defaults to "SELECT *" when invoked without any arguments', () => {
+      const actualQuery = Planet.select()['sql'];
+      const expectedQuery = 'SELECT * FROM planets';
+      assertEquals(actualQuery, expectedQuery);
+    });
   
-    // it('throws an error if invoked with any invalid column names', () => {
-    //   assertThrows(() => Planet.select('diaaameter'), Error);
-    // });
+    it('throws an error if invoked with any invalid column names', () => {
+      assertThrows(() => Planet.select('diaaameter'), Error);
+    });
   
-    // it('throws an error if invoked on a model with an already in-progress sql query', () => {
-    //   Planet['sql'] = 'SELECT climate FROM planets';
-    //   assertThrows(() => Planet.select('terrain'), Error);
-    // });
+    it('throws an error if invoked on a model with an already in-progress sql query', () => {
+      Planet['sql'] = 'SELECT climate FROM planets';
+      assertThrows(() => Planet.select('terrain'), Error);
+    });
   });
   
   describe('where method', () => {
@@ -70,7 +66,7 @@ describe('model methods', () => {
       assert(actualQuery.startsWith(`SELECT * FROM planets WHERE`));
     });
 
-    it('works with equality and comparison conditions when formatted with a space around the operator', () => {
+    it('adds appropriate query string to model when invoked with equality and comparison conditions', () => {
       const equalityQuery = Planet.where('climate = temperate')['sql'];
       assert(equalityQuery.includes(`climate = 'temperate'`));
       Planet['sql'] = '';
@@ -87,9 +83,19 @@ describe('model methods', () => {
       assert(comparisonOrEqualityQuery.includes(`rotation_period >= '12'`));
     });
 
-    it('works with the LIKE operator', () => {
+    it('adds appropriate query string to model when invoked with the LIKE operator', () => {
       const actualQuery = Planet.where('name LIKE A%')['sql'];
       assert(actualQuery.includes(`name LIKE 'A%'`));
+    });
+
+    it('adds appropriate query string to model when invoked with more than one condition', () => {
+      const actualQuery = Planet.where('climate = temperate', 'rotation_period > 12')['sql'];
+      const expectedQuery = `climate = 'temperate' rotation_period > '12'`;
+      assert(actualQuery.includes(expectedQuery));
+    });
+
+    it('throws an error when invoked with column names not on the model', () => {
+      assertThrows(() => Planet.where('rotationPeriod = 24'), Error);
     });
   });
 });
