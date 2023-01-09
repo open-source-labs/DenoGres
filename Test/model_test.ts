@@ -1,11 +1,11 @@
 import {
-  describe,
-  it,
-  beforeEach,
+  assert,
   assertEquals,
   assertMatch,
   assertThrows,
-  assert,
+  beforeEach,
+  describe,
+  it,
 } from '../deps.ts';
 import { Planet } from './sample_model.ts';
 

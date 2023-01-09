@@ -4,11 +4,11 @@ import {
   assertNotEquals,
   assertStrictEquals,
   assertThrows,
-} from "https://deno.land/std@0.150.0/testing/asserts.ts";
-import { Model } from "../src/class/Model.ts";
-import { ConnectDb, DisconnectDb } from "../src/functions/Db.ts";
-import { sqlDataTypes } from "../src/constants/sqlDataTypes.ts";
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
+} from 'https://deno.land/std@0.150.0/testing/asserts.ts';
+import { Model } from '../src/class/Model.ts';
+import { ConnectDb, DisconnectDb } from '../src/functions/Db.ts';
+import { sqlDataTypes } from '../src/constants/sqlDataTypes.ts';
+import { resolve } from 'https://deno.land/std@0.141.0/path/mod.ts';
 
 // import { Model } from 'https://deno.land/x/denogresdev/mod.ts'
 const sampleModelTS = `
@@ -116,38 +116,38 @@ Deno.test(
     const expectedOutput = {
       species: {
         average_lifespan: {
-          type: "varchar",
+          type: 'varchar',
         },
         name: {
-          type: "varchar",
+          type: 'varchar',
           notNull: true,
         },
         skin_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         eye_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         hair_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         _id: {
-          type: "int4",
+          type: 'int4',
           notNull: true,
           primaryKey: true,
           autoIncrement: true,
         },
         homeworld_id: {
-          type: "int8",
+          type: 'int8',
         },
         average_height: {
-          type: "varchar",
+          type: 'varchar',
         },
         language: {
-          type: "varchar",
+          type: 'varchar',
         },
         classification: {
-          type: "varchar",
+          type: 'varchar',
         },
       },
     };
@@ -157,20 +157,20 @@ Deno.test(
 
     const whitespaces = /\s/g;
 
-    let data = sampleModelTS.replace(whitespaces, "");
+    let data = sampleModelTS.replace(whitespaces, '');
 
-    data = data.replace(/export/g, "\n");
+    data = data.replace(/export/g, '\n');
 
     const classes: any = data.match(/class\w+extendsModel.*\s/g);
 
     const currentClass: any = classes[0];
 
-    const tableName = currentClass.replace(/.*statictable=\"(\w+)\".*\n/, "$1");
+    const tableName = currentClass.replace(/.*statictable=\"(\w+)\".*\n/, '$1');
     let tableColumns = currentClass.replace(
       /.*staticcolumns=(\{.*\}\,\}\;).*/,
-      "$1",
+      '$1',
     );
-    tableColumns = tableColumns.replace(/\,\}/g, "}");
+    tableColumns = tableColumns.replace(/\,\}/g, '}');
     tableColumns = tableColumns.slice(0, tableColumns.length - 2);
     tableColumns = tableColumns.replace(/([\w\_]+)\:/g, '"$1":');
 
@@ -188,62 +188,62 @@ Deno.test(
     const expectedOutput = {
       species: {
         average_lifespan: {
-          type: "varchar",
+          type: 'varchar',
         },
         name: {
-          type: "varchar",
+          type: 'varchar',
           notNull: true,
         },
         skin_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         eye_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         hair_colors: {
-          type: "varchar",
+          type: 'varchar',
         },
         _id: {
-          type: "int4",
+          type: 'int4',
           notNull: true,
           primaryKey: true,
           autoIncrement: true,
         },
         homeworld_id: {
-          type: "int8",
+          type: 'int8',
         },
         average_height: {
-          type: "varchar",
+          type: 'varchar',
         },
         language: {
-          type: "varchar",
+          type: 'varchar',
         },
         classification: {
-          type: "varchar",
+          type: 'varchar',
         },
       },
       people: {
         _id: {
-          type: "int4",
+          type: 'int4',
           notNull: true,
           primaryKey: true,
           autoIncrement: true,
         },
         species_id: {
-          type: "int8",
+          type: 'int8',
           notNull: true,
           association: {
-            table: "species",
-            mappedCol: "_id",
+            table: 'species',
+            mappedCol: '_id',
           },
         },
         name: {
-          type: "varchar",
+          type: 'varchar',
           notNull: true,
         },
         current_mood: {
-          type: "enum",
-          enumName: "mood",
+          type: 'enum',
+          enumName: 'mood',
         },
       },
     };
@@ -252,8 +252,8 @@ Deno.test(
 
     const whitespaces = /\s/g;
 
-    let data = sampleModelTS.replace(whitespaces, "");
-    data = data.replace(/export/g, "\n");
+    let data = sampleModelTS.replace(whitespaces, '');
+    data = data.replace(/export/g, '\n');
 
     const classes: any = data.match(/class\w+extendsModel.*\s/g);
 
@@ -262,13 +262,13 @@ Deno.test(
     for (const currentClass of classes) {
       const tableName = currentClass.replace(
         /.*statictable=\"(\w+)\".*\n/,
-        "$1",
+        '$1',
       );
       let tableColumns = currentClass.replace(
         /.*staticcolumns=(\{.*\}\,\}\;).*/,
-        "$1",
+        '$1',
       );
-      tableColumns = tableColumns.replace(/\,\}/g, "}");
+      tableColumns = tableColumns.replace(/\,\}/g, '}');
       tableColumns = tableColumns.slice(0, tableColumns.length - 2);
       tableColumns = tableColumns.replace(/([\w\_]+)\:/g, '"$1":');
 

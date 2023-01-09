@@ -58,10 +58,10 @@ export class Model {
   async save() {
     const table = Object.getPrototypeOf(this).constructor.table; // ex: class 'Species' would have table set to 'species'
     const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
-    const values = Object.values(this).filter(
-      (
-        values // values added by the user (to be added at those columns)
-      ) => !(typeof values === 'object' && values !== null)
+    const values = Object.values(this).filter((values) =>
+      // values added by the user (to be added at those columns)
+      !(typeof values === 'object' && values !== null)
+
     );
 
     Model.sql = ''; // ensures that sql-query-in-progress is empty
@@ -89,10 +89,10 @@ export class Model {
   async update() {
     const table = Object.getPrototypeOf(this).constructor.table;
     const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
-    const newValues = Object.values(this).filter(
-      (
-        values // new values added by user
-      ) => !(typeof values === 'object' && values !== null)
+    const newValues = Object.values(this).filter((values) =>
+      // new values added by user
+      !(typeof values === 'object' && values !== null)
+
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -121,8 +121,8 @@ export class Model {
     Model.sql = '';
     // stores the newly updated row object at the 'record' property of the instance
     if (
-      updatedRows &&
-      typeof updatedRows[0] === 'object' &&
+      updatedRows && typeof updatedRows[0] === 'object' &&
+
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
@@ -494,10 +494,11 @@ export class Model {
   // based on information returned about an existing one-to-many relationship between current and target models
   static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (!mappings)
+    if (!mappings) {
       throw new Error(
-        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
       );
+    }
     const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
     const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 

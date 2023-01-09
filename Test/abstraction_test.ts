@@ -1,12 +1,12 @@
 import {
+  afterAll,
+  afterEach,
   assert,
   assertEquals,
   assertStrictEquals,
   assertThrows,
   beforeAll,
   beforeEach,
-  afterEach,
-  afterAll,
   describe,
   it,
 } from '../deps.ts';
@@ -99,8 +99,9 @@ interface IObj {
 
 describe('Abstraction Test', () => {
   beforeAll(async () => {
-    if (Deno.env.get('ENVIRONMENT') !== 'test')
+    if (Deno.env.get('ENVIRONMENT') !== 'test') {
       throw new Error('Not in test environment');
+    }
     const db = await ConnectDb();
     await db.queryObject(before_all); // executes the query defined above to set up the test db
     await DisconnectDb(db);
