@@ -13,6 +13,31 @@ describe('model methods', () => {
   beforeEach(() => {
     Planet['sql'] = '';
   });
+  describe('insert method', () => {
+    it('appends appropriate query string to model when given a single property to insert', () => {
+      const actualQuery = Planet.insert('name = testPlanet')['sql'];
+      const expectedQuery =
+        /INSERT\sINTO\splanets\s\(\s*name\)\sVALUES\s\(\s*'testPlanet'\)/; //regex to account for possibility of spaces in front of columns and values
+      assertMatch(actualQuery, expectedQuery);
+    });
+    it('appends appropriate query string to model when given several properties to insert', () => {
+      const actualQuery = Planet.insert(
+        'name = testPlanet',
+        'climate = arid',
+        'terrain = bumpy'
+      )['sql'];
+      const expectedQuery =
+        /INSERT\sINTO\splanets\s\(\s*name\s*,\s*climate\s*,\s*terrain\)\sVALUES\s\(\s*'testPlanet'\s*,\s*'arid'\s*,\s*'bumpy'\)/;
+      assertMatch(actualQuery, expectedQuery);
+    });
+    it('throws an error when invoked with incorrect column name', () => {
+      assertThrows(() => Planet.insert('terrrain = rocky'), Error);
+    });
+    it('throws an error when invoked on a model with an already in-progress query', () => {
+      Planet['sql'] = 'INSERT INTO planets ( VALUES (';
+      assertThrows(() => Planet.insert('name = testPlanet'), Error);
+    });
+  });
 
   describe('delete method', () => {
     it('appends appropriate query string to model when invoked without arguments', () => {
@@ -21,10 +46,10 @@ describe('model methods', () => {
       assertEquals(actualQuery, expectedQuery);
     });
 
-    // it('throws an error if invoked on a model with an already in-progress sql query', () => {
-    //   Planet['sql'] = 'SELECT climate FROM planets';
-    //   assertThrows(() => Planet.delete(), Error);
-    // });
+    it('throws an error if invoked on a model with an already in-progress sql query', () => {
+      Planet['sql'] = 'SELECT climate FROM planets';
+      assertThrows(() => Planet.delete(), Error);
+    });
   });
 
   describe('select method', () => {
@@ -50,20 +75,20 @@ describe('model methods', () => {
       assertMatch(actualQuery, expectedQuery);
     });
 
-    // it('defaults to "SELECT *" when invoked without any arguments', () => {
-    //   const actualQuery = Planet.select()['sql'];
-    //   const expectedQuery = 'SELECT * FROM planets';
-    //   assertEquals(actualQuery, expectedQuery);
-    // });
+    it('defaults to "SELECT *" when invoked without any arguments', () => {
+      const actualQuery = Planet.select()['sql'];
+      const expectedQuery = 'SELECT * FROM planets';
+      assertEquals(actualQuery, expectedQuery);
+    });
 
-    // it('throws an error if invoked with any invalid column names', () => {
-    //   assertThrows(() => Planet.select('diaaameter'), Error);
-    // });
+    it('throws an error if invoked with any invalid column names', () => {
+      assertThrows(() => Planet.select('diaaameter'), Error);
+    });
 
-    // it('throws an error if invoked on a model with an already in-progress sql query', () => {
-    //   Planet['sql'] = 'SELECT climate FROM planets';
-    //   assertThrows(() => Planet.select('terrain'), Error);
-    // });
+    it('throws an error if invoked on a model with an already in-progress sql query', () => {
+      Planet['sql'] = 'SELECT climate FROM planets';
+      assertThrows(() => Planet.select('terrain'), Error);
+    });
   });
 
   describe('where method', () => {
