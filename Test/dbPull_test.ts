@@ -1,8 +1,8 @@
 import { assert } from '../deps.ts';
 import { dbPull } from '../src/functions/dbPull.ts';
 
-const generatedModel = 
-`import { Model } from 'https://deno.land/x/denogres/mod.ts'
+const generatedModel =
+  `import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here
 
 
@@ -150,8 +150,8 @@ ok,
 happy,
 }`;
 
-Deno.test('DbPull Model Generation Test', async function() {
-    await dbPull();
-    const models = Deno.readTextFileSync('./models/model.ts');
-    assert(models.includes(generatedModel));
-})
+Deno.test('DbPull Model Generation Test', async function () {
+  await dbPull();
+  const models = Deno.readTextFileSync('./models/model.ts');
+  assert(models.includes(generatedModel));
+});

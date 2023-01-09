@@ -1,5 +1,5 @@
 class IncorrectData extends Error {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg);
     this.name = 'IncorrectData';
   }
@@ -19,8 +19,30 @@ export function checkUnsentQuery(
   return true;
 }
 
+interface Columns {
+  [key: string]: {
+    type: string;
+    primaryKey?: boolean;
+    notNull?: boolean;
+    unique?: boolean;
+    checks?: any;
+    defaultVal?: string | number | boolean | Date;
+    autoIncrement?: boolean;
+    association?: {
+      rel_type?: string;
+      name: string;
+      mappedTable: string;
+      mappedColumn: string;
+    };
+    length?: number;
+    enumName?: string;
+  };
+}
 // checks that the user is accessing a column that already exists in the model
-export function checkColumns(columns, input: string | string[]): boolean {
+export function checkColumns(
+  columns: Columns,
+  input: string | string[]
+): boolean {
   const columnsArr: string[] = Object.keys(columns);
   // checks for if input is an array of columns
   if (Array.isArray(input)) {

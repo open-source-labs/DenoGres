@@ -1,20 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
-import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
-
-interface IrecordPk {
-  attname: string;
-}
-interface IpkObj {
-  [key: string]: unknown;
-}
-
-// TYPE GUARD FUNCTIONS
-// confirms the input follows the exepcted shape of a primary key record (see interface above)
-const recordPk = (record: object): record is IrecordPk => {
-  return 'attname' in record;
-};
+import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
 
 export class Model {
   [k: string]: any; // index signature
@@ -60,8 +47,8 @@ export class Model {
     const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
     const values = Object.values(this).filter(
       (
-        values // values added by the user (to be added at those columns)
-      ) => !(typeof values === 'object' && values !== null)
+        values, // values added by the user (to be added at those columns)
+      ) => !(typeof values === 'object' && values !== null),
     );
 
     Model.sql = ''; // ensures that sql-query-in-progress is empty
@@ -91,8 +78,8 @@ export class Model {
     const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
     const newValues = Object.values(this).filter(
       (
-        values // new values added by user
-      ) => !(typeof values === 'object' && values !== null)
+        values, // new values added by user
+      ) => !(typeof values === 'object' && values !== null),
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -121,8 +108,8 @@ export class Model {
     Model.sql = '';
     // stores the newly updated row object at the 'record' property of the instance
     if (
-      updatedRows &&
-      typeof updatedRows[0] === 'object' &&
+      updatedRows && typeof updatedRows[0] === 'object' &&
+
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
@@ -266,25 +253,29 @@ export class Model {
   // INNER JOIN: selects records with matching values on both tables
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
-    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -299,13 +290,13 @@ export class Model {
   // ORDER BY: sort column(s) by ascending or descending order
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
-  static order(order: string, ...column: string[]) {
+  static order(order: 'ASC' | 'DESC', ...column: string[]) {
     checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
-      console.log(
-        `Error in sort method: order argument should be 'ASC' or 'DESC'`
+      throw new Error(
+        `Error in sort method: order argument should be 'ASC' or 'DESC'`,
       );
     }
     if (order === 'ASC' || order === 'DESC') {
@@ -390,11 +381,14 @@ export class Model {
   // await Capital.belongsTo(Country);
   // const ottawa = await Capital.where('name = Ottawa').queryInstance();
   // const ottawaCountry = await ottawa.getCountry();
-  static async belongsTo(targetModel: typeof Model, options?: belongToOptions) {
+  static async belongsTo(
+    targetModel: typeof Model,
+    options?: { associationName: string },
+  ) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = '';
-    let rel_type = options?.associationName
+    const rel_type = options?.associationName
       ? options?.associationName
       : 'belongsTo';
 
@@ -408,12 +402,6 @@ export class Model {
       // (usually this is the primary key column name, such as 'id' or '_id')
       foreignKey_ColumnName = mappings.source_keyname;
       mappingTarget_ColumnName = mappings.target_keyname;
-      // const columnAtt = {
-      //   type: targetModel.columns[mappingTarget_ColumnName].type,
-      //   association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName }
-      //  }
-      // console.log("foreignKey_ColumnName: ", foreignKey_ColumnName)
-      // Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
     } else {
       // If a relationship doesn't yet exist, we want to create one
       // currently, this method doesn't allow the user to customize the mapped columns
@@ -443,23 +431,9 @@ export class Model {
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
         FIELD_TYPE[columnAtt.type]
       };
-      ALTER TABLE ${
-        this.table
-      } ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${
-        targetModel.table
-      } ON DELETE SET NULL ON UPDATE CASCADE
+      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
-
-    // ========= COMPOSITE FOREIGN KEYS ONLY ============
-    // Add table constraints to static property 'foreignKey'
-    // No need to add if not a composite foreign keys
-    // this.foreignKey.push({
-    //   columns:[foreignKey_ColumnName],
-    //   mappedColumns: [mappingTarget_ColumnName],
-    //   rel_type: 'belongsTo',
-    //   model: targetModel
-    // })
 
     const mappingDetails = {
       association_type: 'belongsTo',
@@ -486,7 +460,7 @@ export class Model {
   // await Country.hasOne(Capital);
   // const canada = await Country.where('name = Canada').queryInstance();
   // const canadaCapital = await canada.getCapital();
-  static async hasOne(targetModel: typeof Model, options?: hasOneOptions) {
+  static async hasOne(targetModel: typeof Model) {
     return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
@@ -494,10 +468,11 @@ export class Model {
   // based on information returned about an existing one-to-many relationship between current and target models
   static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (!mappings)
+    if (!mappings) {
       throw new Error(
-        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
       );
+    }
     const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
     const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 
@@ -514,10 +489,6 @@ export class Model {
 }
 //end of Model class
 
-interface IgetMappingKeysResult {
-  [key: string]: string;
-}
-
 // helper function to find mapping keys between two tables
 // ex: if source table is 'species' and target table is 'planets,' result would include:
 // source_keyname of 'homeworld_id' (i.e. the column name in the source table) and
@@ -526,8 +497,8 @@ interface IgetMappingKeysResult {
 export async function getMappingKeys<T>(
   sourcTable: string,
   targetTable: string,
-  uri?: string
-): Promise<IgetMappingKeysResult | undefined | null> {
+  uri?: string,
+): Promise<{ [key: string]: string } | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
   source_attr.attname AS source_keyname,
@@ -554,45 +525,14 @@ export async function getMappingKeys<T>(
   }
 
   if (typeof result === 'object' && 'rows' in result) {
-    return result.rows[0] as IgetMappingKeysResult;
+    return result.rows[0] as { [key: string]: string };
   }
 } // end of getMappingKeys
-
-// helper function to find existing foreign key related to target table
-// no longer being used anywhere
-async function getForeignKey<T>(
-  thisTable: string,
-  targetTable: string,
-  uri?: string
-) {
-  const queryText = `SELECT a.attname
-  FROM pg_constraint c 
-  JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
-  WHERE attrelid = $1::regclass AND c.contype = 'f' AND c.confrelid=$2::regclass`;
-  let result;
-  const db = await ConnectDb(uri);
-  try {
-    result = await db.queryObject(queryText, [thisTable, targetTable]);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    DisconnectDb(db);
-  }
-  if (
-    typeof result === 'object' &&
-    'rows' in result &&
-    result.rows[0] !== null &&
-    typeof result.rows[0] === 'object' &&
-    recordPk(result.rows[0])
-  ) {
-    return result.rows[0].attname;
-  }
-}
 
 // helper function to find primary key of target table (often '_id' or 'id')
 export async function getprimaryKey<T>(
   tableName: string,
-  uri?: string
+  uri?: string,
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -620,54 +560,32 @@ export async function getprimaryKey<T>(
   }
 }
 
-interface belongToOptions {
-  associationName?: string;
-}
-interface hasOneOptions {
-  associationName?: string;
-}
-interface hasManyOptions {
-  associationName?: string;
-}
-interface manyToManyOptions {
-  through?: typeof Model;
-  createThrough?: string;
-  createXTable?: string;
-}
-
 // returns new instance of the 'ManyToMany' association class (defined in Assocation.ts)
 export async function manyToMany(
   modelA: typeof Model,
   modelB: typeof Model,
-  options: manyToManyOptions
+  options: { through: typeof Model },
 ) {
-  let associationQuery = '';
+  const throughModel = options.through; // ex: 'people_in_films'
+  const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
+  const mapKeysB = await getMappingKeys(throughModel.table, modelB.table); // keys linking the join table and modelB
 
-  if (options?.through) {
-    const throughModel = options.through; // ex: 'people_in_films'
-    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
-    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table); // keys linking the join table and modelB
+  if (mapKeysA && mapKeysB) {
+    const mappingDetails = {
+      association_type: 'ManyToMany',
+      association_name: `${modelA.name}_hasMany_${modelB.name}`,
+      modelA,
+      modelB,
+      throughModel,
+      modelA_foreignKey_inThroughModel: mapKeysA.source_keyname, // ex: 'person_id'
+      modelB_foreignKey_inThroughModel: mapKeysB.source_keyname, // ex: 'film_id'
+      modelA_mappingKey: mapKeysA.target_keyname, // ex: '_id' (primary key name on the people table)
+      modelB_mappingKey: mapKeysB.target_keyname, // ex: '_id' (primary key name on the films table)
+    };
 
-    if (mapKeysA && mapKeysB) {
-      const mappingDetails = {
-        association_type: 'ManyToMany',
-        association_name: `${modelA.name}_hasMany_${modelB.name}`,
-        modelA,
-        modelB,
-        throughModel,
-        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname, // ex: 'person_id'
-        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname, // ex: 'film_id'
-        modelA_mappingKey: mapKeysA.target_keyname, // ex: '_id' (primary key name on the people table)
-        modelB_mappingKey: mapKeysB.target_keyname, // ex: '_id' (primary key name on the films table)
-      };
-
-      // return out association instance
-      return new ManyToMany(modelA, modelB, mappingDetails, associationQuery);
-    } else {
-      throw new Error('This association does not exist');
-    }
-  } else if (options?.createThrough) {
-    // creating new x-table & new x-model: WIP
-    const modelA_foreignKey_inThroughModel = modelA.primaryKey;
+    // return new instance of ManyToMany (with empty associationQuer string since not currently able to create new association)
+    return new ManyToMany(modelA, modelB, mappingDetails, '');
+  } else {
+    throw new Error('This association does not exist');
   }
 }
