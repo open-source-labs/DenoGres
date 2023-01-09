@@ -286,12 +286,12 @@ export class Model {
   // ORDER BY: sort column(s) by ascending or descending order
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
-  static order(order: string, ...column: string[]) {
+  static order(order: 'ASC' | 'DESC', ...column: string[]) {
     checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
-      console.log(
+      throw new Error(
         `Error in sort method: order argument should be 'ASC' or 'DESC'`
       );
     }
@@ -381,7 +381,7 @@ export class Model {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
     let associationQuery = '';
-    let rel_type = options?.associationName
+    const rel_type = options?.associationName
       ? options?.associationName
       : 'belongsTo';
 
@@ -395,12 +395,6 @@ export class Model {
       // (usually this is the primary key column name, such as 'id' or '_id')
       foreignKey_ColumnName = mappings.source_keyname;
       mappingTarget_ColumnName = mappings.target_keyname;
-      // const columnAtt = {
-      //   type: targetModel.columns[mappingTarget_ColumnName].type,
-      //   association: { rel_type: rel_type, table: targetModel.table, mappedCol: mappingTarget_ColumnName }
-      //  }
-      // console.log("foreignKey_ColumnName: ", foreignKey_ColumnName)
-      // Object.assign(this.columns[foreignKey_ColumnName], columnAtt)
     } else {
       // If a relationship doesn't yet exist, we want to create one
       // currently, this method doesn't allow the user to customize the mapped columns
@@ -437,16 +431,6 @@ export class Model {
       } ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
-
-    // ========= COMPOSITE FOREIGN KEYS ONLY ============
-    // Add table constraints to static property 'foreignKey'
-    // No need to add if not a composite foreign keys
-    // this.foreignKey.push({
-    //   columns:[foreignKey_ColumnName],
-    //   mappedColumns: [mappingTarget_ColumnName],
-    //   rel_type: 'belongsTo',
-    //   model: targetModel
-    // })
 
     const mappingDetails = {
       association_type: 'belongsTo',

@@ -81,8 +81,8 @@ export class HasOne extends Association {
   // adds two methods to the target model: a getter and a setter
   // ex: if Country.hasOne(Capital), then add 'getCapital' and 'addCapital' to Country model
   private attachAssociationMethodsToModel() {
-    addMethodToModel(this, this.target, this.getAccesorName)
-    addAddMethodToModel(this, this.target, this.addAccesorName)
+    addGetterToModel(this, this.target, this.getAccesorName)
+    addSetterToModel(this, this.target, this.addAccesorName)
   }
 
   // invoked by the getter method on the target model to retrieve related row from the source table
@@ -107,7 +107,6 @@ export class HasOne extends Association {
   // invoked by the setter method on the target model to add related row on the source table
   async addAssociatedData(instance:any, values:any, uri?: string){
     let query = ''
-    let queryResult:any
     // case1. value is an object (e.g. {id:1})
     // case2. value is an instance of source table
     if(values.id) {
@@ -152,12 +151,12 @@ export class BelongsTo extends Association {
   
   // add instance methods for create, get, update, delete
   private attachAssociationMethodsToModel() {
-    addMethodToModel(this, this.source, this.getAccesorName)
-    addAddMethodToModel(this, this.target, this.addAccesorName)
+    addGetterToModel(this, this.source, this.getAccesorName)
+    addSetterToModel(this, this.target, this.addAccesorName)
   }
 
    // this is instance method e.g. profile1.getUser(), person.getSpecies()
-  async getAssociatedData(instance:any, uri?: string, options?:any) { // 
+  async getAssociatedData(instance:any, uri?: string) { // 
     let query = ''
     let queryResult:any
     if(this.foreignKey_ColumnName) { // type checking
@@ -181,7 +180,6 @@ export class BelongsTo extends Association {
   }
 }// end of BelongsTo class
 
-
 // e.g. Species.hasMany(Person)
 export class HasMany extends Association {
   constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
@@ -200,12 +198,12 @@ export class HasMany extends Association {
   private attachAssociationMethodsToModel(model:typeof Model) {
     const methodName = this.getAccesorName
     
-    addMethodToModel(this, model, methodName)
-    addAddMethodToModel(this, this.target, this.addAccesorName)
+    addGetterToModel(this, model, methodName)
+    addSetterToModel(this, this.target, this.addAccesorName)
   }
 
   // this is instance method e.g. species1.getPeople()
-  async getAssociatedData(instance:any, uri?: string, options?:any) {
+  async getAssociatedData(instance:any, uri?: string) {
     let query = ''
     if(this.mapping_ColumnName) {
       query = `
@@ -232,8 +230,6 @@ export class HasMany extends Association {
   
 }//end of hasMany
 
-
-
 export class ManyToMany extends Association {
   constructor(source:typeof Model, target:typeof Model, mappingDetails:mappingDetails, query:string) {
     super(source, target, mappingDetails, query);    
@@ -255,13 +251,13 @@ export class ManyToMany extends Association {
 
   // add instance methods for create, get, update, delete
   private attachAssociationMethodsToModels() {
-    addMethodToModel(this, this.modelA, this.getAccesorName_A)
-    addMethodToModel(this, this.modelB, this.getAccesorName_B)
-    //addAddMethodToModel(this, this.target, this.addAccesorName_A)
-    //addAddMethodToModel(this, this.target, this.addAccesorName_B)
+    addGetterToModel(this, this.modelA, this.getAccesorName_A)
+    addGetterToModel(this, this.modelB, this.getAccesorName_B)
+    //addSetterToModel(this, this.target, this.addAccesorName_A)
+    //addSetterToModel(this, this.target, this.addAccesorName_B)
   }
 
-  async getAssociatedData<T extends {}>(instance:T, uri?: string, options?:any) {
+  async getAssociatedData<T extends {}>(instance:T, uri?: string) {
     let query = ''
     let queryResult:any
     if(instance.constructor === this.modelA) {
@@ -298,11 +294,10 @@ export class ManyToMany extends Association {
   }
 } // end of ManyToMany class
 
-
 // accepts an association class (like 'HasOne'), the target model (like 'Country'), and the ModelMethod (like 'getCapital')
 // adds a method with the given name to the target model's prototype, which will act as a getter to retrieve a given model
 // instance's associated data (ex: canada.getCapital() will return the Ottawa row from the db)
-function addMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
+function addGetterToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
   Object.defineProperty(targetModel.prototype, ModelMethod, {
     enumerable: false, 
     value(options:any) {
@@ -311,8 +306,8 @@ function addMethodToModel<T extends Association>(association:T, targetModel:type
   }) 
 }
 
-// just like 'addMethodToModel' but used to add a setter method, like 'addCapital'
-function addAddMethodToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
+// just like 'addGetterToModel' but used to add a setter method, like 'addCapital'
+function addSetterToModel<T extends Association>(association:T, targetModel:typeof Model, ModelMethod:string) {
   Object.defineProperty(targetModel.prototype, ModelMethod, {
     enumerable: false, 
     value(val:any, options:any) {
