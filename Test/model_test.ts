@@ -77,38 +77,34 @@ describe('model methods', () => {
   });
 
   describe('select method', () => {
-    beforeEach(() => {
-      Planet['sql'] = '';
-    });
-
     it('appends appropriate query string to model when invoked with an asterisk', () => {
       const actualQuery = Planet.select('*')['sql'];
       const expectedQuery = 'SELECT * FROM planets';
       assertEquals(actualQuery, expectedQuery);
     });
-
-    it('works when invoked with one valid column name', () => {
+  
+    it('appends appropriate query string to model when invoked with one valid column name', () => {
       const actualQuery = Planet.select('climate')['sql'];
       const expectedQuery = 'SELECT climate FROM planets';
       assertEquals(actualQuery, expectedQuery);
     });
-
-    it('works with multiple valid column names', () => {
+  
+    it('appends appropriate query string to model when invoked with multiple valid column names', () => {
       const actualQuery = Planet.select('climate', 'terrain')['sql'];
       const expectedQuery = /SELECT\s+climate,\s*terrain\s+FROM\s+planets/i; // ignore missing or extra spaces where inconsequential
       assertMatch(actualQuery, expectedQuery);
     });
-
+  
     it('defaults to "SELECT *" when invoked without any arguments', () => {
       const actualQuery = Planet.select()['sql'];
       const expectedQuery = 'SELECT * FROM planets';
       assertEquals(actualQuery, expectedQuery);
     });
-
+  
     it('throws an error if invoked with any invalid column names', () => {
       assertThrows(() => Planet.select('diaaameter'), Error);
     });
-
+  
     it('throws an error if invoked on a model with an already in-progress sql query', () => {
       Planet['sql'] = 'SELECT climate FROM planets';
       assertThrows(() => Planet.select('terrain'), Error);
@@ -127,7 +123,7 @@ describe('model methods', () => {
       assert(actualQuery.startsWith(`SELECT * FROM planets WHERE`));
     });
 
-    it('works with equality and comparison conditions when formatted with a space around the operator', () => {
+    it('adds appropriate query string to model when invoked with equality and comparison conditions', () => {
       const equalityQuery = Planet.where('climate = temperate')['sql'];
       assert(equalityQuery.includes(`climate = 'temperate'`));
       Planet['sql'] = '';
@@ -146,9 +142,63 @@ describe('model methods', () => {
       assert(comparisonOrEqualityQuery.includes(`rotation_period >= '12'`));
     });
 
-    it('works with the LIKE operator', () => {
+    it('adds appropriate query string to model when invoked with the LIKE operator', () => {
       const actualQuery = Planet.where('name LIKE A%')['sql'];
       assert(actualQuery.includes(`name LIKE 'A%'`));
     });
+
+    it('adds appropriate query string to model when invoked with more than one condition', () => {
+      const actualQuery = Planet.where('climate = temperate', 'rotation_period > 12')['sql'];
+      const expectedQuery = `climate = 'temperate' rotation_period > '12'`;
+      assert(actualQuery.includes(expectedQuery));
+    });
+
+    it('throws an error when invoked with column names not on the model', () => {
+      assertThrows(() => Planet.where('rotationPeriod = 24'), Error);
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'where' method without any arguments
+     * - user invokes with malformatted arguments or unsupported syntax
+     * - user invokes with values of the wrong type for their columns
+     * - user chains with incompatible methods
+     */
+  });
+
+  describe('limit method', () => {
+    it('adds appropriate query string to model when invoked with a number', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery = Planet.limit(20)['sql'];
+      assert(actualQuery.includes(' LIMIT 20'));
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'limit' method without an argument
+     * - user invokes with the wrong type of argument (i.e. not a number)
+     * - user chains with incompatible methods (i.e. not after 'select')
+     */
+  });
+
+  describe('having method', () => {
+    it('adds appropriate query string to model when invoked with a single condition', () => {
+      Planet['sql'] = 'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
+      const actualQuery = Planet.having('COUNT(_id) > 1')['sql'];
+      assert(actualQuery.includes(' HAVING COUNT(_id) > 1'));
+    });
+
+    it('adds appropriate query string to model when invoked with more than one condition', () => {
+      Planet['sql'] = 'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
+      const actualQuery = Planet.having('COUNT(_id) > 1', 'AND gravity IS NOT NULL')['sql'];
+      assert(actualQuery.includes(' HAVING COUNT(_id) > 1 AND gravity IS NOT NULL'));
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'having' method without an argument
+     * - user invokes with a malformatted condition or nonexist column name
+     * - user chains with incompatible methods (i.e. not after 'select' and 'group')
+     */
   });
 });

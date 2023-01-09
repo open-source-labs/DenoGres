@@ -2,6 +2,7 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
+import { PoolClient } from '../../deps';
 
 export class Model {
   [k: string]: any; // index signature
@@ -29,6 +30,9 @@ export class Model {
   static unique?: Array<string[]>;
   static primaryKey?: string[];
   private static sql = ''; // stores current db query here until done executing
+  private static transactionInProgress = false; // flag for whether transaction is on first run or not
+  private static transactionFailed = false; // flag for whether query in a transaction has failed
+  private static transactionConnection?: PoolClient;
   static foreignKey?: {
     columns: string[];
     mappedColumns: string[];
@@ -36,6 +40,67 @@ export class Model {
     table: string;
   }[];
 
+  /**
+   * params: uri | void
+   * Begins and continues adding queries to the transaction.
+   *
+   * Note: Initially checking the transactionFailed state solves the issue of duplicate error handling messages appearing
+   */
+  static async transaction(uri?: string) {
+    if (!Model.transactionFailed) {
+      const db = Model.transactionConnection;
+      if (!Model.transactionInProgress) {
+        this.sql = 'BEGIN;' + this.sql;
+        // create connection to db
+        Model.transactionConnection = await ConnectDb(uri);
+        try {
+          await db.queryObject(this.sql);
+          Model.transactionInProgress = true;
+        } catch (err) {
+          Model.transactionFailed = true;
+        }
+      } else {
+        try {
+          await db.queryObject(this.sql);
+        } catch (err) {
+          Model.transactionFailed = true;
+          console.log(err, 'ERROR IN TRANSACTION');
+        }
+      }
+    }
+    this.sql = '';
+  }
+  /**
+   * params: uri | void
+   * If no previous queries have failed endTran() will send one last query to the database, commiting if it passes, rollback if it fails
+   * If previous query has failed, Rollback and disconnect from the db
+   * Reset transactionFailed and transactionInProgess Booleans and this.sql
+   */
+  static async endTransaction() {
+    const db = Model.transactionConnection;
+    if (Model.transactionFailed) {
+      try {
+        await db.queryObject('ROLLBACK;');
+        DisconnectDb(db);
+      } catch (err) {
+        console.log(err, 'THERE WAS AN ERROR IN THE TRANSACTION');
+      }
+    } else {
+      try {
+        await db.queryObject(this.sql + ';');
+        await db.queryObject('COMMIT;');
+      } catch (err) {
+        await db.queryObject('ROLLBACK');
+        DisconnectDb(db);
+        console.log(err, 'ERROR IN FINAL QUERY OF TRANSACTION');
+      }
+    }
+    Model.transactionFailed = false;
+    Model.transactionInProgress = false;
+    this.sql = '';
+  }
+
+  // inserts properties created by user on instance object into user's db
   // the only non-static property that exists on the user's model classes by default
   // not directly changeable by the user; when a user invokes the 'save' method on a
   // model instance, the result (i.e. the new row/contents of the instance will be stored here)
