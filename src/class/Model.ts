@@ -1,6 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
+import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
 
 interface IrecordPk {
   attname: string;
@@ -60,6 +61,7 @@ export class Model {
     const values = Object.values(this).filter((values) =>
       // values added by the user (to be added at those columns)
       !(typeof values === 'object' && values !== null)
+
     );
 
     Model.sql = ''; // ensures that sql-query-in-progress is empty
@@ -90,6 +92,7 @@ export class Model {
     const newValues = Object.values(this).filter((values) =>
       // new values added by user
       !(typeof values === 'object' && values !== null)
+
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -119,6 +122,7 @@ export class Model {
     // stores the newly updated row object at the 'record' property of the instance
     if (
       updatedRows && typeof updatedRows[0] === 'object' &&
+
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
@@ -131,12 +135,19 @@ export class Model {
   // builds query of the form 'INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
   // must be chained with invocation of 'query' method in order to execute query
   static insert(...value: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'insert', this.name);
+
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
       // split each argument into column name (before '=') and value (after '=')
       const words = value[i].toString().split(' = ');
       // every words[0] should represent a column name (separated by commas to form query string)
-      this.sql += ` ${words[0]}`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+
+      this.sql += ` ${inputColumn}`;
       if (i !== value.length - 1) this.sql += ' ,';
       else this.sql += ')';
     }
@@ -154,10 +165,16 @@ export class Model {
   // this method is like the 'update' method above but without the WHERE clause
   // therefore it updates the value(s) of the given column(s) for all records in the table
   static edit(...condition: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'edit', this.name);
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
-      this.sql += ` ${words[0]} = '${words[1]}'`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+      // words[1] is the input value
+      this.sql += ` ${inputColumn} = '${words[1]}'`;
       if (i !== condition.length - 1) this.sql += ' ,';
     }
     return this;
@@ -167,6 +184,8 @@ export class Model {
   // can also be chained with 'where' method to delete only rows where condition is met
   // either way, must be chained with 'query' method to execute query
   static delete() {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'delete', this.name);
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -174,8 +193,18 @@ export class Model {
   // accepts 1 or more column names to select from table associated with given model
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
-    this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
-    return this;
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'select', this.name);
+    // check for empty arguments and *
+    if (arguments.length === 0 || arguments[0] === '*') {
+      this.sql += `SELECT * FROM ${this.table}`;
+      return this;
+    } else {
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, column);
+      this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
+      return this;
+    }
   }
 
   // this method can be chained onto other methods to add 1 or more conditions to the existing query
@@ -189,23 +218,30 @@ export class Model {
 
     // converts conditions from the form "column_name = value" into "column_name = 'value'"
     for (let i = 0; i < condition.length; i++) {
+      // check that the input column is one that is in the table
       if (condition[i].includes(' = ')) {
         words = condition[i].toString().split(' = ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} = '${words[1]}'`;
       } else if (condition[i].includes(' > ')) {
         words = condition[i].toString().split(' > ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} > '${words[1]}'`;
       } else if (condition[i].includes(' < ')) {
         words = condition[i].toString().split(' < ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} < '${words[1]}'`;
       } else if (condition[i].includes(' >= ')) {
         words = condition[i].toString().split(' >= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} >= '${words[1]}'`;
       } else if (condition[i].includes(' <= ')) {
         words = condition[i].toString().split(' <= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} <= '${words[1]}'`;
       } else if (condition[i].includes(' LIKE ')) {
         words = condition[i].toString().split(' LIKE ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
@@ -230,35 +266,32 @@ export class Model {
   // INNER JOIN: selects records with matching values on both tables
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
-    this.sql +=
-      ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
-    this.sql +=
-      ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
-    this.sql +=
-      ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
-    this.sql +=
-      ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
   // puts all rows with same value for passed in column(s) into one 'summary row'
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
+    checkColumns(this.columns, column);
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
   }
@@ -267,11 +300,12 @@ export class Model {
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
   static order(order: string, ...column: string[]) {
+    checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
       console.log(
-        `Error in sort method: order argument should be 'ASC' or 'DESC'`,
+        `Error in sort method: order argument should be 'ASC' or 'DESC'`
       );
     }
     if (order === 'ASC' || order === 'DESC') {
@@ -282,26 +316,41 @@ export class Model {
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   static count(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'count', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
   }
 
   static sum(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'sum', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
 
   static avg(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'avg', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
 
   static min(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'min', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
 
   static max(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'max', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
@@ -320,7 +369,7 @@ export class Model {
     // clear the query string and return the resulting rows from the query if any
     this.sql = '';
     await DisconnectDb(db);
-    return (queryResult) ? queryResult.rows : undefined;
+    return queryResult ? queryResult.rows : undefined;
   }
 
   // can chain this method on after the 'select' method to query the db
@@ -394,7 +443,11 @@ export class Model {
       ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
         FIELD_TYPE[columnAtt.type]
       };
-      ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
+      ALTER TABLE ${
+        this.table
+      } ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${
+        targetModel.table
+      } ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
 
@@ -474,7 +527,7 @@ interface IgetMappingKeysResult {
 export async function getMappingKeys<T>(
   sourcTable: string,
   targetTable: string,
-  uri?: string,
+  uri?: string
 ): Promise<IgetMappingKeysResult | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
@@ -511,7 +564,7 @@ export async function getMappingKeys<T>(
 async function getForeignKey<T>(
   thisTable: string,
   targetTable: string,
-  uri?: string,
+  uri?: string
 ) {
   const queryText = `SELECT a.attname
   FROM pg_constraint c 
@@ -540,7 +593,7 @@ async function getForeignKey<T>(
 // helper function to find primary key of target table (often '_id' or 'id')
 export async function getprimaryKey<T>(
   tableName: string,
-  uri?: string,
+  uri?: string
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -587,7 +640,7 @@ interface manyToManyOptions {
 export async function manyToMany(
   modelA: typeof Model,
   modelB: typeof Model,
-  options: manyToManyOptions,
+  options: manyToManyOptions
 ) {
   let associationQuery = '';
 
