@@ -261,11 +261,11 @@
 >             - `rel_type` set to `belongsTo`
 >             - `table` set to the name of the target table
 >             - `mappedCol` set to the name of the primary id on the target table (usually `id` or `_id`)
-> - an new instance of the `BelongsTo` class is returned with the following passed to the constructor:
+> - a new instance of the `BelongsTo` class is returned with the following passed to the constructor:
 >     - the current model and the target model
 >     - a `mappingDetails` object with the properties:
 >         - `association_type` set to `belongsTo`
->         - `association_name` set to `table_name_belongsTo_target_table`
+>         - `association_name` set to string of the form `currentTable_belongsTo_targetTable`
 >         - `targetModel` set to the target model itself
 >         - `foreignKey_ColumnName` set to a foreign key of the form `target_id`
 >         - `mapping_ColumnName` set to the name of the primary key on the target table
@@ -286,8 +286,107 @@
 > - opens a connection with the user's database
 > - sends a query string of the form `SELECT * FROM target_table WHERE target_primaryKey = 'foreignKey_ColumnName'` to the user's database
 > - returns the row(s) returned from the database, which should be the row associated with the current model instance, ex:
+>     - step 1. `await Capital.belongsTo(Country)`
+>     - step 2. `const ottawa = await Capital.where('name = Ottawa').queryInstance()`
+>     - step 3. `const ottawaCountry = await ottawa.getCountry()`
+>     - `ottawaCountry` should be an array with a single object representing the row for Canada
+
+### **Has One**
+
+#### Expected Behavior:
+> when user invokes the `hasOne` method on a model class, passing in a target model (i.e. table to form the association with)...
+> - the `belongsTo` method is invoked on the target model, passing in the current model along with an options object specifying the `associationName` as `hasOne`, this has all the following effects:
+> - a new property is added to the columns object on the target model
+>     - the property's name is the new foreign key column name (of the form `model_id` where the model is the original one on which the `hasOne` method was invoked)
+>     - the corresponding value is an object with the propreties:
+>         - `type` set to the type of the primary id on the original model
+>         - `association` set to an object with the following properties:
+>             - `rel_type` set to `hasOne`
+>             - `table` set to the name of the original table
+>             - `mappedCol` set to the name of the primary id on the original table (usually `id` or `_id`)
+> - a new instance of the `HasOne` class is returned with the following passed to the constructor:
+>     - the target model and the original model
+>     - a `mappingDetails` object with the properties:
+>         - `association_type` set to `belongsTo` (**ISSUE, HARD-CODED**)
+>         - `association_name` set to string of the form `targetTable_belongsTo_originalTable` (**ISSUE, HARD-CODED**)
+>         - `targetModel` set to the original model
+>         - `foreignKey_ColumnName` set to a foreign key of the form `model_id`
+>         - `mapping_ColumnName` set to the name of the primary key on the original table
+>     - an `associationQuery` string with two queries (separated by a semicolon):
+>         - `ALTER TABLE target_table ADD foreignKey_ColumnName type`
+>         - `ALTER TABLE target_table ADD CONSTRAINT fk_foreignKey_ColumnName FOREIGN KEY (foreignKey_ColumnName) REFERENCES original_table ON DELETE SET NULL ON UPDATE CASCADE`
+> - note that, to send the `associationQuery` to the user's database, fully establishing the new association, the user must then invoke the `syncAssociation` method on the `HasOne` instance returned (see below)
+
+#### Resulting Methods:
+
+> the new instance of the `HasOne` class will contain a method called `syncAssociation`, which, when invoked...
+> - opens a connection with the user's database
+> - sends the `associationQuery` passed to the instance (see above) to the database
+> - disconnects from the user's database
+> - returns undefined (regardless of success or failure)
+
+> instantiation of this new `HasOne` instance also triggers the addition of a getter method (of the form `getModel`) onto the original model, which, when invoked on an instance of that model...
+> - opens a connection with the user's database
+> - sends a query string of the form `SELECT * FROM target_table WHERE target_primaryKey = 'foreignKey_ColumnName'` to the user's database
+> - returns the row(s) returned from the database, which should be the row associated with the current model instance, ex:
 >     - step 1. `await Country.hasOne(Capital)`
 >     - step 2. `const canada = await Country.where('name = Canada').queryInstance()`
 >     - step 3. `const canadaCapital = await canada.getCapital()`
->     - should return an array with a single object representing the row for the capital of Canada, Ottowa
+>     - `canadaCapital` should be an array with a single object representing the row for the capital of Canada, Ottowa
 
+### **Has Many**
+
+#### Expected Behavior:
+> when user invokes the `hasMany` method on a model class, passing in a target model (i.e. table to form the association with)...
+> - if a relationship between the models already exists, a new instance of the `HasMany` class is returned with the following passed to the constructor:
+>     - the current model and the target model
+>     - a `mappingDetails` object with the properties:
+>         - `association_type` set to `hasMany`
+>         - `association_name` set to string of the form `currentTable_hasMany_targetTable`
+>         - `targetModel` set to the target model
+>         - `foreignKey_ColumnName` set to the foreign key on the target table linking it to the current table OR an empty string (if the relationship does not yet exist)
+>         - `mapping_ColumnName` set to the name of the primary key on the current table
+>     - an `associationQuery` set to an empty string (**ISSUE, OBSOLETE**)
+> - if a relationship between the models does NOT already exist, an error will be thrown
+> - NOTE: this method, unlike the others, does not establish a new relationship between tables but instead returns a HasMany instance representing an existing relationship; to establish a new one-to-many relationship, the docs recommend using the `belongsTo` method
+
+#### Resulting Methods:
+
+> instantiation of the `HasMany` class triggers the addition of a getter method (of the form `getModels`, ex: `getPlanets` or `getUsers`) onto the original model, which, when invoked on an instance of that model...
+> - opens a connection with the user's database
+> - sends a query string of the form `SELECT * FROM target_table WHERE foreignKey_ColumnName = 'primaryKey'` to the user's database
+> - returns the row(s) returned from the database, which should be the rows from the target table associated with the current model instance, ex:
+>     - step 1. `await Species.hasMany(Person)`
+>     - step 2. `const droid = await Species.where('name = Droid').queryInstance()`
+>     - step 3. `const droidCharacters = await droid.getPersons()`
+>     - `droidCharacters` should be an array with objects representing the rows for each droid character
+
+### **Many-To-Many**
+
+#### Expected Behavior:
+> when user invokes the `manyToMany` function (independent of a model), passing in two models and an options object of the form `{ through: join_table_name }`...
+> - if a relationship between these models already exists, a new instance of the `ManyToMany` class is returned with the following passed to the constructor:
+>     - the two models (modelA and modelB)
+>     - a `mappingDetails` object with the properties:
+>         - `association_type` set to `ManyToMany`
+>         - `association_name` set to string of the form `modelA_hasMany_modelB`
+>         - `modelA` set to the first model passed in
+>         - `modelB` set to the second model passed in
+>         - `throughModel` set to the join table name passed into the options object
+>         - `modelA_foreignKey_inThroughModel` set to the name of the foreign key associated with modelA on the join table
+>         - `modelB_foreignKey_inThroughModel` set to the name of the foreign key associated with modelB on the join table
+>         - `modelA_mappingKey` set to the name of the primary key on modelA
+>         - `modelB_mappingKey` set to the name of the primary key on modelB
+>     - an `associationQuery` set to an empty string (**ISSUE, OBSOLETE**)
+> - NOTE: this method, like hasMany, cannot currently establish a new relationship between tables but instead returns a ManyToMany instance representing an existing relationship; there is currently no way to establish a new many-to-many relationship
+
+#### Resulting Methods:
+
+> instantiation of the `ManyToMany` class triggers the addition of getter methods (of the form `getModels`) onto models A and B, which, when invoked on instances of those models...
+> - opens a connection with the user's database
+> - sends the database a query string of the form `SELECT tableA.* FROM tableB INNER JOIN joinTable ON tableB.primaryKey = joinTable.foreignKeyB INNER JOIN tableA ON joinTable.foreignKeyA = tableA.primaryKey WHERE tableA.primaryKey = 'primary_key_on_instance' ORDER BY tableB.primaryKey`
+> - returns the rows returned from the database, which should be the rows associated with the current model instance, ex:
+>     - step 1. `await manyToMany(Person, Film, { through: PeopleInFilm })`
+>     - step 2. `const luke = await Person.where('name = Luke Skywalker').queryInstance()`
+>     - step 3. `const lukeFilms = await luke.getFilms()`
+>     - `lukeFilms` should be an array with objects representing the rows for each film Luke is in
