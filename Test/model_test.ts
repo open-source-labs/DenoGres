@@ -97,6 +97,50 @@ describe('model methods', () => {
     it('throws an error when invoked with column names not on the model', () => {
       assertThrows(() => Planet.where('rotationPeriod = 24'), Error);
     });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'where' method without any arguments
+     * - user invokes with malformatted arguments or unsupported syntax
+     * - user invokes with values of the wrong type for their columns
+     * - user chains with incompatible methods
+     */
+  });
+
+  describe('limit method', () => {
+    it('adds appropriate query string to model when invoked with a number', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery = Planet.limit(20)['sql'];
+      assert(actualQuery.includes(' LIMIT 20'));
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'limit' method without an argument
+     * - user invokes with the wrong type of argument (i.e. not a number)
+     * - user chains with incompatible methods (i.e. not after 'select')
+     */
+  });
+
+  describe('having method', () => {
+    it('adds appropriate query string to model when invoked with a single condition', () => {
+      Planet['sql'] = 'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
+      const actualQuery = Planet.having('COUNT(_id) > 1')['sql'];
+      assert(actualQuery.includes(' HAVING COUNT(_id) > 1'));
+    });
+
+    it('adds appropriate query string to model when invoked with more than one condition', () => {
+      Planet['sql'] = 'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
+      const actualQuery = Planet.having('COUNT(_id) > 1', 'AND gravity IS NOT NULL')['sql'];
+      assert(actualQuery.includes(' HAVING COUNT(_id) > 1 AND gravity IS NOT NULL'));
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'having' method without an argument
+     * - user invokes with a malformatted condition or nonexist column name
+     * - user chains with incompatible methods (i.e. not after 'select' and 'group')
+     */
   });
 });
 
