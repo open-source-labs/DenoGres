@@ -56,6 +56,7 @@ export class Model {
   static primaryKey?: string[];
   private static sql = ''; // stores current db query here until done executing
   private static openTran = false; // flag for whether transaction is on first run or not
+  private static tranFailed = false;
   private static connectTran?: PoolClient;
   static foreignKey?: {
     columns: string[];
@@ -80,28 +81,39 @@ export class Model {
     //if variable is true, run db.queryObject(this.sql);
     //if db.queryObject(this.sql) fails, then we db.queryObject('ROLLBACK') and reset this.sql =''  send error and close db
     //else reset this.sql =''
-    if (!this.openTran) {
+    // console.log(Model.openTran, 'This SHOULD BE MODEL OPENTRAN INITIALLY');
+    if(!Model.tranFailed){
+    if (!Model.openTran) {
       this.sql = 'BEGIN;' + this.sql;
-      const db = (this.connectTran = await ConnectDb(uri));
+      const db = (Model.connectTran = await ConnectDb(uri));
       try {
-        db.queryObject(this.sql + ';');
-        this.openTran = true;
+        const queryResult = await db.queryObject(this.sql);
+        // console.log(queryResult, ' FIRST QUERY RESULT VARIABLE');
+        // this.openTran = true;
+        Model.openTran = true;
       } catch (err) {
-        db.queryObject('ROLLBACK;');
-        DisconnectDb(db);
-        console.log(err, 'error on first query in transaction');
+        Model.tranFailed = true;
+        // await db.queryObject('ROLLBACK;');
+        // DisconnectDb(db);
+        // Model.openTran = false;
+        // console.log(err, 'ERROR IN FIRST QUERY OF TRANSACTION');
       }
     } else {
-      const db = this.connectTran;
+      const db = Model.connectTran;
       try {
-        db.queryObject(this.sql);
+        // console.log(this.sql, "the query that's not first");
+        const queryResult = await db.queryObject(this.sql);
+        // console.log(queryResult, 'MIDDLE QUERY RESULT VARIABLE');
       } catch (err) {
-        db.queryObject('ROLLBACK');
-        DisconnectDb(db);
-        this.openTran = false;
-        console.log(err, 'error in transaction');
+        Model.tranFailed = true;
+        // console.log(db, 'db in CATCH');
+        // await db.queryObject('ROLLBACK');
+        // DisconnectDb(db);
+        // Model.openTran = false;
+        console.log(err, 'ERROR IN TRANSACTION');
       }
     }
+  }
     this.sql = '';
   }
 
@@ -112,21 +124,31 @@ export class Model {
 
     //if error, rollback and disconnect from db
 
+    const db = Model.connectTran;
     //always at end of function set sql = '', set boolean to false
-    const db = this.connectTran;
-    try {
-      console.log(this.sql);
-      db.queryObject(this.sql + ';');
-      db.queryObject('COMMIT;');
-      //DisconnectDb(db) it does not like this
-    } catch (err) {
-      db.queryObject('ROLLBACK');
-      DisconnectDb(db);
-      console.log(err, 'error in final query in transaction'); // we dont throw an error when theres an error
+    if (Model.tranFailed) {
+      try {
+        await db.queryObject('ROLLBACK;');
+        DisconnectDb(db);
+      } catch (err) {
+        console.log(err, 'THERE WAS AN ERROR IN THE TRANSACTION');
+      }
+    } else {
+      try {
+        console.log(this.sql);
+        await db.queryObject(this.sql + ';');
+        await db.queryObject('COMMIT;');
+        //DisconnectDb(db) it does not like this
+      } catch (err) {
+        await db.queryObject('ROLLBACK');
+        DisconnectDb(db);
+        console.log(err, 'ERROR IN FINAL QUERY OF TRANSACTION');
+      }
     }
-
     // DisconnectDb(db); also doesnt like this
-    this.openTran = false;
+    // this.openTran = false;
+    Model.tranFailed = false;
+    Model.openTran = false;
     this.sql = '';
   }
 

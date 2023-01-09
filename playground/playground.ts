@@ -39,15 +39,15 @@ import * as model from '../models/model.ts';
 
 // model.Turtle.insert('name = TESTINGGGG').query();
 
-await model.Turtle.insert('name = Name10').tran();
-await model.Turtle.insert('name= Name11').tran();
-await model.Turtle.insert('name = Name12').endTran();
+await model.Turtle.insert('name = rhino1').tran();
+await model.Turtle.insert('name = rhino').tran();
+await model.Turtle.insert('name = rhino').tran();
 
-// await model.Duck.insert('name = Name7').tran();
-// await model.Duck.insert('name = Name8').tran();
-// await model.Duck.edit('name = doodoo2').where('name = Name7').tran();
-// await model.Duck.delete().where('name = Name8').tran();
-// await model.Duck.insert('name = Name9').endTran();
+await model.Duck.insert('name = seahorse').tran();
+await model.Duck.insert('name= cat').tran();
+await model.Duck.edit('name = crab').where('name = seahorse').tran();
+await model.Duck.delete().where('name = cat').tran();
+await model.Duck.insert('name = octopus').endTran();
 
 //  model.Turtle.insert('name = TURTLE').tran();
 //  model.Turtle.insert('name = TOirTOise').tran();
