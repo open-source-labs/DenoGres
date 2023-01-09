@@ -31,11 +31,35 @@ describe('model methods', () => {
       assertMatch(actualQuery, expectedQuery);
     });
     it('throws an error when invoked with incorrect column name', () => {
-      assertThrows(() => Planet.insert('terrrain = rocky'), Error);
+      assertThrows(() => Planet.insert('terrrrrain = rocky'), Error);
     });
     it('throws an error when invoked on a model with an already in-progress query', () => {
       Planet['sql'] = 'INSERT INTO planets ( VALUES (';
       assertThrows(() => Planet.insert('name = testPlanet'), Error);
+    });
+  });
+  describe('edit method', () => {
+    it('appends appropriate query string to model when invoked with one property', () => {
+      const actualQuery = Planet.edit('name = testPlanet')['sql'];
+      const expectedQuery = "UPDATE planets SET name = 'testPlanet'";
+      assertEquals(actualQuery, expectedQuery);
+    });
+    it('appends appropriate query string to model when invoked with several properties', () => {
+      const actualQuery = Planet.edit(
+        'name = testPlanet',
+        'climate = arid',
+        'terrain = bumpy'
+      )['sql'];
+      const expectedQuery =
+        "UPDATE planets SET name = 'testPlanet' , climate = 'arid' , terrain = 'bumpy'";
+      assertEquals(actualQuery, expectedQuery);
+    });
+    it('throws an error when invoked with an incorrect column name', () => {
+      assertThrows(() => Planet.edit('terrrrrain = rocky'), Error);
+    });
+    it('throws an error when invoked on a model with an already in-progress query', () => {
+      Planet['sql'] = 'UPDATE planets SET ';
+      assertThrows(() => Planet.edit('name = testPlanet'), Error);
     });
   });
 
