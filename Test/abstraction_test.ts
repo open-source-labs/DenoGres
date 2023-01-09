@@ -91,7 +91,8 @@ class Team extends Model {
     teamrole: { type: 'string', notNull: false },
   };
 }
-interface IObj { // work-around
+interface IObj {
+  // work-around
   //firstName: unknown[];
   [key: string]: any;
 }
@@ -136,7 +137,7 @@ describe('Abstraction Test', () => {
 
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = '${user0.firstname}'`,
+      `SELECT * FROM users WHERE firstname = '${user0.firstname}'`
     );
     await DisconnectDb(db);
 
@@ -152,7 +153,7 @@ describe('Abstraction Test', () => {
     // bring the saved record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'temp'`,
+      `SELECT * FROM users WHERE firstname = 'temp'`
     );
     await DisconnectDb(db);
 
@@ -164,14 +165,14 @@ describe('Abstraction Test', () => {
   // 4. edit 'Test' --> 'Deno Land'
   it('edit the existing record', async () => {
     // edit must be used after where, otherwise it will update whole records in the table
-    await User.edit('firstname = Deno', 'lastname = Land').where(
-      'firstname = Test',
-    ).query();
+    await User.edit('firstname = Deno', 'lastname = Land')
+      .where('firstname = Test')
+      .query();
 
     // bring the editted record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'Deno'`,
+      `SELECT * FROM users WHERE firstname = 'Deno'`
     );
     await DisconnectDb(db);
 
@@ -189,7 +190,7 @@ describe('Abstraction Test', () => {
     // bring the editted record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'temp'`,
+      `SELECT * FROM users WHERE firstname = 'temp'`
     );
     await DisconnectDb(db);
     assertEquals(q1.rows[0], undefined);
@@ -197,7 +198,7 @@ describe('Abstraction Test', () => {
 
   // 6. selecting all / and part of existing users
   it('select the record', async () => {
-    const selected = await User.select('firstname, lastname').query() as IObj;
+    const selected = (await User.select('firstname, lastname').query()) as IObj;
     assertEquals(selected.length, 8);
   });
 
@@ -209,47 +210,44 @@ describe('Abstraction Test', () => {
 
   // 8. innerJoin
   it('selects records that have matching values from both tables', async () => {
-    const innerjoin = await User.select('users.*').innerJoin(
-      'team_id',
-      'id',
-      'teams',
-    ).where('points = 60').query() as IObj;
+    const innerjoin = (await User.select('users.*')
+      .innerJoin('team_id', 'id', 'teams')
+      .where('points = 60')
+      .query()) as IObj;
     assertEquals(innerjoin[0].points, 60);
   });
 
   // 9. leftJoin
   it('selects records from first table and matching values on second table', async () => {
-    const leftjoin = await User.select('users.*').leftJoin(
-      'team_id',
-      'id',
-      'teams',
-    ).where('points = 60').query() as IObj;
+    const leftjoin = (await User.select('users.*')
+      .leftJoin('team_id', 'id', 'teams')
+      .where('points = 60')
+      .query()) as IObj;
     assertEquals(leftjoin[0].points, 60);
   });
 
   // 10. rightJoin
   it('selects records from first table and matching values on second table', async () => {
-    const rightjoin = await User.select('users.*').rightJoin(
-      'team_id',
-      'id',
-      'teams',
-    ).where('points = 60').query() as IObj;
+    const rightjoin = (await User.select('users.*')
+      .rightJoin('team_id', 'id', 'teams')
+      .where('points = 60')
+      .query()) as IObj;
     assertEquals(rightjoin[0].points, 60);
   });
 
   // 11. fullJoin = outerJoin
   it('selects all records when a match exists in either table', async () => {
-    const fulljoin = await User.select('users.*').fullJoin(
-      'team_id',
-      'id',
-      'teams',
-    ).where('points = 60').query() as IObj;
+    const fulljoin = (await User.select('users.*')
+      .fullJoin('team_id', 'id', 'teams')
+      .where('points = 60')
+      .query()) as IObj;
     assertEquals(fulljoin[0].points, 60);
   });
 
   // 12. group is used with aggregation functions
   it('group rows with same values', async () => {
-    const group = await User.select('SUM(points), gender').group('gender')
+    const group = await User.select('SUM(points), gender')
+      .group('gender')
       .query();
     assertEquals(group[0], { sum: 140n, gender: 'M' });
     assertEquals(group[1], { sum: 220n, gender: 'F' });
@@ -257,8 +255,9 @@ describe('Abstraction Test', () => {
 
   // 13. order
   it('sort column(s) by ascending or descending order', async () => {
-    const order = await User.select('firstname, points').order('DESC', 'points')
-      .query() as IObj;
+    const order = (await User.select('firstname, points')
+      .order('DESC', 'points')
+      .query()) as IObj;
     assertEquals(order[0].points, 80);
     assertEquals(order[1].points, 70);
     assertEquals(order[2].points, 60);
@@ -278,17 +277,17 @@ describe('Abstraction Test', () => {
 
   // 16. avg
   it('calculate aggregate functions - AVG', async () => {
-    const avg = await User.avg('points').query() as IObj;
+    const avg = (await User.avg('points').query()) as IObj;
     assertEquals(Math.trunc(avg[0].avg), 45);
   });
   // 17. min
   it('calculate aggregate functions - MIN', async () => {
-    const min = await User.min('points').query() as IObj;
+    const min = (await User.min('points').query()) as IObj;
     assertEquals(min[0].min, 10);
   });
   // // 18. max
   it('calculate aggregate functions - MAX', async () => {
-    const max = await User.max('points').query() as IObj;
+    const max = (await User.max('points').query()) as IObj;
     assertEquals(max[0].max, 80);
   });
 
