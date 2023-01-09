@@ -41,7 +41,7 @@ interface Columns {
 // checks that the user is accessing a column that already exists in the model
 export function checkColumns(
   columns: Columns,
-  input: string | string[]
+  input: string | string[],
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
   // checks for if input is an array of columns

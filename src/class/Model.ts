@@ -41,8 +41,8 @@ export class Model {
 
   /**
    * params: uri | void
-   * Begins and continues adding queries to the transaction. 
-   * 
+   * Begins and continues adding queries to the transaction.
+   *
    * Note: Initially checking the tranFailed state solves the issue of duplicate error handling messages appearing
    */
   static async tran(uri?: string) {
