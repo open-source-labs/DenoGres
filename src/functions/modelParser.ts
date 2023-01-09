@@ -1,4 +1,4 @@
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
+import { resolve } from "../../deps.ts";
 
 // reads the given model.ts file (at ./models/model.ts) and converts it into an object w/ info about db schema
 // output ex:

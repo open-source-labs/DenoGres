@@ -2,7 +2,7 @@ import { sqlDataTypes } from "../constants/sqlDataTypes.ts";
 import { createClassName } from "../functions/StringFormat.ts";
 import { introspect } from "./introspect.ts";
 import { checkDbPull } from "./checkDbPull.ts";
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
+import { resolve } from "../../deps.ts";
 
 export let wasFired: boolean;
 

@@ -1,5 +1,5 @@
-import { resolve } from 'https://deno.land/std/path/mod.ts';
-import { ensureDir } from 'https://deno.land/std/fs/ensure_dir.ts';
+import { resolve } from '../../deps.ts';
+import { ensureDir } from '../../deps.ts';
 import { uniqueLog } from './myLog.ts';
 
 
