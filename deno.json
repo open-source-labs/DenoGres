@@ -5,5 +5,14 @@
     "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogres/webview/webview.ts\"",
     "test": "deno test --no-check --allow-read --allow-net --allow-env --allow-write --allow-run",
     "playground": "deno run -A ./playground/playground.ts"
-  }
+  },
+  "fmt": {
+    "files": {
+      "exclude": ["denogres-gui/", "vendor/"]
+    },
+    "options": {
+      "singleQuote": true
+    }
+  },
+  "importMap": "./vendor/import_map.json"
 }

@@ -2,6 +2,8 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { Pool, PoolClient } from '../../deps.ts';
+import { checkUnsentQuery, checkColumns } from '../functions/errorMessages.ts';
+
 interface IrecordPk {
   attname: string;
 }
@@ -71,7 +73,6 @@ export class Model {
   // public setTran(){
   //   return this.tran === true ? false: true;
   // }
-  private record = {}; // stores properties already set on instance by user
 
   static async tran(uri?: string) {
     // if variable is false then connect to db and run BEGIN; db.queryObject(firstquery)
@@ -153,61 +154,104 @@ export class Model {
   }
 
   // inserts properties created by user on instance object into user's db
+  // the only non-static property that exists on the user's model classes by default
+  // not directly changeable by the user; when a user invokes the 'save' method on a
+  // model instance, the result (i.e. the new row/contents of the instance will be stored here)
+  private record = {};
+
+  // inserts properties created by user on instance object (representing a single row) into user's db
   async save() {
-    const table = Object.getPrototypeOf(this).constructor.table;
-    const keys = Object.keys(this).filter((keys) => keys !== 'record');
-    const values = Object.values(this).filter(
-      (values) => !(typeof values === 'object' && values !== null)
+    const table = Object.getPrototypeOf(this).constructor.table; // ex: class 'Species' would have table set to 'species'
+    const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
+    const values = Object.values(this).filter((values) =>
+      // values added by the user (to be added at those columns)
+      !(typeof values === 'object' && values !== null)
     );
 
+    Model.sql = ''; // ensures that sql-query-in-progress is empty
+
+    // builds query string to insert new key/value pairs onto table in user's db
     Model.sql += `INSERT INTO ${table} (${keys.toString()}) VALUES (`;
     for (let i = 0; i < values.length; i++) {
       Model.sql += `'${values[i]}'`;
       if (i !== values.length - 1) Model.sql += ', ';
       else Model.sql += ')';
     }
+    // ensures that the query will return the newly created row
     Model.sql += ` RETURNING *`;
-    const results: any = await Model.query();
-    if (typeof results[0] === 'object' && results[0] !== null) {
+    // sends query to user's database by invoking 'query' method on the model
+    const results = await Model.query();
+    // stores the newly added row object at the 'record' property of the instance
+    if (results && typeof results[0] === 'object' && results[0] !== null) {
       this.record = results[0];
     }
+    Model.sql = '';
     return this;
   }
 
-  // updates database with properties reassigned by user on instance
+  // updates database with properties (i.e. columns) reassigned by user on instance ALREADY added to db by user
   async update() {
-    const newKeys = Object.keys(this).filter((keys) => keys !== 'record');
-    const newValues = Object.values(this).filter(
-      (values) => !(typeof values === 'object' && values !== null)
+    const table = Object.getPrototypeOf(this).constructor.table;
+    const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
+    const newValues = Object.values(this).filter((values) =>
+      // new values added by user
+      !(typeof values === 'object' && values !== null)
+
     );
-    const keys = Object.keys(this.record);
-    const values = Object.values(this.record);
+    const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
+    const values = Object.values(this.record); // values previously added by user
 
     Model.sql = '';
-    Model.sql += `UPDATE ${Object.getPrototypeOf(this).constructor.table} SET`;
+    // builds query string to update table in user's db, setting newly assigned keys (columns) to their values
+    Model.sql += `UPDATE ${table} SET`;
     for (let i = 0; i < newKeys.length; i++) {
       Model.sql += ` ${newKeys[i]} = '${newValues[i]}'`;
       if (i !== newValues.length - 1) Model.sql += ',';
     }
+
+    // adds the condition that the update only be made to the row that this model instance represents
+    // i.e. model instance must already have been saved to the db (only includes non-null values in condition)
     Model.sql += ` WHERE`;
     for (let i = 0; i < keys.length; i++) {
-      Model.sql += ` ${keys[i]} = '${values[i]}'`;
-      if (i !== values.length - 1) Model.sql += ' AND';
+      if (values[i]) {
+        if (i > 0) Model.sql += ' AND';
+        Model.sql += ` ${keys[i]} = '${values[i]}'`;
+      }
     }
-    return await Model.query();
+    Model.sql += ` RETURNING *`;
+    // sends query to user's database by invoking 'query' method on the model
+    const updatedRows = await Model.query();
+    // clears the in-progress-query-string now that the query has been executed
+    Model.sql = '';
+    // stores the newly updated row object at the 'record' property of the instance
+    if (
+      updatedRows && typeof updatedRows[0] === 'object' &&
+
+      updatedRows[0] !== null
+    ) {
+      this.record = updatedRows[0];
+    }
+    return this;
   }
 
-  // inserts row(s) into the db table associated with the current model
+  // inserts row into the db table associated with the current model
   // accepts as arguments 1 or more strings of the form 'column_name = value'
   // builds query of the form 'INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...)
   // must be chained with invocation of 'query' method in order to execute query
   static insert(...value: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'insert', this.name);
+
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
       // split each argument into column name (before '=') and value (after '=')
       const words = value[i].toString().split(' = ');
       // every words[0] should represent a column name (separated by commas to form query string)
-      this.sql += ` ${words[0]}`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+
+      this.sql += ` ${inputColumn}`;
       if (i !== value.length - 1) this.sql += ' ,';
       else this.sql += ')';
     }
@@ -225,10 +269,16 @@ export class Model {
   // this method is like the 'update' method above but without the WHERE clause
   // therefore it updates the value(s) of the given column(s) for all records in the table
   static edit(...condition: string[]) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'edit', this.name);
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
-      this.sql += ` ${words[0]} = '${words[1]}'`;
+      const inputColumn: string = words[0];
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, inputColumn);
+      // words[1] is the input value
+      this.sql += ` ${inputColumn} = '${words[1]}'`;
       if (i !== condition.length - 1) this.sql += ' ,';
     }
     return this;
@@ -238,6 +288,8 @@ export class Model {
   // can also be chained with 'where' method to delete only rows where condition is met
   // either way, must be chained with 'query' method to execute query
   static delete() {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'delete', this.name);
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -245,8 +297,18 @@ export class Model {
   // accepts 1 or more column names to select from table associated with given model
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
-    this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
-    return this;
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'select', this.name);
+    // check for empty arguments and *
+    if (arguments.length === 0 || arguments[0] === '*') {
+      this.sql += `SELECT * FROM ${this.table}`;
+      return this;
+    } else {
+      // check that the input column is one that is in the table
+      checkColumns(this.columns, column);
+      this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
+      return this;
+    }
   }
 
   // this method can be chained onto other methods to add 1 or more conditions to the existing query
@@ -260,23 +322,30 @@ export class Model {
 
     // converts conditions from the form "column_name = value" into "column_name = 'value'"
     for (let i = 0; i < condition.length; i++) {
+      // check that the input column is one that is in the table
       if (condition[i].includes(' = ')) {
         words = condition[i].toString().split(' = ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} = '${words[1]}'`;
       } else if (condition[i].includes(' > ')) {
         words = condition[i].toString().split(' > ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} > '${words[1]}'`;
       } else if (condition[i].includes(' < ')) {
         words = condition[i].toString().split(' < ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} < '${words[1]}'`;
       } else if (condition[i].includes(' >= ')) {
         words = condition[i].toString().split(' >= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} >= '${words[1]}'`;
       } else if (condition[i].includes(' <= ')) {
         words = condition[i].toString().split(' <= ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} <= '${words[1]}'`;
       } else if (condition[i].includes(' LIKE ')) {
         words = condition[i].toString().split(' LIKE ');
+        checkColumns(this.columns, words[0]);
         this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
@@ -326,6 +395,7 @@ export class Model {
   // puts all rows with same value for passed in column(s) into one 'summary row'
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
+    checkColumns(this.columns, column);
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
   }
@@ -334,6 +404,7 @@ export class Model {
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
   static order(order: string, ...column: string[]) {
+    checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
@@ -349,26 +420,41 @@ export class Model {
 
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   static count(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'count', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
   }
 
   static sum(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'sum', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
 
   static avg(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'avg', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
 
   static min(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'min', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
 
   static max(column: string) {
+    // If the sql string already exists, throw an error to the user
+    checkUnsentQuery(this.sql.length, 'max', this.name);
+    checkColumns(this.columns, column);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
@@ -508,36 +594,18 @@ export class Model {
     return await targetModel.belongsTo(this, { associationName: 'hasOne' });
   }
 
-  // e.g. Species.hasMany(Person) // making sure or creating foreign key in Person (people table)
-  static async hasMany(targetModel: typeof Model, options?: hasManyOptions) {
-    let mapping_ColumnName = ''; // mapping key in this model
-    let targetModel_foreignKey = ''; // foreign key in targetModel
-    let associationQuery = '';
-
+  // does NOT establish a new relationship between tables--returns a new instance of the HasMany class (defined in Association.ts)
+  // based on information returned about an existing one-to-many relationship between current and target models
+  static async hasMany(targetModel: typeof Model) {
     const mappings = await getMappingKeys(targetModel.table, this.table);
-    if (mappings !== undefined && mappings !== null) {
-      //console.log('========== EXISTING ASSOCIATION ===========');
-      mapping_ColumnName = mappings.target_keyname;
-      targetModel_foreignKey = mappings.source_keyname;
-      const columnAtt = {
-        //type: this.columns[mapping_ColumnName].type,
-        association: {
-          rel_type: 'belongsTo',
-          table: this.table,
-          mappedCol: mapping_ColumnName,
-        },
-      };
-      //console.log("columnAtt: ", columnAtt)
-      //Object.assign(targetModel.columns[targetModel_foreignKey], columnAtt)
-      //console.log(targetModel.columns[targetModel_foreignKey])
-    } else {
-      // IF forming new relationships // not allowing user option for now (defaulting to target's primary key)
-      //console.log('========== FORMING NEW ASSOCIATION ===========');
-      //console.log('========== need to execute belongsTo first ===========');
+    if (!mappings) {
+      throw new Error(
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
+      );
     }
-    // ========= WHEN COMPOSITE FOREIGN KEYS ...============
+    const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
+    const targetModel_foreignKey = mappings.source_keyname; // name of the foreign key on the target table
 
-    // ======== BUILDING FOR ASSOCIATION INSTANCE =======
     const mappingDetails = {
       association_type: 'hasMany',
       association_name: `${this.name}_hasMany_${targetModel.name}`,
@@ -546,12 +614,7 @@ export class Model {
       mapping_ColumnName: mapping_ColumnName,
     };
 
-    return new HasMany(this, targetModel, mappingDetails, associationQuery);
-  }
-
-  test() {
-    console.log(Object.keys(this));
-    console.log(Object.getPrototypeOf(this).constructor.table);
+    return new HasMany(this, targetModel, mappingDetails, ''); // empty string passed in for association query
   }
 }
 //end of Model class
@@ -684,13 +747,11 @@ export async function manyToMany(
   options: manyToManyOptions
 ) {
   let associationQuery = '';
-  // for existing one (x-table also exist)
   if (options?.through) {
-    const throughModel = options.through;
-    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table);
-    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table);
-    // console.log("mapKeysA: ",mapKeysA)
-    // console.log("mapKeysB: ",mapKeysB)
+    const throughModel = options.through; // ex: 'people_in_films'
+    const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
+    const mapKeysB = await getMappingKeys(throughModel.table, modelB.table); // keys linking the join table and modelB
+
     if (mapKeysA && mapKeysB) {
       const mappingDetails = {
         association_type: 'ManyToMany',
@@ -698,19 +759,19 @@ export async function manyToMany(
         modelA,
         modelB,
         throughModel,
-        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname,
-        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname,
-        modelA_mappingKey: mapKeysA.target_keyname,
-        modelB_mappingKey: mapKeysB.target_keyname,
+        modelA_foreignKey_inThroughModel: mapKeysA.source_keyname, // ex: 'person_id'
+        modelB_foreignKey_inThroughModel: mapKeysB.source_keyname, // ex: 'film_id'
+        modelA_mappingKey: mapKeysA.target_keyname, // ex: '_id' (primary key name on the people table)
+        modelB_mappingKey: mapKeysB.target_keyname, // ex: '_id' (primary key name on the films table)
       };
-      //console.log("mappingDetails:", mappingDetails)
-      //// return out association instance
+
+      // return out association instance
       return new ManyToMany(modelA, modelB, mappingDetails, associationQuery);
     } else {
       throw new Error('This association does not exist');
     }
   } else if (options?.createThrough) {
-    //// creating new x-table & new x-model
+    // creating new x-table & new x-model: WIP
     const modelA_foreignKey_inThroughModel = modelA.primaryKey;
   }
 }

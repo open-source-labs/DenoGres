@@ -1,13 +1,13 @@
-import { resolve } from "https://deno.land/std@0.141.0/path/mod.ts";
-import { ConnectDb, DisconnectDb } from "./Db.ts";
-import { introspect } from "./introspect.ts";
-import modelParser from "./modelParser.ts";
+import { resolve } from '../../deps.ts';
+import { ConnectDb, DisconnectDb } from './Db.ts';
+import { introspect } from './introspect.ts';
+import modelParser from './modelParser.ts';
 
-export default async function seed(path = "./seed.ts") {
+export default async function seed(path = './seed.ts') {
   path = resolve(path);
 
   await Deno.run({
-    cmd: ["deno", "fmt", path],
+    cmd: ['deno', 'fmt', path],
   }).status();
 
   const db = await ConnectDb();
@@ -29,11 +29,11 @@ export default async function seed(path = "./seed.ts") {
     if (
       modelNameSet.has(seedTableName) && !(dbTableNameSet.has(seedTableName))
     ) {
-      return "Create + Insert";
+      return 'Create + Insert';
     } else if (
       modelNameSet.has(seedTableName) && dbTableNameSet.has(seedTableName)
     ) {
-      return "Insert";
+      return 'Insert';
     }
   };
 
@@ -41,7 +41,7 @@ export default async function seed(path = "./seed.ts") {
     const operation = getOperation(seedTableName, modelNameSet, dbTableNameSet);
 
     switch (operation) {
-      case "Create + Insert": {
+      case 'Create + Insert': {
         let modelColumns = models[seedTableName];
 
         // get the query string for creating that table in the user's db
@@ -62,7 +62,7 @@ export default async function seed(path = "./seed.ts") {
         await db.queryObject(insertQuery);
         break;
       }
-      case "Insert": {
+      case 'Insert': {
         // if table already exists in user's db, just insert new values into the table
         const insertQuery = getInsertQuery(
           seedTables[seedTableName],
@@ -86,7 +86,7 @@ export default async function seed(path = "./seed.ts") {
 // which is assigned an array of objects, where each object represents a row (with column names as properties
 // and the value at that column in that row as the associated value); RETURNS an object where each property
 // is a table name set to an array of objects representing each row
-const parseSeed = (path = "./seed.ts") => {
+const parseSeed = (path = './seed.ts') => {
   path = resolve(path);
 
   const output: any = {};
@@ -95,20 +95,20 @@ const parseSeed = (path = "./seed.ts") => {
 
   const whitespaces = /\s/g;
 
-  data = data.replace(whitespaces, "");
-  data = data.replace(/(const|let|var)/g, "\n");
+  data = data.replace(whitespaces, '');
+  data = data.replace(/(const|let|var)/g, '\n');
 
   const tables: any = data.match(/\n.*/g)?.map((table: any) =>
     table.slice(1, -1)
   );
 
   for (const table of tables) {
-    const tableName = table.replace(/(\w+).*/, "$1");
-    let tableData = table.replace(/.*\=(\[.*\]\.*)/, "$1");
+    const tableName = table.replace(/(\w+).*/, '$1');
+    let tableData = table.replace(/.*\=(\[.*\]\.*)/, '$1');
 
     // make JSON parsable (get rid of trailing commas and put double quotes around property names)
-    tableData = tableData.replace(/\,\}/g, "}"); 
-    tableData = tableData.replace(/\,\]/g, "]");
+    tableData = tableData.replace(/\,\}/g, '}');
+    tableData = tableData.replace(/\,\]/g, ']');
     tableData = tableData.replace(
       /([\w\_]+)\:/g,
       '"$1":',
@@ -125,19 +125,19 @@ const parseSeed = (path = "./seed.ts") => {
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
-  let constraints = "";
+  let constraints = '';
 
   const associations = [];
 
   const checks: any = [];
 
   for (const column in columns) {
-    if (columns[column].autoIncrement) columns[column].type = "SERIAL";
+    if (columns[column].autoIncrement) columns[column].type = 'SERIAL';
 
     createTableQuery += `${column} ${columns[column].type}`;
     for (const constraint in columns[column]) {
       switch (constraint) {
-        case "association": {
+        case 'association': {
           associations.push({
             columnName: column,
             mappedTable: columns[column].association?.mappedTable,
@@ -145,26 +145,26 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
           });
           break;
         }
-        case "checks": {
+        case 'checks': {
           checks.push(columns[column].checks);
         }
-        case "primaryKey": {
+        case 'primaryKey': {
           if (columns[column].primaryKey === true) {
-            constraints += " PRIMARY KEY";
+            constraints += ' PRIMARY KEY';
           }
           break;
         }
-        case "notNull": {
+        case 'notNull': {
           if (columns[column].notNull === true) {
-            constraints += " NOT NULL";
+            constraints += ' NOT NULL';
           }
           break;
         }
-        case "unique": {
-          constraints += " UNIQUE";
+        case 'unique': {
+          constraints += ' UNIQUE';
           break;
         }
-        case "defaultVal": {
+        case 'defaultVal': {
           constraints += ` DEFAULT ${columns[column].defaultVal}`;
           break;
         }
@@ -174,11 +174,11 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
       }
     }
     createTableQuery += `${constraints}, `;
-    constraints = "";
+    constraints = '';
   }
 
   createTableQuery = createTableQuery.slice(0, createTableQuery.length - 2) +
-    "); ";
+    '); ';
 
   let associationsQuery = ``;
   let associationIndex = 0;
@@ -200,18 +200,18 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
       for (const definition of check[constraintName]) {
         const arrayRegex = /\[.*\]/;
         if (arrayRegex.test(definition)) {
-          const newDefinition = definition.replace("=", " in ").replace(
-            "[",
-            "(",
+          const newDefinition = definition.replace('=', ' in ').replace(
+            '[',
+            '(',
           )
-            .replace("]", ")");
+            .replace(']', ')');
 
           checkQuery += `${newDefinition} AND `;
         } else {
           checkQuery += `${definition} AND `;
         }
       }
-      checkQuery = checkQuery.slice(0, -5) + "); ";
+      checkQuery = checkQuery.slice(0, -5) + '); ';
 
       checksQuery += checkQuery;
     }
@@ -224,7 +224,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
 
 // returns a query string for inserting a set of values into their corresponding columns in a table in the user's db
 const getInsertQuery = (data: any, tableName: string) => {
-  let columns = "";
+  let columns = '';
 
   for (const column in data[0]) {
     columns += `${column}, `;
@@ -235,18 +235,18 @@ const getInsertQuery = (data: any, tableName: string) => {
   let insertQuery = `INSERT INTO ${tableName} (${columns}) VALUES `;
 
   let value;
-  let values = "";
+  let values = '';
 
   for (const datum of data) {
-    value = "(";
+    value = '(';
     for (const key in datum) {
       value += `'${datum[key]}', `;
     }
-    value = value.slice(0, value.length - 2) + "), ";
+    value = value.slice(0, value.length - 2) + '), ';
     values += value;
   }
 
-  values = values.slice(0, values.length - 2) + ";";
+  values = values.slice(0, values.length - 2) + ';';
 
   insertQuery += values;
 
