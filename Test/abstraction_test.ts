@@ -137,7 +137,7 @@ describe('Abstraction Test', () => {
 
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = '${user0.firstname}'`
+      `SELECT * FROM users WHERE firstname = '${user0.firstname}'`,
     );
     await DisconnectDb(db);
 
@@ -153,7 +153,7 @@ describe('Abstraction Test', () => {
     // bring the saved record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'temp'`
+      `SELECT * FROM users WHERE firstname = 'temp'`,
     );
     await DisconnectDb(db);
 
@@ -172,7 +172,7 @@ describe('Abstraction Test', () => {
     // bring the editted record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'Deno'`
+      `SELECT * FROM users WHERE firstname = 'Deno'`,
     );
     await DisconnectDb(db);
 
@@ -190,7 +190,7 @@ describe('Abstraction Test', () => {
     // bring the editted record from db
     const db = await ConnectDb();
     const q1 = await db.queryObject(
-      `SELECT * FROM users WHERE firstname = 'temp'`
+      `SELECT * FROM users WHERE firstname = 'temp'`,
     );
     await DisconnectDb(db);
     assertEquals(q1.rows[0], undefined);

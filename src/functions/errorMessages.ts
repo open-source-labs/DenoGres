@@ -9,11 +9,11 @@ class IncorrectData extends Error {
 export function checkUnsentQuery(
   length: number,
   method: string,
-  model: string
+  model: string,
 ): boolean {
   if (length > 0) {
     throw new IncorrectData(
-      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`
+      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`,
     );
   }
   return true;
@@ -41,7 +41,7 @@ interface Columns {
 // checks that the user is accessing a column that already exists in the model
 export function checkColumns(
   columns: Columns,
-  input: string | string[]
+  input: string | string[],
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
   // checks for if input is an array of columns
