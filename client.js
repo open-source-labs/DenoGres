@@ -1,8 +1,8 @@
 import { Client } from './deps.ts';
 
 const pgclient = new Client({
-  host: 'localhost',
-  port: 1234,
+  hostname: 'localhost',
+  port: 5432,
   user: 'postgres',
   password: 'postgres',
   database: 'postgres',
