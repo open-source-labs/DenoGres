@@ -281,11 +281,24 @@ describe('model methods', () => {
       assert(Planet['sql'].includes('ORDER BY diameter,rotation_period DESC'));
     });
 
+    it('throws an error when invoked without either ASC or DESC', () => {
+      assertThrows(
+        () => Planet.order('ascending', 'diameter', 'rotation_period'),
+        Error,
+      );
+    });
+
+    it('throws an error when invoked without any arguments', () => {
+      assertThrows(() => Planet.order(), Error);
+    });
+
+    it('throws an error when invoked with column name that is not in the database', () => {
+      assertThrows(() => Planet.order('ASC', 'gravitational_pull'), Error);
+    });
+
     /**
      * no tests for the following problems (for which Postgres will throw its own errors):
-     * - user invokes 'order' method without an argument
-     * - user invokes without either ASC or DESC
-     * - user invokes with column or table names not in the database
+     * - user invokes on table name not in the database
      * - user chains with incompatible methods (i.e. not after 'select' method)
      */
   });
