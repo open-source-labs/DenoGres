@@ -1,8 +1,8 @@
 import { Client } from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
 
 const pgclient = new Client({
-  host: process.env.POSTGRES_HOST,
-  port: process.env.POSTGRES_PORT,
+  host: Deno.env.get('POSTGRES_HOST'),
+  port: Deno.env.get('POSTGRES_PORT'),
   user: 'postgres',
   password: 'postgres',
   database: 'postgres',
