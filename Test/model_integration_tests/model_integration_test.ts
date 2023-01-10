@@ -8,10 +8,16 @@ describe('model methods', () => {
 
   beforeAll(async () => {
     const pool = new Pool(Deno.env.get('TEST_DB_URI'), 1, true);
-    db = await pool.connect();
-    await db.queryObject(createTablesQuery);
-    const temp_test = await db.queryObject('SELECT * FROM users');
-    console.log(temp_test.rows);
+    try {
+      db = await pool.connect();
+      await db.queryObject(createTablesQuery);
+      const temp_test = await db.queryObject('SELECT * FROM users');
+      console.log(temp_test.rows);
+    } catch (err) {
+      console.log(err);
+      await db.queryObject(dropTablesQuery);
+      await db.end();
+    }
   });
 
   afterAll(async () => {
