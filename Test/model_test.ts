@@ -7,9 +7,7 @@ import {
   describe,
   it,
 } from '../deps.ts';
-import { indexOfNeedle } from '../vendor/deno.land/std@0.160.0/bytes/mod.ts';
-import { toNamespacedPath } from '../vendor/deno.land/std@0.160.0/path/win32.ts';
-import { Person, Planet } from './sample_model.ts';
+import { Planet } from './sample_model.ts';
 
 describe('model methods', () => {
   beforeEach(() => {
@@ -215,8 +213,10 @@ describe('model methods', () => {
   });
   describe('joins methods', () => {
     it('adds appropriate query string to model when invoked for innerJoin', () => {
-      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets' +
-        Planet.innerJoin('_id', 'homeworld_id', 'people')['sql'];
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.innerJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
       assert(
         Planet['sql'].includes(
           'INNER JOIN people ON planets._id = people.homeworld_id',
@@ -224,8 +224,10 @@ describe('model methods', () => {
       );
     });
     it('adds appropriate query string to model when invoked for leftJoin', () => {
-      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets' +
-        Planet.leftJoin('_id', 'homeworld_id', 'people')['sql'];
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.leftJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
       assert(
         Planet['sql'].includes(
           'LEFT JOIN people ON planets._id = people.homeworld_id',
