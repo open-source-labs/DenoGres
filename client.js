@@ -1,4 +1,4 @@
-import { Client } from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
+import { Client } from './deps.ts';
 
 const pgclient = new Client({
   host: Deno.env.get('POSTGRES_HOST'),
