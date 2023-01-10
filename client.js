@@ -17,7 +17,7 @@ const pool = new Pool(
 
 // pgclient.connect();
 
-pool.connect();
+pgclient = pool.connect();
 
 const table =
   'CREATE TABLE student(id SERIAL PRIMARY KEY, firstName VARCHAR(40) NOT NULL, lastName VARCHAR(40) NOT NULL, age INT, address VARCHAR(80), email VARCHAR(40))';
@@ -31,30 +31,16 @@ const values = [
   'octocat@github.com',
 ];
 
-// pgclient.queryObject(table, (err) => {
-//   if (err) throw err;
-// });
-
-pool.queryObject(table, (err) => {
+pgclient.queryObject(table, (err) => {
   if (err) throw err;
 });
 
-// pgclient.queryObject(text, values, (err) => {
-//   if (err) throw err;
-// });
-
-pool.queryObject(text, values, (err) => {
+pgclient.queryObject(text, values, (err) => {
   if (err) throw err;
 });
 
-// pgclient.queryObject('SELECT * FROM student', (err, res) => {
-//   if (err) throw err;
-//   console.log(err, res.rows); // Print the data in student table
-//   pgclient.end();
-// });
-
-pool.queryObject('SELECT * FROM student', (err, res) => {
+pgclient.queryObject('SELECT * FROM student', (err, res) => {
   if (err) throw err;
   console.log(err, res.rows); // Print the data in student table
-  pool.end();
+  pgclient.end();
 });
