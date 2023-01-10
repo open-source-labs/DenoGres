@@ -148,8 +148,10 @@ describe('model methods', () => {
     });
 
     it('adds appropriate query string to model when invoked with more than one condition', () => {
-      const actualQuery =
-        Planet.where('climate = temperate', 'rotation_period > 12')['sql'];
+      const actualQuery = Planet.where(
+        'climate = temperate',
+        'rotation_period > 12',
+      )['sql'];
       const expectedQuery = `climate = 'temperate' rotation_period > '12'`;
       assert(actualQuery.includes(expectedQuery));
     });
@@ -193,8 +195,10 @@ describe('model methods', () => {
     it('adds appropriate query string to model when invoked with more than one condition', () => {
       Planet['sql'] =
         'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
-      const actualQuery =
-        Planet.having('COUNT(_id) > 1', 'AND gravity IS NOT NULL')['sql'];
+      const actualQuery = Planet.having(
+        'COUNT(_id) > 1',
+        'AND gravity IS NOT NULL',
+      )['sql'];
       assert(
         actualQuery.includes(' HAVING COUNT(_id) > 1 AND gravity IS NOT NULL'),
       );
@@ -205,6 +209,60 @@ describe('model methods', () => {
      * - user invokes 'having' method without an argument
      * - user invokes with a malformatted condition or nonexist column name
      * - user chains with incompatible methods (i.e. not after 'select' and 'group')
+     */
+  });
+  describe('joins methods', () => {
+    it('adds appropriate query string to model when invoked for innerJoin', () => {
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.innerJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
+      assert(
+        Planet['sql'].includes(
+          'INNER JOIN people ON planets._id = people.homeworld_id',
+        ),
+      );
+    });
+    it('adds appropriate query string to model when invoked for leftJoin', () => {
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.leftJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
+      assert(
+        Planet['sql'].includes(
+          'LEFT JOIN people ON planets._id = people.homeworld_id',
+        ),
+      );
+    });
+
+    it('adds appropriate query string to model when invoked with rightJoin', () => {
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.rightJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
+      assert(
+        Planet['sql'].includes(
+          'RIGHT JOIN people ON planets._id = people.homeworld_id',
+        ),
+      );
+    });
+
+    it('adds appropriate query string to model when invoked with fullJoin', () => {
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
+      const actualQuery = Planet.fullJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
+      assert(
+        Planet['sql'].includes(
+          'FULL JOIN people ON planets._id = people.homeworld_id',
+        ),
+      );
+    });
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'join' method without an argument
+     * - user invokes with column or table names not in the database
+     * - user chains with incompatible methods (i.e. not after 'select' method)
      */
   });
 });
