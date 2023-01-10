@@ -13,5 +13,6 @@
     "options": {
       "singleQuote": true
     }
-  }
+  },
+  "importMap": "./vendor/import_map.json"
 }
