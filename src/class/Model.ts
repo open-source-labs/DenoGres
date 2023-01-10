@@ -66,6 +66,7 @@ export class Model {
       } catch (err) {
         // rollback and disconnect from the db, transaction failed
         rollback(Model, err);
+
       }
     }
     this.sql = '';
