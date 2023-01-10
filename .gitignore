@@ -10,4 +10,6 @@ denogres-gui/node_modules
 denogres-gui/api/userDB.env
 denogres-gui/.vite/
 denogres-gui/.vscode/
-vendor/
+# vendor/
+Migrations/
+models/
