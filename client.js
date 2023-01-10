@@ -1,8 +1,8 @@
 import { Client } from './deps.ts';
 
 const pgclient = new Client({
-  host: Deno.env.get('POSTGRES_HOST'),
-  port: Deno.env.get('POSTGRES_PORT'),
+  host: localhost,
+  port: 5432,
   user: 'postgres',
   password: 'postgres',
   database: 'postgres',
