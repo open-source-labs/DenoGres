@@ -265,4 +265,61 @@ describe('model methods', () => {
      * - user chains with incompatible methods (i.e. not after 'select' method)
      */
   });
+
+  describe('order method', () => {
+    it('adds appropriate query string to model when order is invoked with ASC', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery =
+        Planet.order('ASC', 'diameter', 'rotation_period')['sql'];
+      assert(Planet['sql'].includes('ORDER BY diameter,rotation_period ASC'));
+    });
+
+    it('adds appropriate query string to model when order is invoked with DESC', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery =
+        Planet.order('DESC', 'diameter', 'rotation_period')['sql'];
+      assert(Planet['sql'].includes('ORDER BY diameter,rotation_period DESC'));
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes 'order' method without an argument
+     * - user invokes without either ASC or DESC
+     * - user invokes with column or table names not in the database
+     * - user chains with incompatible methods (i.e. not after 'select' method)
+     */
+  });
+
+  describe('aggregate functions', () => {
+    it('adds the appropriate query string to model when count is invoked', () => {
+      const actualQuery = Planet.count('climate');
+      assert(Planet['sql'].includes('SELECT COUNT(climate) FROM planets'));
+    });
+
+    it('adds the appropriate query string to model when sum is invoked', () => {
+      const actualQuery = Planet.sum('climate');
+      assert(Planet['sql'].includes('SELECT SUM(climate) FROM planets'));
+    });
+
+    it('adds the appropriate query string to model when avg is invoked', () => {
+      const actualQuery = Planet.avg('climate');
+      assert(Planet['sql'].includes('SELECT AVG(climate) FROM planets'));
+    });
+
+    it('adds the appropriate query string to model when min is invoked', () => {
+      const actualQuery = Planet.min('climate');
+      assert(Planet['sql'].includes('SELECT MIN(climate) FROM planets'));
+    });
+
+    it('adds the appropriate query string to model when max is invoked', () => {
+      const actualQuery = Planet.max('climate');
+      assert(Planet['sql'].includes('SELECT MAX(climate) FROM planets'));
+    });
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes an aggregate method without an argument
+     * - user invokes with column or table names not in the database
+     * - user chains with incompatible methods
+     */
+  });
 });
