@@ -3,6 +3,7 @@ import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
 import { PoolClient } from '../../deps.ts';
+import { rollback } from '../functions/rollback.ts';
 
 export class Model {
   [k: string]: any; // index signature
@@ -31,7 +32,6 @@ export class Model {
   static primaryKey?: string[];
   private static sql = ''; // stores current db query here until done executing
   private static transactionInProgress = false; // flag for whether transaction is on first run or not
-  private static transactionFailed = false; // flag for whether query in a transaction has failed
   private static transactionConnection?: PoolClient;
   static foreignKey?: {
     columns: string[];
@@ -47,26 +47,26 @@ export class Model {
    * Note: Initially checking the transactionFailed state solves the issue of duplicate error handling messages appearing
    */
   static async transaction(uri?: string) {
-    if (!Model.transactionFailed) {
-      let db = Model.transactionConnection;
-      if (!Model.transactionInProgress) {
-        this.sql = 'BEGIN;' + this.sql;
-        // create connection to db
-        Model.transactionConnection = await ConnectDb(uri);
-        db = Model.transactionConnection;
-        try {
-          await db.queryObject(this.sql);
-          Model.transactionInProgress = true;
-        } catch (err) {
-          Model.transactionFailed = true;
-        }
-      } else {
-        try {
-          await db.queryObject(this.sql);
-        } catch (err) {
-          Model.transactionFailed = true;
-          console.log(err, 'ERROR IN TRANSACTION');
-        }
+    let db = Model.transactionConnection;
+    if (!Model.transactionInProgress) {
+      this.sql = 'BEGIN;' + this.sql;
+      // create connection to db
+      Model.transactionConnection = await ConnectDb(uri);
+      db = Model.transactionConnection;
+      try {
+        await db.queryObject(this.sql);
+        Model.transactionInProgress = true;
+      } catch (err) {
+        // throw error, cannot connect to the db
+        throw new Error('Connection to the database failed', err);
+      }
+    } else {
+      try {
+        await db.queryObject(this.sql);
+      } catch (err) {
+        // rollback and disconnect from the db, transaction failed
+        rollback(Model, err);
+
       }
     }
     this.sql = '';
@@ -79,24 +79,13 @@ export class Model {
    */
   static async endTransaction() {
     const db = Model.transactionConnection;
-    if (Model.transactionFailed) {
-      try {
-        await db.queryObject('ROLLBACK;');
-        DisconnectDb(db);
-      } catch (err) {
-        console.log(err, 'THERE WAS AN ERROR IN THE TRANSACTION');
-      }
-    } else {
-      try {
-        await db.queryObject(this.sql + ';');
-        await db.queryObject('COMMIT;');
-      } catch (err) {
-        await db.queryObject('ROLLBACK');
-        DisconnectDb(db);
-        console.log(err, 'ERROR IN FINAL QUERY OF TRANSACTION');
-      }
+    try {
+      await db.queryObject(this.sql + ';');
+      await db.queryObject('COMMIT;');
+    } catch (err) {
+      // rollback and disconnect from the db
+      rollback(Model, err);
     }
-    Model.transactionFailed = false;
     Model.transactionInProgress = false;
     this.sql = '';
   }
