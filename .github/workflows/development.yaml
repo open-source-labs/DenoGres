@@ -21,7 +21,5 @@ jobs:
           deno-version: v1.x
       - name: Verify formatting
         run: deno fmt --check
-      # - name: Run linter
-      #   run: deno lint
       - name: Run model method unit tests
         run: deno test -A --no-check ./Test/model_test.ts
