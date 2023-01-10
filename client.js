@@ -22,15 +22,15 @@ const values = [
   'octocat@github.com',
 ];
 
-pgclient.query(table, (err, res) => {
+pgclient.queryObject(table, (err) => {
   if (err) throw err;
 });
 
-pgclient.query(text, values, (err, res) => {
+pgclient.queryObject(text, values, (err) => {
   if (err) throw err;
 });
 
-pgclient.query('SELECT * FROM student', (err, res) => {
+pgclient.queryObject('SELECT * FROM student', (err, res) => {
   if (err) throw err;
   console.log(err, res.rows); // Print the data in student table
   pgclient.end();
