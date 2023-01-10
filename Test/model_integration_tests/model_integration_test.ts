@@ -11,8 +11,6 @@ describe('model methods', () => {
     try {
       db = await pool.connect();
       await db.queryObject(createTablesQuery);
-      const temp_test = await db.queryObject('SELECT * FROM users');
-      console.log(temp_test.rows);
     } catch (err) {
       console.log(err);
       await db.queryObject(dropTablesQuery);

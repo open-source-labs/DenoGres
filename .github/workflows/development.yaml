@@ -45,4 +45,4 @@ jobs:
       - name: Run model method integration tests
         run: deno test -A --no-check ./Test/model_integration_tests/
         env:
-          TEST_DB_URI: postgres://ynhufyow:cUTssLTW2NFX97XvQUjgX1r-OiUi924y@berry.db.elephantsql.com/ynhufyow
+          TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
