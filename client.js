@@ -12,7 +12,7 @@ import { Pool } from './deps.ts';
 const pool = new Pool(
   'postgres://ynhufyow:cUTssLTW2NFX97XvQUjgX1r-OiUi924y@berry.db.elephantsql.com/ynhufyow',
   3,
-  true
+  true,
 );
 
 // pgclient.connect();
