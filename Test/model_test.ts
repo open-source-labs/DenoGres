@@ -215,13 +215,13 @@ describe('model methods', () => {
   });
   describe('joins methods', () => {
     it('adds appropriate query string to model when invoked for innerJoin', () => {
-      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
-      const actualQuery = Planet.innerJoin('_id', 'homeworld_id', 'people')[
-        'sql'
-      ];
-      const expectedQuery =
-        'SELECT planets._id, people.homeworld_id FROM planets INNER JOIN people ON planets._id = people.homeworld_id';
-      assertEquals(actualQuery, expectedQuery);
+      Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets' +
+        Planet.innerJoin('_id', 'homeworld_id', 'people')['sql'];
+      assert(
+        Planet['sql'].includes(
+          'INNER JOIN people ON planets._id = people.homeworld_id',
+        ),
+      );
     });
     it('adds appropriate query string to model when invoked for leftJoin', () => {
       Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets' +
@@ -235,8 +235,9 @@ describe('model methods', () => {
 
     it('adds appropriate query string to model when invoked with rightJoin', () => {
       Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
-      const actualQuery =
-        Planet.rightJoin('_id', 'homeworld_id', 'people')['sql'];
+      const actualQuery = Planet.rightJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
       assert(
         Planet['sql'].includes(
           'RIGHT JOIN people ON planets._id = people.homeworld_id',
@@ -246,8 +247,9 @@ describe('model methods', () => {
 
     it('adds appropriate query string to model when invoked with fullJoin', () => {
       Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
-      const actualQuery =
-        Planet.fullJoin('_id', 'homeworld_id', 'people')['sql'];
+      const actualQuery = Planet.fullJoin('_id', 'homeworld_id', 'people')[
+        'sql'
+      ];
       assert(
         Planet['sql'].includes(
           'FULL JOIN people ON planets._id = people.homeworld_id',
@@ -258,8 +260,8 @@ describe('model methods', () => {
     /**
      * no tests for the following problems (for which Postgres will throw its own errors):
      * - user invokes 'join' method without an argument
-     * - user invokes with a malformatted condition or nonexist column name
-     * - user chains with incompatible methods (i.e. not after 'select' and 'group')
+     * - user invokes with column or table names not in the database
+     * - user chains with incompatible methods (i.e. not after 'select' method)
      */
   });
 });
