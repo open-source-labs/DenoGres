@@ -48,11 +48,12 @@ export class Model {
    */
   static async transaction(uri?: string) {
     if (!Model.transactionFailed) {
-      const db = Model.transactionConnection;
+      let db = Model.transactionConnection;
       if (!Model.transactionInProgress) {
         this.sql = 'BEGIN;' + this.sql;
         // create connection to db
         Model.transactionConnection = await ConnectDb(uri);
+        db = Model.transactionConnection;
         try {
           await db.queryObject(this.sql);
           Model.transactionInProgress = true;
@@ -173,7 +174,8 @@ export class Model {
     Model.sql = '';
     // stores the newly updated row object at the 'record' property of the instance
     if (
-      updatedRows && typeof updatedRows[0] === 'object' &&
+      updatedRows &&
+      typeof updatedRows[0] === 'object' &&
       updatedRows[0] !== null
     ) {
       this.record = updatedRows[0];
