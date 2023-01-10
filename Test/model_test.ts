@@ -266,7 +266,7 @@ describe('model methods', () => {
      */
   });
   describe('groupBy method', () => {
-    it.only('adds appropriate query string to model when invoked with groupBy', () => {
+    it.('adds appropriate query string to model when invoked with groupBy', () => {
       Planet['sql'] = 'SELECT _id,name,population FROM planets';
       const actualQuery = Planet.group(
         'planets._id',
