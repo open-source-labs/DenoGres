@@ -4,6 +4,7 @@ import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
 import { PoolClient } from '../../deps.ts';
 import { rollback } from '../functions/rollback.ts';
+
 export class Model {
   [k: string]: any; // index signature
   static table: string;
