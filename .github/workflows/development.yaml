@@ -15,7 +15,7 @@ jobs:
     # Docker Hub image that the job executes in
     container: denoland/deno:alpine
 
-    # Service containers to run with `container-job`
+    # Service containers to run with job 'test'
     services:
       # Label used to access the service container
       postgres:
@@ -42,13 +42,5 @@ jobs:
         run: deno fmt --check
       - name: Run model method unit tests
         run: deno test -A --no-check ./Test/model_test.ts
-      - name: Connect to PostgreSQL
-        # Runs a script that creates a PostgreSQL table, populates
-        # the table with data, and then retrieves the data.
-        run: deno run -A --unstable client.ts
-        # Environment variables used by the `client.js` script to create a new PostgreSQL table.
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: postgres
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
+      - name: Run model method integration tests
+        run: deno test -A --no-check ./Test/model_integration_tests/
