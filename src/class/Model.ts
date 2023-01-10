@@ -2,7 +2,7 @@ import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
-import { PoolClient } from '../../deps';
+import { PoolClient } from '../../deps.ts';
 
 export class Model {
   [k: string]: any; // index signature
