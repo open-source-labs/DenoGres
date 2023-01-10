@@ -258,7 +258,6 @@ describe('model methods', () => {
         ),
       );
     });
-
     /**
      * no tests for the following problems (for which Postgres will throw its own errors):
      * - user invokes 'join' method without an argument
