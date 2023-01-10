@@ -266,10 +266,14 @@ describe('model methods', () => {
      */
   });
   describe('groupBy method', () => {
-    it.only('adds appropriate query string to model when invoked with groupBy',()=>{
+    it.only('adds appropriate query string to model when invoked with groupBy', () => {
       Planet['sql'] = 'SELECT _id,name,population FROM planets';
-      const actualQuery = Planet.group('planets._id','planets.name','planets.population')['sql'];
-      console.log(actualQuery,'THIS IS THE ACTUAL QUERY');
+      const actualQuery = Planet.group(
+        'planets._id',
+        'planets.name',
+        'planets.population',
+      )['sql'];
+      console.log(actualQuery, 'THIS IS THE ACTUAL QUERY');
       assert(
         Planet['sql'].includes(
           'GROUP BY planets._id,planets.name,planets.population',
