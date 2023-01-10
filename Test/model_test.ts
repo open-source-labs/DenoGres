@@ -244,7 +244,7 @@ describe('model methods', () => {
       );
     });
 
-    it.only('adds appropriate query string to model when invoked with fullJoin', () => {
+    it('adds appropriate query string to model when invoked with fullJoin', () => {
       Planet['sql'] = 'SELECT planets._id, people.homeworld_id FROM planets';
       const actualQuery =
         Planet.fullJoin('_id', 'homeworld_id', 'people')['sql'];
