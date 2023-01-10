@@ -13,7 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     # Docker Hub image that the job executes in
-    container: deno:15-alpine
+    container: denoland/deno:1.29.2
 
     # Service containers to run with `container-job`
     services:
