@@ -23,5 +23,5 @@ jobs:
         run: deno fmt --check
       # - name: Run linter
       #   run: deno lint
-      # - name: Run tests
-      #   run: deno test -A --no-check
+      - name: Run model method unit tests
+        run: deno test -A --no-check ./Test/model_test.ts
