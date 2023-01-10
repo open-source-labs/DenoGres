@@ -1,7 +1,7 @@
 import { ConnectDb, DisconnectDb } from '../functions/Db.ts';
 import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
-import { checkColumns, checkUnsentQuery } from '../functions/errorMessages.ts';
+import { checkColumns, checkQueryString } from '../functions/errorMessages.ts';
 import { PoolClient } from '../../deps.ts';
 import { rollback } from '../functions/rollback.ts';
 
@@ -177,7 +177,7 @@ export class Model {
   // must be chained with invocation of 'query' method in order to execute query
   static insert(...value: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'insert', this.name);
+    checkQueryString(this.sql.length, 'insert', this.name, 'start');
 
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
@@ -207,7 +207,7 @@ export class Model {
   // therefore it updates the value(s) of the given column(s) for all records in the table
   static edit(...condition: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'edit', this.name);
+    checkQueryString(this.sql.length, 'edit', this.name, 'start');
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
@@ -226,7 +226,7 @@ export class Model {
   // either way, must be chained with 'query' method to execute query
   static delete() {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'delete', this.name);
+    checkQueryString(this.sql.length, 'delete', this.name, 'start');
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -235,7 +235,7 @@ export class Model {
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'select', this.name);
+    checkQueryString(this.sql.length, 'select', this.name, 'start');
     // check for empty arguments and *
     if (arguments.length === 0 || arguments[0] === '*') {
       this.sql += `SELECT * FROM ${this.table}`;
@@ -291,12 +291,16 @@ export class Model {
 
   // LIMIT: limit number of output rows
   static limit(limit: number) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'limit', this.name, 'chain');
     this.sql += ` LIMIT ${limit}`;
     return this;
   }
 
   // HAVING: add condition(s) involving aggregate functions to the current query
   static having(...condition: string[]) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'having', this.name, 'chain');
     this.sql += ` HAVING ${condition[0]}`;
     for (let i = 1; i < condition.length; i++) {
       this.sql += ` ${condition[i]}`;
@@ -307,6 +311,10 @@ export class Model {
   // INNER JOIN: selects records with matching values on both tables
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'innerJoin', this.name, 'chain');
+    // currently only checking column 1 since that is in the current model
+    checkColumns(this.columns, column1);
     this.sql +=
       ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -314,6 +322,10 @@ export class Model {
 
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'leftJoin', this.name, 'chain');
+    // currently only checking column 1 since that is in the current model
+    checkColumns(this.columns, column1);
     this.sql +=
       ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -321,6 +333,10 @@ export class Model {
 
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'rightJoin', this.name, 'chain');
+    // currently only checking column 1 since that is in the current model
+    checkColumns(this.columns, column1);
     this.sql +=
       ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -328,6 +344,10 @@ export class Model {
 
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'fullJoin', this.name, 'chain');
+    // currently only checking column 1 since that is in the current model
+    checkColumns(this.columns, column1);
     this.sql +=
       ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -336,6 +356,8 @@ export class Model {
   // puts all rows with same value for passed in column(s) into one 'summary row'
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'group', this.name, 'chain');
     checkColumns(this.columns, column);
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
@@ -345,6 +367,8 @@ export class Model {
   // accepts either 'ASC' or 'DESC' as first argument and 1 or more columns
   // as remaining argument(s), chained onto 'select' method
   static order(order: 'ASC' | 'DESC', ...column: string[]) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'order', this.name, 'chain');
     checkColumns(this.columns, column);
     this.sql += ` ORDER BY ${column.toString()}`;
 
@@ -362,7 +386,7 @@ export class Model {
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   static count(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'count', this.name);
+    checkQueryString(this.sql.length, 'count', this.name, 'start');
     checkColumns(this.columns, column);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
@@ -370,7 +394,7 @@ export class Model {
 
   static sum(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'sum', this.name);
+    checkQueryString(this.sql.length, 'sum', this.name, 'start');
     checkColumns(this.columns, column);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
@@ -378,7 +402,7 @@ export class Model {
 
   static avg(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'avg', this.name);
+    checkQueryString(this.sql.length, 'avg', this.name, 'start');
     checkColumns(this.columns, column);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
@@ -386,7 +410,7 @@ export class Model {
 
   static min(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'min', this.name);
+    checkQueryString(this.sql.length, 'min', this.name, 'start');
     checkColumns(this.columns, column);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
@@ -394,7 +418,7 @@ export class Model {
 
   static max(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkUnsentQuery(this.sql.length, 'max', this.name);
+    checkQueryString(this.sql.length, 'max', this.name, 'start');
     checkColumns(this.columns, column);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
@@ -421,6 +445,8 @@ export class Model {
   // for a single row and return a new instance representing that row
   // ex: const droid = await Species.where('name = Droid').queryInstance()
   static async queryInstance(uri?: string, print?: string) {
+    // checks that the user is chaining this after other methods
+    checkQueryString(this.sql.length, 'queryInstance', this.name, 'chain');
     const db = await ConnectDb(uri);
     if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
