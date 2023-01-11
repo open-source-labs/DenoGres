@@ -24,6 +24,6 @@ jobs:
       - name: Run model method unit tests
         run: deno test -A --no-check ./Test/model_test.ts
       - name: Run model method integration tests
-        run: deno test -A --no-check ./Test/model_integration_tests/
         env:
           TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
+        run: deno test -A --no-check ./Test/model_integration_tests/
