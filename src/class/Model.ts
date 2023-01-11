@@ -610,7 +610,7 @@ export async function getMappingKeys<T>(
 } // end of getMappingKeys
 
 // helper function to find primary key of target table (often '_id' or 'id')
-export async function getprimaryKey<T>(
+export async function getprimaryKey(
   tableName: string,
   uri?: string,
 ): Promise<string | undefined | null> {
@@ -634,7 +634,8 @@ export async function getprimaryKey<T>(
     'rows' in result &&
     result.rows[0] !== null &&
     typeof result.rows[0] === 'object' &&
-    recordPk(result.rows[0])
+    'attname' in result.rows[0] &&
+    typeof result.rows[0].attname === 'string'
   ) {
     return result.rows[0].attname;
   }
