@@ -188,9 +188,9 @@ export class Model {
       // check that the input column is one that is in the table
       checkColumns(this.columns, inputColumn);
 
-      // this.sql += ` ${inputColumn}`;
-      // if (i !== value.length - 1) this.sql += ' ,';
-      // else this.sql += ')';
+      this.sql += ` ${inputColumn}`;
+      if (i !== value.length - 1) this.sql += ' ,';
+      else this.sql += ')';
     }
     this.sql += ' VALUES (';
     for (let i = 0; i < value.length; i++) {
