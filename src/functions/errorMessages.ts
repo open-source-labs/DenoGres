@@ -10,11 +10,11 @@ export function checkQueryString(
   length: number,
   method: string,
   model: string,
-  startOrChain: 'start' | 'chain'
+  startOrChain: 'start' | 'chain',
 ): boolean {
   if (startOrChain === 'start' && length > 0) {
     throw new Error(
-      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`
+      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`,
     );
   } else if (startOrChain === 'chain' && !length) {
     throw new Error(`${method} must be chained with other methods.`);
@@ -45,7 +45,7 @@ interface Columns {
 // checks that the user is accessing a column that already exists in the model
 export function checkColumns(
   columns: Columns,
-  input: string | string[]
+  input: string | string[],
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
   // checks for if input is an array of columns
