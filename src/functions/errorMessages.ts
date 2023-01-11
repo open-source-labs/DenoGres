@@ -6,17 +6,21 @@ class IncorrectData extends Error {
 }
 
 // Checks if the sql query has a length already. i.e. the user already started building the query string but never executed it.
-export function checkUnsentQuery(
+export function checkQueryString(
   length: number,
   method: string,
   model: string,
+  startOrChain: 'start' | 'chain',
 ): boolean {
-  if (length > 0) {
-    throw new IncorrectData(
+  if (startOrChain === 'start' && length > 0) {
+    throw new Error(
       `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`,
     );
+  } else if (startOrChain === 'chain' && !length) {
+    throw new Error(`${method} must be chained with other methods.`);
+  } else {
+    return true;
   }
-  return true;
 }
 
 interface Columns {
@@ -47,13 +51,13 @@ export function checkColumns(
   // checks for if input is an array of columns
   if (Array.isArray(input)) {
     input.forEach((c) => {
-      if (!columnsArr.includes(c)) {
+      if (!columnsArr.includes(c) && !c.includes('.')) {
         throw new IncorrectData(`Column: ${c} does not exist on this model.`);
       }
     });
   } else {
     // checks value of a single column
-    if (!columnsArr.includes(input)) {
+    if (!columnsArr.includes(input) && !input.includes('.')) {
       throw new IncorrectData(`Column: ${input} does not exist on this model.`);
     }
   }

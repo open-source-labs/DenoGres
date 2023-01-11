@@ -266,19 +266,134 @@ describe('model methods', () => {
      */
   });
   describe('groupBy method', () => {
-    it.('adds appropriate query string to model when invoked with groupBy', () => {
+    it('adds appropriate query string to model when invoked with groupBy', () => {
       Planet['sql'] = 'SELECT _id,name,population FROM planets';
       const actualQuery = Planet.group(
         'planets._id',
         'planets.name',
         'planets.population',
       )['sql'];
-      console.log(actualQuery, 'THIS IS THE ACTUAL QUERY');
       assert(
         Planet['sql'].includes(
           'GROUP BY planets._id,planets.name,planets.population',
         ),
       );
     });
+  });
+
+  describe('order method', () => {
+    it('adds appropriate query string to model when order is invoked with ASC', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery =
+        Planet.order('ASC', 'diameter', 'rotation_period')['sql'];
+      assert(Planet['sql'].includes('ORDER BY diameter,rotation_period ASC'));
+    });
+
+    it('adds appropriate query string to model when order is invoked with DESC', () => {
+      Planet['sql'] = 'SELECT * FROM planets';
+      const actualQuery =
+        Planet.order('DESC', 'diameter', 'rotation_period')['sql'];
+      assert(Planet['sql'].includes('ORDER BY diameter,rotation_period DESC'));
+    });
+
+    it('throws an error when invoked without either ASC or DESC', () => {
+      assertThrows(
+        () => Planet.order('ascending', 'diameter', 'rotation_period'),
+        Error,
+      );
+    });
+
+    it('throws an error when invoked without any arguments', () => {
+      assertThrows(() => Planet.order(), Error);
+    });
+
+    it('throws an error when invoked with column name that is not in the database', () => {
+      assertThrows(() => Planet.order('ASC', 'gravitational_pull'), Error);
+    });
+
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes on table name not in the database
+     * - user chains with incompatible methods (i.e. not after 'select' method)
+     */
+  });
+
+  describe('aggregate functions', () => {
+    describe('count method', () => {
+      it('adds the appropriate query string to model when count is invoked', () => {
+        const actualQuery = Planet.count('climate');
+        assert(Planet['sql'].includes('SELECT COUNT(climate) FROM planets'));
+      });
+
+      it('throws an error when count is invoked without an argument', () => {
+        assertThrows(() => Planet.count(), Error);
+      });
+
+      it('throws an error when count is invoked with a column name that is not in the database', () => {
+        assertThrows(() => Planet.count('gravitational_pull'), Error);
+      });
+    });
+
+    describe('sum method', () => {
+      it('adds the appropriate query string to model when sum is invoked', () => {
+        const actualQuery = Planet.sum('climate');
+        assert(Planet['sql'].includes('SELECT SUM(climate) FROM planets'));
+      });
+
+      it('throws an error when sum is invoked without an argument', () => {
+        assertThrows(() => Planet.sum(), Error);
+      });
+
+      it('throws an error when sum is invoked with a column name that is not in the database', () => {
+        assertThrows(() => Planet.sum('gravitational_pull'), Error);
+      });
+    });
+    describe('avg method', () => {
+      it('adds the appropriate query string to model when avg is invoked', () => {
+        const actualQuery = Planet.avg('climate');
+        assert(Planet['sql'].includes('SELECT AVG(climate) FROM planets'));
+      });
+
+      it('throws an error when avg is invoked without an argument', () => {
+        assertThrows(() => Planet.avg(), Error);
+      });
+
+      it('throws an error when avg is invoked with a column name that is not in the database', () => {
+        assertThrows(() => Planet.avg('gravitational_pull'), Error);
+      });
+    });
+    describe('min method', () => {
+      it('adds the appropriate query string to model when min is invoked', () => {
+        const actualQuery = Planet.min('climate');
+        assert(Planet['sql'].includes('SELECT MIN(climate) FROM planets'));
+      });
+
+      it('throws an error when min is invoked without an argument', () => {
+        assertThrows(() => Planet.min(), Error);
+      });
+
+      it('throws an error when min is invoked with a column name that is not in the database', () => {
+        assertThrows(() => Planet.min('gravitational_pull'), Error);
+      });
+    });
+    describe('max method', () => {
+      it('adds the appropriate query string to model when max is invoked', () => {
+        const actualQuery = Planet.max('climate');
+        assert(Planet['sql'].includes('SELECT MAX(climate) FROM planets'));
+      });
+
+      it('throws an error when max is invoked without an argument', () => {
+        assertThrows(() => Planet.max(), Error);
+      });
+
+      it('throws an error when max is invoked with a column name that is not in the database', () => {
+        assertThrows(() => Planet.max('gravitational_pull'), Error);
+      });
+    });
+    /**
+     * no tests for the following problems (for which Postgres will throw its own errors):
+     * - user invokes on table name not in the database
+     * - user chains with incompatible methods
+     */
   });
 });
