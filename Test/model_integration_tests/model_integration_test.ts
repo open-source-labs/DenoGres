@@ -10,7 +10,7 @@ import {
 } from '../../deps.ts';
 import { Pool, PoolClient } from '../../deps.ts';
 import { createTablesQuery, dropTablesQuery } from './seed_testdb.ts';
-import { Planet, Person } from '../sample_model.ts';
+import { Person, Planet } from '../sample_model.ts';
 import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
 describe('model methods', () => {
   let db: PoolClient;
@@ -100,53 +100,71 @@ describe('model methods', () => {
   });
 
   describe('transaction', () => {
-    it('it should commit single query to the database upon successful transaction for single table', async() => {
-    
+    it('it should commit single query to the database upon successful transaction for single table', async () => {
       await Planet.insert('name = turtle').transaction();
       await Planet.endTransaction();
-      const planet = await db.queryObject(`SELECT name FROM planets WHERE name = 'turtle'`)
-      assertEquals(planet.rows, [{name: 'turtle'}])
+      const planet = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'turtle'`,
+      );
+      assertEquals(planet.rows, [{ name: 'turtle' }]);
     });
     // double check transaction works with multiple queries
-    it('it should commit multiple queries to the database upon successful transaction for a single table',async()=>{
+    it('it should commit multiple queries to the database upon successful transaction for a single table', async () => {
       await Planet.insert('name = Alex').transaction();
       await Planet.insert('name = Jacob').transaction();
       await Planet.insert('name = Mia').transaction();
       await Planet.insert('name = Rachel').transaction();
       await Planet.endTransaction();
-      const planetAlex = await db.queryObject(`SELECT name FROM planets WHERE name = 'Alex'`);
-      const planetJacob = await db.queryObject(`SELECT name FROM planets WHERE name = 'Jacob'`)
-      const planetMia= await db.queryObject(`SELECT name FROM planets WHERE name = 'Mia'`)
-      const planetRachel = await db.queryObject(`SELECT name FROM planets WHERE name = 'Rachel'`)
-      
-      assertEquals(planetAlex.rows, [{name: 'Alex'}])
-      assertEquals(planetJacob.rows, [{name: 'Jacob'}])
-      assertEquals(planetMia.rows, [{name: 'Mia'}])
-      assertEquals(planetRachel.rows, [{name: 'Rachel'}])
+      const planetAlex = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Alex'`,
+      );
+      const planetJacob = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Jacob'`,
+      );
+      const planetMia = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Mia'`,
+      );
+      const planetRachel = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Rachel'`,
+      );
+
+      assertEquals(planetAlex.rows, [{ name: 'Alex' }]);
+      assertEquals(planetJacob.rows, [{ name: 'Jacob' }]);
+      assertEquals(planetMia.rows, [{ name: 'Mia' }]);
+      assertEquals(planetRachel.rows, [{ name: 'Rachel' }]);
     });
 
-    it('it should commit a single query per table to the database upon successful transaction for two table', async() => {
-    
+    it('it should commit a single query per table to the database upon successful transaction for two table', async () => {
       await Planet.insert('name = turtle1').transaction();
       await Person.insert('name = turtle1').transaction();
       await Planet.endTransaction();
-      const planet = await db.queryObject(`SELECT planets.name FROM planets INNER JOIN people ON planets.name = people.name`);
-      assertEquals(planet.rows, [{name: 'turtle1'}]);
+      const planet = await db.queryObject(
+        `SELECT planets.name FROM planets INNER JOIN people ON planets.name = people.name`,
+      );
+      assertEquals(planet.rows, [{ name: 'turtle1' }]);
     });
-    
-    it('it should commit multiple queries to the database upon successful transaction for multiple tables',async()=>{
+
+    it('it should commit multiple queries to the database upon successful transaction for multiple tables', async () => {
       await Planet.insert('name = Hyperion').transaction();
       await Planet.insert('name = Endymion').transaction();
       await Person.insert('name = Shrike').transaction();
       await Person.insert('name = The Consul').endTransaction();
-      const Hyperion = await db.queryObject(`SELECT name FROM planets WHERE name = 'Hyperion'`);
-      const Endymion = await db.queryObject(`SELECT name FROM planets WHERE name = 'Endymion'`)
-      const Shrike = await db.queryObject(`SELECT name FROM people WHERE name = 'Shrike'`)
-      const Consul = await db.queryObject(`SELECT name FROM people WHERE name = 'The Consul'`)
-      assertEquals(Hyperion.rows, [{name: 'Hyperion'}])
-      assertEquals(Endymion.rows, [{name: 'Endymion'}])
-      assertEquals(Shrike.rows, [{name: 'Shrike'}])
-      assertEquals(Consul.rows, [{name: 'The Consul'}])
+      const Hyperion = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Hyperion'`,
+      );
+      const Endymion = await db.queryObject(
+        `SELECT name FROM planets WHERE name = 'Endymion'`,
+      );
+      const Shrike = await db.queryObject(
+        `SELECT name FROM people WHERE name = 'Shrike'`,
+      );
+      const Consul = await db.queryObject(
+        `SELECT name FROM people WHERE name = 'The Consul'`,
+      );
+      assertEquals(Hyperion.rows, [{ name: 'Hyperion' }]);
+      assertEquals(Endymion.rows, [{ name: 'Endymion' }]);
+      assertEquals(Shrike.rows, [{ name: 'Shrike' }]);
+      assertEquals(Consul.rows, [{ name: 'The Consul' }]);
     });
   });
 });
