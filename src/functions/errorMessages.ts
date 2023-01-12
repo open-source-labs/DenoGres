@@ -11,22 +11,24 @@ class IncorrectData extends Error {
 export function checkQueryString(
   length: number,
   method: string,
-  model: Model,
-  startOrChain: 'start' | 'chain',
+  model: typeof Model,
+  startOrChain: 'start' | 'chain'
 ): boolean {
   if (startOrChain === 'start' && length > 0) {
-    if (model.transactionInProgress) {
-      model.transactionErrorMsg =
-        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`;
+    if (model['transactionInProgress']) {
+      model[
+        'transactionErrorMsg'
+      ] = `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`;
     } else {
       throw new Error(
-        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`,
+        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`
       );
     }
   } else if (startOrChain === 'chain' && !length) {
-    if (model.transactionInProgress) {
-      model.transactionErrorMsg =
-        `${method} must be chained with other methods.`;
+    if (model['transactionInProgress']) {
+      model[
+        'transactionErrorMsg'
+      ] = `${method} must be chained with other methods.`;
     } else {
       throw new Error(`${method} must be chained with other methods.`);
     }
@@ -57,7 +59,7 @@ interface Columns {
 export function checkColumns(
   columns: Columns,
   input: string | string[],
-  model?: Model,
+  model: typeof Model
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
 
@@ -78,17 +80,17 @@ function checkColumnsHelper(
   modelColumns: string[],
   column: string,
   // need to fix any Type
-  model: any,
+  model: typeof Model
 ): void {
   const errorMessage = (data: string) => {
     return `Column: ${data} does not exist on this model.`;
   };
   // throws an error on an incorrect column if a transaction is NOT in progress
   if (!modelColumns.includes(column)) {
-    if (!model.transactionInProgress) {
+    if (!model['transactionInProgress']) {
       throw new IncorrectData(errorMessage(column));
     } else {
-      model.transactionErrorMsg = errorMessage(column);
+      model['transactionErrorMsg'] = errorMessage(column);
     }
   }
   return;
