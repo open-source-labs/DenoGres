@@ -7,7 +7,7 @@ import {
   describe,
   it,
 } from '../deps.ts';
-import { Planet } from './sample_model.ts';
+import { Planet, PlanetsInFilm } from './sample_model.ts';
 
 describe('model methods', () => {
   beforeEach(() => {
@@ -264,6 +264,21 @@ describe('model methods', () => {
      * - user invokes with column or table names not in the database
      * - user chains with incompatible methods (i.e. not after 'select' method)
      */
+  });
+  describe('group method', () => {
+    it('adds appropriate query string to model when invoked with group', () => {
+      Planet['sql'] = 'SELECT _id,name,population FROM planets';
+      const actualQuery = Planet.group(
+        'planets._id',
+        'planets.name',
+        'planets.population',
+      )['sql'];
+      assert(
+        Planet['sql'].includes(
+          'GROUP BY planets._id,planets.name,planets.population',
+        ),
+      );
+    });
   });
 
   describe('order method', () => {
