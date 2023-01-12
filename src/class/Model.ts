@@ -81,6 +81,7 @@ export class Model {
     try {
       await db.queryObject(this.sql + ';');
       await db.queryObject('COMMIT;');
+      DisconnectDb(db);
     } catch (err) {
       // rollback and disconnect from the db
       rollback(Model, err);
