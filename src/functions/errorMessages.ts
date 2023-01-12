@@ -1,3 +1,5 @@
+import { Model } from '../class/Model.ts';
+
 class IncorrectData extends Error {
   constructor(msg: string) {
     super(msg);
@@ -9,22 +11,20 @@ class IncorrectData extends Error {
 export function checkQueryString(
   length: number,
   method: string,
-  model: any,
-  startOrChain: 'start' | 'chain',
+  model: Model,
+  startOrChain: 'start' | 'chain'
 ): boolean {
   if (startOrChain === 'start' && length > 0) {
     if (model.transactionInProgress) {
-      model.transactionErrorMsg =
-        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`;
+      model.transactionErrorMsg = `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`;
     } else {
       throw new Error(
-        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`,
+        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`
       );
     }
   } else if (startOrChain === 'chain' && !length) {
     if (model.transactionInProgress) {
-      model.transactionErrorMsg =
-        `${method} must be chained with other methods.`;
+      model.transactionErrorMsg = `${method} must be chained with other methods.`;
     } else {
       throw new Error(`${method} must be chained with other methods.`);
     }
@@ -55,7 +55,7 @@ interface Columns {
 export function checkColumns(
   columns: Columns,
   input: string | string[],
-  model?: any,
+  model?: Model
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
 
@@ -76,7 +76,7 @@ function checkColumnsHelper(
   modelColumns: string[],
   column: string,
   // need to fix any Type
-  model: any,
+  model: any
 ): void {
   const errorMessage = (data: string) => {
     return `Column: ${data} does not exist on this model.`;
