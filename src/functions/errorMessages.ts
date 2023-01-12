@@ -51,15 +51,19 @@ export function checkColumns(
   // checks for if input is an array of columns
   if (Array.isArray(input)) {
     input.forEach((c) => {
-      if (!columnsArr.includes(c) && !c.includes('.')) {
-        throw new IncorrectData(`Column: ${c} does not exist on this model.`);
-      }
+      // break up model.column refences
+      if (c.includes('.')) c = c.split('.')[1];
+      checkColumnsHelper(columnsArr, c);
     });
   } else {
     // checks value of a single column
-    if (!columnsArr.includes(input) && !input.includes('.')) {
-      throw new IncorrectData(`Column: ${input} does not exist on this model.`);
-    }
+    checkColumnsHelper(columnsArr, input);
   }
   return true;
+}
+
+function checkColumnsHelper(modelColumns: string[], column: string) {
+  if (!modelColumns.includes(column)) {
+    throw new IncorrectData(`Column: ${column} does not exist on this model.`);
+  }
 }
