@@ -7,7 +7,7 @@ import {
   describe,
   it,
 } from '../deps.ts';
-import { Planet, PlanetsInFilm } from './sample_model.ts';
+import { Planet } from './sample_model.ts';
 
 describe('model methods', () => {
   beforeEach(() => {
