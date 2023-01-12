@@ -9,18 +9,25 @@ class IncorrectData extends Error {
 export function checkQueryString(
   length: number,
   method: string,
-  model: string,
+  model: any,
   startOrChain: 'start' | 'chain'
 ): boolean {
   if (startOrChain === 'start' && length > 0) {
-    throw new Error(
-      `Cannot ${method}. Query is already built. Please complete query with ${model}.query()`
-    );
+    if (model.transactionInProgress) {
+      model.transactionErrorMsg = `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`;
+    } else {
+      throw new Error(
+        `Cannot ${method}. Query is already built. Please complete query with ${model.name}.query()`
+      );
+    }
   } else if (startOrChain === 'chain' && !length) {
-    throw new Error(`${method} must be chained with other methods.`);
-  } else {
-    return true;
+    if (model.transactionInProgress) {
+      model.transactionErrorMsg = `${method} must be chained with other methods.`;
+    } else {
+      throw new Error(`${method} must be chained with other methods.`);
+    }
   }
+  return true;
 }
 
 interface Columns {
@@ -46,21 +53,39 @@ interface Columns {
 export function checkColumns(
   columns: Columns,
   input: string | string[],
-  model: any
+  model?: any
 ): boolean {
   const columnsArr: string[] = Object.keys(columns);
+
   // checks for if input is an array of columns
   if (Array.isArray(input)) {
     input.forEach((c) => {
-      if (!columnsArr.includes(c) && !c.includes('.')) {
-        throw new IncorrectData(`Column: ${c} does not exist on this model.`);
-      }
+      // break up model.column refences
+      if (c.includes('.')) c = c.split('.')[1];
+      checkColumnsHelper(columnsArr, c, model);
     });
   } else {
-    // checks value of a single column
-    if (!columnsArr.includes(input) && !input.includes('.')) {
-      throw new IncorrectData(`Column: ${input} does not exist on this model.`);
-    }
+    checkColumnsHelper(columnsArr, input, model);
   }
   return true;
+}
+
+function checkColumnsHelper(
+  modelColumns: string[],
+  column: string,
+  // need to fix any Type
+  model: any
+): void {
+  const errorMessage = (data: string) => {
+    return `Column: ${data} does not exist on this model.`;
+  };
+  // throws an error on an incorrect column if a transaction is NOT in progress
+  if (!modelColumns.includes(column)) {
+    if (!model.transactionInProgress) {
+      throw new IncorrectData(errorMessage(column));
+    } else {
+      model.transactionErrorMsg = errorMessage(column);
+    }
+  }
+  return;
 }

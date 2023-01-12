@@ -87,10 +87,14 @@ export class HasOne extends Association {
   targetModel_MappindColumnName = this.mappingDetails?.mapping_ColumnName;
   association_name = `${this.target.name}_hasOne_${this.source.name}`; // ex: 'country_hasOne_capital'
   getAccesorName = `get${this.source.name[0].toUpperCase()}${
-    this.source.name.slice(1)
+    this.source.name.slice(
+      1,
+    )
   }`; // ex: 'getCapital'
   addAccesorName = `add${this.source.name[0].toUpperCase()}${
-    this.source.name.slice(1)
+    this.source.name.slice(
+      1,
+    )
   }`; // ex: 'addCapital'
   // add instance methods for create, get, update, delete
 
@@ -105,11 +109,13 @@ export class HasOne extends Association {
   async getAssociatedData(instance: any, uri?: string) {
     let query = '';
     let queryResult: any;
-    if (this.targetModel_MappindColumnName) { // type checking
+    if (this.targetModel_MappindColumnName) {
+      // type checking
       query = `SELECT * FROM ${this.source.table} 
-        WHERE ${this.foreignKey_ColumnName} ='${
+      WHERE ${this.foreignKey_ColumnName} ='${
         instance[this.targetModel_MappindColumnName]
       }'`;
+      console.log('query in has one: ', query);
     }
     const db = await ConnectDb(uri);
     try {
@@ -137,7 +143,9 @@ export class HasOne extends Association {
       // if this instance has id, assume it's in the database and just update the foreign key column
       const toObj = Object.assign({}, values);
       const objKeys = Object.keys(toObj).join(',');
-      const objVals = Object.values(toObj).map((el) => `'${el}'`).join(',');
+      const objVals = Object.values(toObj)
+        .map((el) => `'${el}'`)
+        .join(',');
       const instanceId = instance.id || instance._id; // <<<<<<<<< HARD CODED for now
 
       query =
@@ -171,10 +179,14 @@ export class BelongsTo extends Association {
   targetModel_MappindColumnName = this.mappingDetails?.mapping_ColumnName; // ex: 'id'
   association_name = `${this.source.name}_belongsTo_${this.target.name}`; // ex: 'capital_belongsTo_country'
   getAccesorName = `get${this.target.name[0].toUpperCase()}${
-    this.target.name.slice(1)
+    this.target.name.slice(
+      1,
+    )
   }`; // ex: 'getCountry'
   addAccesorName = `add${this.target.name[0].toUpperCase()}${
-    this.target.name.slice(1)
+    this.target.name.slice(
+      1,
+    )
   }`; // ex: 'addCountry'
 
   // add instance methods for create, get, update, delete
@@ -184,10 +196,12 @@ export class BelongsTo extends Association {
   }
 
   // this is instance method e.g. profile1.getUser(), person.getSpecies()
-  async getAssociatedData(instance: any, uri?: string) { //
+  async getAssociatedData(instance: any, uri?: string) {
+    //
     let query = '';
     let queryResult: any;
-    if (this.foreignKey_ColumnName) { // type checking
+    if (this.foreignKey_ColumnName) {
+      // type checking
       query = `SELECT * FROM ${this.target.table} 
       WHERE ${this.targetModel_MappindColumnName} ='${
         instance[this.foreignKey_ColumnName]
@@ -226,10 +240,14 @@ export class HasMany extends Association {
   mapping_ColumnName = this.mappingDetails?.mapping_ColumnName;
   association_name = `${this.source.name}_hasMany_${this.target.name}`;
   getAccesorName = `get${this.target.name[0].toUpperCase()}${
-    this.target.name.slice(1)
+    this.target.name.slice(
+      1,
+    )
   }s`; // ex: 'getSpecies'
   addAccesorName = `add${this.target.name[0].toUpperCase()}${
-    this.target.name.slice(1)
+    this.target.name.slice(
+      1,
+    )
   }s`; // ex: 'addPlanets'
 
   // add instance methods for create, get, update, delete
@@ -292,16 +310,24 @@ export class ManyToMany extends Association {
   modelB_mappingKey = this.mappingDetails.modelB_mappingKey;
   association_name = `${this.modelA.name}_ManyToMany_${this.modelB.name}`;
   getAccesorName_A = `get${this.modelB.name[0].toUpperCase()}${
-    this.modelB.name.slice(1)
+    this.modelB.name.slice(
+      1,
+    )
   }s`;
   getAccesorName_B = `get${this.modelA.name[0].toUpperCase()}${
-    this.modelA.name.slice(1)
+    this.modelA.name.slice(
+      1,
+    )
   }s`;
   addAccesorName_A = `add${this.modelB.name[0].toUpperCase()}${
-    this.modelB.name.slice(1)
+    this.modelB.name.slice(
+      1,
+    )
   }s`;
   addAccesorName_B = `add${this.modelA.name[0].toUpperCase()}${
-    this.modelA.name.slice(1)
+    this.modelA.name.slice(
+      1,
+    )
   }s`;
 
   // add instance methods for create, get, update, delete
