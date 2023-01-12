@@ -265,8 +265,8 @@ describe('model methods', () => {
      * - user chains with incompatible methods (i.e. not after 'select' method)
      */
   });
-  describe('groupBy method', () => {
-    it('adds appropriate query string to model when invoked with groupBy', () => {
+  describe('group method', () => {
+    it('adds appropriate query string to model when invoked with group', () => {
       Planet['sql'] = 'SELECT _id,name,population FROM planets';
       const actualQuery = Planet.group(
         'planets._id',
