@@ -3,7 +3,6 @@ import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkQueryString } from '../functions/errorMessages.ts';
 import { PoolClient } from '../../deps.ts';
-import { rollback } from '../functions/rollback.ts';
 
 export class Model {
   [k: string]: any; // index signature
@@ -33,6 +32,7 @@ export class Model {
   private static sql = ''; // stores current db query here until done executing
   private static transactionInProgress = false; // flag for whether transaction is on first run or not
   private static transactionConnection?: PoolClient;
+  private static transactionErrorMsg = '';
   static foreignKey?: {
     columns: string[];
     mappedColumns: string[];
@@ -47,7 +47,7 @@ export class Model {
    * Note: Initially checking the transactionFailed state solves the issue of duplicate error handling messages appearing
    */
   static async transaction(uri?: string) {
-    let db = Model.transactionConnection;
+    let db = Model.transactionConnection as PoolClient;
     if (!Model.transactionInProgress) {
       this.sql = 'BEGIN;' + this.sql;
       // create connection to db
@@ -57,37 +57,60 @@ export class Model {
         await db.queryObject(this.sql);
         Model.transactionInProgress = true;
       } catch (err) {
-        // throw error, cannot connect to the db
         throw new Error('Connection to the database failed', err);
       }
+    } // rollsback if an error was thrown while building the query
+    else if (Model.transactionErrorMsg.length !== 0) {
+      await this.rollback(Model.transactionErrorMsg);
     } else {
       try {
         await db.queryObject(this.sql);
       } catch (err) {
         // rollback and disconnect from the db, transaction failed
-        rollback(Model, err);
+        await this.rollback(err);
       }
     }
+    // reset the sql string upon a successful query
     this.sql = '';
   }
   /**
    * params: uri | void
    * If no previous queries have failed endTran() will send one last query to the database, commiting if it passes, rollback if it fails
    * If previous query has failed, Rollback and disconnect from the db
-   * Reset transactionFailed and transactionInProgess Booleans and this.sql
+   * Reset transactionFailed and transactionInProgress Booleans and this.sql
    */
   static async endTransaction() {
-    const db = Model.transactionConnection;
-    try {
-      await db.queryObject(this.sql + ';');
-      await db.queryObject('COMMIT;');
-      DisconnectDb(db);
-    } catch (err) {
-      // rollback and disconnect from the db
-      rollback(Model, err);
+    const db = Model.transactionConnection as PoolClient;
+    if (Model.transactionInProgress) {
+      if (Model.transactionErrorMsg.length !== 0) {
+        await this.rollback(Model.transactionErrorMsg);
+      } else {
+        try {
+          await db.queryObject(this.sql + ';');
+          await db.queryObject('COMMIT;');
+          await DisconnectDb(db);
+          Model.transactionInProgress = false;
+          this.sql = '';
+        } catch (err) {
+          // rollback and disconnect from the db
+          await this.rollback(err);
+        }
+      }
     }
-    Model.transactionInProgress = false;
-    this.sql = '';
+  }
+
+  // Rollback existing transaction due to a postgres error or error building the query
+  static async rollback(err: Error | string) {
+    const db = Model.transactionConnection as PoolClient;
+    try {
+      await db.queryObject('ROLLBACK;');
+      await DisconnectDb(db);
+      Model.transactionInProgress = false;
+      this.sql = '';
+    } catch (err) {
+      throw new Error('Rollback failed: ', err);
+    }
+    throw new Error(`transaction failed. Rolled back because ${err}`);
   }
 
   // inserts properties created by user on instance object into user's db
@@ -178,7 +201,7 @@ export class Model {
   // must be chained with invocation of 'query' method in order to execute query
   static insert(...value: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'insert', this.name, 'start');
+    checkQueryString(this.sql.length, 'insert', Model, 'start');
 
     this.sql += `INSERT INTO ${this.table} (`;
     for (let i = 0; i < value.length; i++) {
@@ -187,7 +210,7 @@ export class Model {
       // every words[0] should represent a column name (separated by commas to form query string)
       const inputColumn: string = words[0];
       // check that the input column is one that is in the table
-      checkColumns(this.columns, inputColumn);
+      checkColumns(this.columns, inputColumn, Model);
 
       this.sql += ` ${inputColumn}`;
       if (i !== value.length - 1) this.sql += ' ,';
@@ -208,13 +231,13 @@ export class Model {
   // therefore it updates the value(s) of the given column(s) for all records in the table
   static edit(...condition: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'edit', this.name, 'start');
+    checkQueryString(this.sql.length, 'edit', Model, 'start');
     this.sql += `UPDATE ${this.table} SET`;
     for (let i = 0; i < condition.length; i++) {
       const words = condition[i].toString().split(' = ');
       const inputColumn: string = words[0];
       // check that the input column is one that is in the table
-      checkColumns(this.columns, inputColumn);
+      checkColumns(this.columns, inputColumn, Model);
       // words[1] is the input value
       this.sql += ` ${inputColumn} = '${words[1]}'`;
       if (i !== condition.length - 1) this.sql += ' ,';
@@ -227,7 +250,7 @@ export class Model {
   // either way, must be chained with 'query' method to execute query
   static delete() {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'delete', this.name, 'start');
+    checkQueryString(this.sql.length, 'delete', Model, 'start');
     this.sql += `DELETE FROM ${this.table}`;
     return this;
   }
@@ -236,14 +259,14 @@ export class Model {
   // can be chained with 'where' method, either way must be chained with 'query' method
   static select(...column: string[]) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'select', this.name, 'start');
+    checkQueryString(this.sql.length, 'select', Model, 'start');
     // check for empty arguments and *
     if (arguments.length === 0 || arguments[0] === '*') {
       this.sql += `SELECT * FROM ${this.table}`;
       return this;
     } else {
       // check that the input column is one that is in the table
-      checkColumns(this.columns, column);
+      checkColumns(this.columns, column, Model);
       this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
       return this;
     }
@@ -263,27 +286,27 @@ export class Model {
       // check that the input column is one that is in the table
       if (condition[i].includes(' = ')) {
         words = condition[i].toString().split(' = ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} = '${words[1]}'`;
       } else if (condition[i].includes(' > ')) {
         words = condition[i].toString().split(' > ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} > '${words[1]}'`;
       } else if (condition[i].includes(' < ')) {
         words = condition[i].toString().split(' < ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} < '${words[1]}'`;
       } else if (condition[i].includes(' >= ')) {
         words = condition[i].toString().split(' >= ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} >= '${words[1]}'`;
       } else if (condition[i].includes(' <= ')) {
         words = condition[i].toString().split(' <= ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} <= '${words[1]}'`;
       } else if (condition[i].includes(' LIKE ')) {
         words = condition[i].toString().split(' LIKE ');
-        checkColumns(this.columns, words[0]);
+        checkColumns(this.columns, words[0], Model);
         this.sql += ` ${words[0]} LIKE '${words[1]}'`;
       }
     }
@@ -293,7 +316,7 @@ export class Model {
   // LIMIT: limit number of output rows
   static limit(limit: number) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'limit', this.name, 'chain');
+    checkQueryString(this.sql.length, 'limit', Model, 'chain');
     this.sql += ` LIMIT ${limit}`;
     return this;
   }
@@ -301,7 +324,7 @@ export class Model {
   // HAVING: add condition(s) involving aggregate functions to the current query
   static having(...condition: string[]) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'having', this.name, 'chain');
+    checkQueryString(this.sql.length, 'having', Model, 'chain');
     this.sql += ` HAVING ${condition[0]}`;
     for (let i = 1; i < condition.length; i++) {
       this.sql += ` ${condition[i]}`;
@@ -313,9 +336,9 @@ export class Model {
   // chained after the 'select' method
   static innerJoin(column1: string, column2: string, table2: string) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'innerJoin', this.name, 'chain');
+    checkQueryString(this.sql.length, 'innerJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
-    checkColumns(this.columns, column1);
+    checkColumns(this.columns, column1, Model);
     this.sql +=
       ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -324,9 +347,9 @@ export class Model {
   // LEFT JOIN: selects records from this table and matching values on table2
   static leftJoin(column1: string, column2: string, table2: string) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'leftJoin', this.name, 'chain');
+    checkQueryString(this.sql.length, 'leftJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
-    checkColumns(this.columns, column1);
+    checkColumns(this.columns, column1, Model);
     this.sql +=
       ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -335,9 +358,9 @@ export class Model {
   // RIGHT JOIN: selects records from table2 and matching values on this table
   static rightJoin(column1: string, column2: string, table2: string) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'rightJoin', this.name, 'chain');
+    checkQueryString(this.sql.length, 'rightJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
-    checkColumns(this.columns, column1);
+    checkColumns(this.columns, column1, Model);
     this.sql +=
       ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -346,9 +369,9 @@ export class Model {
   // FULL JOIN: selects all records when a match exists in either table
   static fullJoin(column1: string, column2: string, table2: string) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'fullJoin', this.name, 'chain');
+    checkQueryString(this.sql.length, 'fullJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
-    checkColumns(this.columns, column1);
+    checkColumns(this.columns, column1, Model);
     this.sql +=
       ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
@@ -358,8 +381,8 @@ export class Model {
   // often used with aggregate functions (ex: COUNT), chained after 'select' method
   static group(...column: string[]) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'group', this.name, 'chain');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'group', Model, 'chain');
+    checkColumns(this.columns, column, Model);
     this.sql += ` GROUP BY ${column.toString()}`;
     return this;
   }
@@ -369,8 +392,8 @@ export class Model {
   // as remaining argument(s), chained onto 'select' method
   static order(order: 'ASC' | 'DESC', ...column: string[]) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'order', this.name, 'chain');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'order', Model, 'chain');
+    checkColumns(this.columns, column, Model);
     this.sql += ` ORDER BY ${column.toString()}`;
 
     if (order !== 'ASC' && order !== 'DESC') {
@@ -387,40 +410,40 @@ export class Model {
   // AVG-COUNT-SUM-MIN-MAX: calculate aggregate functions
   static count(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'count', this.name, 'start');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'count', Model, 'start');
+    checkColumns(this.columns, column, Model);
     this.sql += `SELECT COUNT(${column}) FROM ${this.table}`;
     return this;
   }
 
   static sum(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'sum', this.name, 'start');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'sum', Model, 'start');
+    checkColumns(this.columns, column, Model);
     this.sql += `SELECT SUM(${column}) FROM ${this.table}`;
     return this;
   }
 
   static avg(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'avg', this.name, 'start');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'avg', Model, 'start');
+    checkColumns(this.columns, column, Model);
     this.sql += `SELECT AVG(${column}) FROM ${this.table}`;
     return this;
   }
 
   static min(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'min', this.name, 'start');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'min', Model, 'start');
+    checkColumns(this.columns, column, Model);
     this.sql += `SELECT MIN(${column}) FROM ${this.table}`;
     return this;
   }
 
   static max(column: string) {
     // If the sql string already exists, throw an error to the user
-    checkQueryString(this.sql.length, 'max', this.name, 'start');
-    checkColumns(this.columns, column);
+    checkQueryString(this.sql.length, 'max', Model, 'start');
+    checkColumns(this.columns, column, Model);
     this.sql += `SELECT MAX(${column}) FROM ${this.table}`;
     return this;
   }
@@ -447,7 +470,7 @@ export class Model {
   // ex: const droid = await Species.where('name = Droid').queryInstance()
   static async queryInstance(uri?: string, print?: string) {
     // checks that the user is chaining this after other methods
-    checkQueryString(this.sql.length, 'queryInstance', this.name, 'chain');
+    checkQueryString(this.sql.length, 'queryInstance', Model, 'chain');
     const db = await ConnectDb(uri);
     if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
     const queryResult = await db.queryObject(this.sql);
