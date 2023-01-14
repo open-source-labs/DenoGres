@@ -23,8 +23,15 @@ jobs:
         run: deno fmt --check
       - name: Run model method unit tests
         run: deno test -A --no-check ./Test/model_test.ts
-      - name: Run model method integration tests
-        env:
-          TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
-          ENVIRONMENT: test
-        run: deno test -A --no-check ./Test/model_integration_tests/
+      # - name: Run model method integration tests
+      #   env:
+      #     TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
+      #     ENVIRONMENT: test
+      #   run: deno test -A --no-check ./Test/model_integration_tests/
+      - name: Connect to postgres container
+        run: docker-compose up --renew-anon-volumes
+      - name: Run container test
+        run: deno task test ./container_test.ts
+      - name: Disconnect from postgres container
+        if: always()
+        run: docker-compose down -v
