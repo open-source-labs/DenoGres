@@ -33,10 +33,10 @@ jobs:
     steps:
       - name: Setup repo
         uses: actions/checkout@v3
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
+      # - name: Setup Deno
+      #   uses: denoland/setup-deno@v1
+      #   with:
+      #     deno-version: v1.x
       - name: Verify formatting
         run: deno fmt --check
       - name: Run model method unit tests
