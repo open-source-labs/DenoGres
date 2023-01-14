@@ -12,7 +12,6 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # container: denoland/deno:1.29.3
 
     # Service containers to run with the job
     services:
@@ -20,7 +19,7 @@ jobs:
       postgres:
         # Docker Hub image
         image: postgres
-        # Provide the password for postgres
+        # Provide the credentials for postgres
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -30,6 +29,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        # Maps tcp port 5432 on service container to the host
         ports:
           - 5432:5432
 
@@ -40,17 +40,13 @@ jobs:
         uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      # - name: Verify formatting
-      #   run: deno fmt --check
-      # - name: Run model method unit tests
-      #   run: deno test -A --no-check ./Test/model_test.ts
-      # - name: Run model method integration tests
-      #   env:
-      #     TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
-      #     ENVIRONMENT: test
-      #   run: deno test -A --no-check ./Test/model_integration_tests/
+      - name: Verify formatting
+        run: deno fmt --check
+      - name: Run model method unit tests
+        run: deno test -A --no-check ./Test/model_test.ts
       - name: Run model method integration tests
         env:
           ENVIRONMENT: test
+          # uri for db instance running in container (needed for testing methods that invoke the ConnectDb func)
           TEST_DB_URI: postgresql://postgres:postgres@localhost:5432/postgres
         run: deno test -A --no-check ./Test/model_integration_tests/
