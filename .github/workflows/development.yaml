@@ -22,6 +22,7 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
         options: >-
@@ -49,4 +50,7 @@ jobs:
       #     ENVIRONMENT: test
       #   run: deno test -A --no-check ./Test/model_integration_tests/
       - name: Run model method integration tests
+        env:
+          ENVIRONMENT: test
+          TEST_DB_URI: postgresql://postgres:postgres@localhost:5432
         run: deno test -A --no-check ./Test/model_integration_tests/
