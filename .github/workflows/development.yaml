@@ -12,7 +12,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: denoland/deno:1.10.3
+    container: denoland/deno:1.29.3
 
     # Service containers to run with the job
     services:
