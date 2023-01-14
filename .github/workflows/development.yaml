@@ -12,7 +12,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: denoland/deno:1.29.3
+    # container: denoland/deno:1.29.3
 
     # Service containers to run with the job
     services:
@@ -29,27 +29,24 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Setup repo
         uses: actions/checkout@v3
-      # - name: Setup Deno
-      #   uses: denoland/setup-deno@v1
-      #   with:
-      #     deno-version: v1.x
-      - name: Verify formatting
-        run: deno fmt --check
-      - name: Run model method unit tests
-        run: deno test -A --no-check ./Test/model_test.ts
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      # - name: Verify formatting
+      #   run: deno fmt --check
+      # - name: Run model method unit tests
+      #   run: deno test -A --no-check ./Test/model_test.ts
       # - name: Run model method integration tests
       #   env:
       #     TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
       #     ENVIRONMENT: test
       #   run: deno test -A --no-check ./Test/model_integration_tests/
-      # - name: Connect to PostgreSQL
-      #   run: node client.js
-      #   env:
-      #     POSTGRES_HOST: postgres
-      #     POSTGRES_PORT: 5432
       - name: Run model method integration tests
         run: deno test -A --no-check ./Test/model_integration_tests/
