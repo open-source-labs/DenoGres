@@ -52,5 +52,5 @@ jobs:
       - name: Run model method integration tests
         env:
           ENVIRONMENT: test
-          TEST_DB_URI: postgresql://postgres:postgres@localhost:5432
+          TEST_DB_URI: postgresql://postgres:postgres@localhost:5432/postgres
         run: deno test -A --no-check ./Test/model_integration_tests/
