@@ -1,4 +1,12 @@
-import { Pool, PoolClient, describe, beforeAll, afterAll, it, assert } from './deps.ts';
+import {
+  afterAll,
+  assert,
+  beforeAll,
+  describe,
+  it,
+  Pool,
+  PoolClient,
+} from './deps.ts';
 
 describe('Test db container connection', () => {
   let client: PoolClient;
@@ -13,11 +21,11 @@ describe('Test db container connection', () => {
         hostname: 'localhost',
         port: 5432,
       },
-      1
+      1,
     );
-    
+
     client = await pool.connect();
-  })
+  });
 
   afterAll(async () => {
     await client.release();
@@ -26,8 +34,10 @@ describe('Test db container connection', () => {
 
   describe('can retrieve data', () => {
     it('works', async () => {
-      const { rows } = await client.queryObject('SELECT * FROM planets LIMIT 5');
+      const { rows } = await client.queryObject(
+        'SELECT * FROM planets LIMIT 5',
+      );
       assert(rows.length > 0);
     });
   });
-})
+});
