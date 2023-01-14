@@ -29,7 +29,7 @@ jobs:
       #     ENVIRONMENT: test
       #   run: deno test -A --no-check ./Test/model_integration_tests/
       - name: Connect to postgres container
-        run: docker-compose up --renew-anon-volumes
+        run: docker-compose up --renew-anon-volumes -d
       - name: Run container test
         run: deno task test ./container_test.ts
       - name: Disconnect from postgres container
