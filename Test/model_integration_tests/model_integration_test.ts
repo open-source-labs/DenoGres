@@ -11,18 +11,20 @@ import { Pool, PoolClient } from '../../deps.ts';
 import { createTablesQuery, dropTablesQuery } from './seed_testdb.ts';
 import { Person, Planet } from '../sample_model.ts';
 import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
+
 describe('model methods', () => {
   let pool: Pool;
   let db: PoolClient;
 
   beforeAll(async () => {
-    pool = new Pool({
-      database: 'postgres',
-      hostname: 'localhost',
-      password: 'postgres',
-      port: 5432,
-      user: 'postgres',
-    }, 1);
+    // pool = new Pool({
+    //   database: 'postgres',
+    //   hostname: 'localhost',
+    //   password: 'postgres',
+    //   port: 5432,
+    //   user: 'postgres',
+    // }, 1);
+    pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
 
     db = await pool.connect();
     await db.queryObject(createTablesQuery);
