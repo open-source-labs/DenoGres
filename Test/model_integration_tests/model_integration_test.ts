@@ -17,15 +17,7 @@ describe('model methods', () => {
   let db: PoolClient;
 
   beforeAll(async () => {
-    // pool = new Pool({
-    //   database: 'postgres',
-    //   hostname: 'localhost',
-    //   password: 'postgres',
-    //   port: 5432,
-    //   user: 'postgres',
-    // }, 1);
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
-
     db = await pool.connect();
     await db.queryObject(createTablesQuery);
   });
