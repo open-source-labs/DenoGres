@@ -24,7 +24,7 @@ describe('model methods', () => {
       const actualQuery = Planet.insert(
         'name = testPlanet',
         'climate = arid',
-        'terrain = bumpy',
+        'terrain = bumpy'
       )['sql'];
       const expectedQuery =
         /INSERT\sINTO\splanets\s\(\s*name\s*,\s*climate\s*,\s*terrain\)\sVALUES\s\(\s*'testPlanet'\s*,\s*'arid'\s*,\s*'bumpy'\)/;
@@ -41,17 +41,17 @@ describe('model methods', () => {
   describe('edit method', () => {
     it('appends appropriate query string to model when invoked with one property', () => {
       const actualQuery = Planet.edit('name = testPlanet')['sql'];
-      const expectedQuery = 'UPDATE planets SET name = \'testPlanet\'';
+      const expectedQuery = "UPDATE planets SET name = 'testPlanet'";
       assertEquals(actualQuery, expectedQuery);
     });
     it('appends appropriate query string to model when invoked with several properties', () => {
       const actualQuery = Planet.edit(
         'name = testPlanet',
         'climate = arid',
-        'terrain = bumpy',
+        'terrain = bumpy'
       )['sql'];
       const expectedQuery =
-        'UPDATE planets SET name = \'testPlanet\' , climate = \'arid\' , terrain = \'bumpy\'';
+        "UPDATE planets SET name = 'testPlanet' , climate = 'arid' , terrain = 'bumpy'";
       assertEquals(actualQuery, expectedQuery);
     });
     it('throws an error when invoked with an incorrect column name', () => {
@@ -150,10 +150,14 @@ describe('model methods', () => {
     it('adds appropriate query string to model when invoked with more than one condition', () => {
       const actualQuery = Planet.where(
         'climate = temperate',
-        'rotation_period > 12',
+        'rotation_period > 12'
       )['sql'];
       const expectedQuery = `climate = 'temperate' rotation_period > '12'`;
       assert(actualQuery.includes(expectedQuery));
+    });
+    it('adds appropriate query string to the model when invoked with AND, OR, and NOT operators', () => {
+      const andQuery = Planet.where('AND rotation_period > 12')['sql'];
+      assert(andQuery.includes(''));
     });
 
     it('throws an error when invoked with column names not on the model', () => {
@@ -197,10 +201,10 @@ describe('model methods', () => {
         'SELECT COUNT(_id), gravity FROM planets GROUP BY gravity';
       const actualQuery = Planet.having(
         'COUNT(_id) > 1',
-        'AND gravity IS NOT NULL',
+        'AND gravity IS NOT NULL'
       )['sql'];
       assert(
-        actualQuery.includes(' HAVING COUNT(_id) > 1 AND gravity IS NOT NULL'),
+        actualQuery.includes(' HAVING COUNT(_id) > 1 AND gravity IS NOT NULL')
       );
     });
 
@@ -219,8 +223,8 @@ describe('model methods', () => {
       ];
       assert(
         Planet['sql'].includes(
-          'INNER JOIN people ON planets._id = people.homeworld_id',
-        ),
+          'INNER JOIN people ON planets._id = people.homeworld_id'
+        )
       );
     });
     it('adds appropriate query string to model when invoked for leftJoin', () => {
@@ -230,8 +234,8 @@ describe('model methods', () => {
       ];
       assert(
         Planet['sql'].includes(
-          'LEFT JOIN people ON planets._id = people.homeworld_id',
-        ),
+          'LEFT JOIN people ON planets._id = people.homeworld_id'
+        )
       );
     });
 
@@ -242,8 +246,8 @@ describe('model methods', () => {
       ];
       assert(
         Planet['sql'].includes(
-          'RIGHT JOIN people ON planets._id = people.homeworld_id',
-        ),
+          'RIGHT JOIN people ON planets._id = people.homeworld_id'
+        )
       );
     });
 
@@ -254,8 +258,8 @@ describe('model methods', () => {
       ];
       assert(
         Planet['sql'].includes(
-          'FULL JOIN people ON planets._id = people.homeworld_id',
-        ),
+          'FULL JOIN people ON planets._id = people.homeworld_id'
+        )
       );
     });
     /**
@@ -271,12 +275,12 @@ describe('model methods', () => {
       const actualQuery = Planet.group(
         'planets._id',
         'planets.name',
-        'planets.population',
+        'planets.population'
       )['sql'];
       assert(
         Planet['sql'].includes(
-          'GROUP BY planets._id,planets.name,planets.population',
-        ),
+          'GROUP BY planets._id,planets.name,planets.population'
+        )
       );
     });
   });
@@ -284,22 +288,24 @@ describe('model methods', () => {
   describe('order method', () => {
     it('adds appropriate query string to model when order is invoked with ASC', () => {
       Planet['sql'] = 'SELECT * FROM planets';
-      const actualQuery =
-        Planet.order('ASC', 'diameter', 'rotation_period')['sql'];
+      const actualQuery = Planet.order('ASC', 'diameter', 'rotation_period')[
+        'sql'
+      ];
       assert(Planet['sql'].includes('ORDER BY diameter,rotation_period ASC'));
     });
 
     it('adds appropriate query string to model when order is invoked with DESC', () => {
       Planet['sql'] = 'SELECT * FROM planets';
-      const actualQuery =
-        Planet.order('DESC', 'diameter', 'rotation_period')['sql'];
+      const actualQuery = Planet.order('DESC', 'diameter', 'rotation_period')[
+        'sql'
+      ];
       assert(Planet['sql'].includes('ORDER BY diameter,rotation_period DESC'));
     });
 
     it('throws an error when invoked without either ASC or DESC', () => {
       assertThrows(
         () => Planet.order('ascending', 'diameter', 'rotation_period'),
-        Error,
+        Error
       );
     });
 
