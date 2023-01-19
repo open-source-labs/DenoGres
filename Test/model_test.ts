@@ -156,8 +156,33 @@ describe('model methods', () => {
       assert(actualQuery.includes(expectedQuery));
     });
     it('adds appropriate query string to the model when invoked with AND, OR, and NOT operators', () => {
-      const andQuery = Planet.where('AND rotation_period > 12')['sql'];
-      assert(andQuery.includes(''));
+      const andQuery = Planet.where(
+        'climate = temperate',
+        'AND rotation_period > 12'
+      )['sql'];
+      assert(
+        andQuery.includes(
+          `WHERE climate = 'temperate' AND rotation_period > '12'`
+        )
+      );
+      const orQuery = Planet.where(
+        'climate = temperate',
+        'OR rotation_period > 12'
+      )['sql'];
+      assert(
+        orQuery.includes(
+          `WHERE climate = 'temperate' OR rotation_period > '12'`
+        )
+      );
+      const notQuery = Planet.where(
+        'climate = temperate',
+        'NOT rotation_period > 12'
+      )['sql'];
+      assert(
+        notQuery.includes(
+          `WHERE climate = 'temperate' NOT rotation_period > '12'`
+        )
+      );
     });
 
     it('throws an error when invoked with column names not on the model', () => {
