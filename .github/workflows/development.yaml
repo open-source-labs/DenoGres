@@ -1,0 +1,30 @@
+name: Development
+
+on:
+  push:
+    branches: ['main', 'dev']
+  pull_request:
+    branches: ['main', 'dev']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Verify formatting
+        run: deno fmt --check
+      - name: Run model method unit tests
+        run: deno test -A --no-check ./Test/model_test.ts
+      - name: Run model method integration tests
+        env:
+          TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
+          ENVIRONMENT: test
+        run: deno test -A --no-check ./Test/model_integration_tests/
