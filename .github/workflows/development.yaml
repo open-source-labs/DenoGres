@@ -12,6 +12,27 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    # Service containers to run with the job
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the credentials for postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        # Maps tcp port 5432 on service container to the host
+        ports:
+          - 5432:5432
+
     steps:
       - name: Setup repo
         uses: actions/checkout@v3
@@ -25,6 +46,7 @@ jobs:
         run: deno test -A --no-check ./Test/model_test.ts
       - name: Run model method integration tests
         env:
-          TEST_DB_URI: ${{ secrets.TEST_DB_URI }}
           ENVIRONMENT: test
+          # uri for db instance running in container (needed for testing methods that invoke the ConnectDb func)
+          TEST_DB_URI: postgresql://postgres:postgres@localhost:5432/postgres
         run: deno test -A --no-check ./Test/model_integration_tests/
