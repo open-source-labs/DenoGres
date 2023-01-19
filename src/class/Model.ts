@@ -84,7 +84,8 @@ export class Model {
     if (Model.transactionInProgress) {
       if (Model.transactionErrorMsg.length !== 0) {
         await this.rollback(Model.transactionErrorMsg);
-      } else {
+      } 
+      else {
         try {
           await db.queryObject(this.sql + ';');
           await db.queryObject('COMMIT;');
@@ -105,11 +106,12 @@ export class Model {
     try {
       await db.queryObject('ROLLBACK;');
       await DisconnectDb(db);
-      Model.transactionInProgress = false;
-      this.sql = '';
     } catch (err) {
       throw new Error('Rollback failed: ', err);
     }
+    Model.transactionInProgress = false;
+    this.sql = '';
+    Model.transactionErrorMsg = '';
     throw new Error(`transaction failed. Rolled back because ${err}`);
   }
 
