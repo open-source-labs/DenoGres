@@ -84,8 +84,7 @@ export class Model {
     if (Model.transactionInProgress) {
       if (Model.transactionErrorMsg.length !== 0) {
         await this.rollback(Model.transactionErrorMsg);
-      } 
-      else {
+      } else {
         try {
           await db.queryObject(this.sql + ';');
           await db.queryObject('COMMIT;');
