@@ -95,7 +95,7 @@ To restore Models to a prior version, execute the following CLI command:
 
 ## Testing
 
-To run all tests, use the command:
+For develpers interested in contributing, to run all tests, use the command:
 
 > `deno task test`
 
