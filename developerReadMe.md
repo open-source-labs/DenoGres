@@ -24,7 +24,7 @@ Most of the code for the ORM can be found in the root directory and src
 directory. In the root directory, you'll find a `mod.ts` file that defines the
 behavior of the Denogres CLI (including denogres --init, --db-pull, etc.), as
 well as a `deps.ts` file where, following Deno best practices, we've imported
-and exported all dependencies to for the rest of the application.
+and exported all dependencies for the rest of the application.
 
 In the `src` directory, the `class` directory contains a crucial file,
 `Model.ts`, which defines the Model class from which all users' models are
