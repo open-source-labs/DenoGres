@@ -107,7 +107,7 @@ export class Model {
       await DisconnectDb(db);
     } catch (err) {
       throw new Error('Rollback failed: ', err);
-    } finally{
+    } finally {
       Model.transactionInProgress = false;
       this.sql = '';
       Model.transactionErrorMsg = '';
