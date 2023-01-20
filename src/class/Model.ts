@@ -112,7 +112,13 @@ export class Model {
       this.sql = '';
       Model.transactionErrorMsg = '';
     }
+<<<<<<< Updated upstream
 
+=======
+    Model.transactionInProgress = false;
+    this.sql = '';
+    Model.transactionErrorMsg = '';
+>>>>>>> Stashed changes
     throw new Error(`transaction failed. Rolled back because ${err}`);
   }
 

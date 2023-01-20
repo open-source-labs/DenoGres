@@ -20,6 +20,7 @@ export {
   assertNotEquals,
   assertStrictEquals,
   assertThrows,
+  assertRejects
 } from 'https://deno.land/std@0.171.0/testing/asserts.ts';
 
 export {

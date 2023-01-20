@@ -3,7 +3,7 @@ import {
   assert,
   assertEquals,
   assertExists,
-  assertThrows,
+  assertRejects,
   beforeAll,
   describe,
   it,
@@ -29,6 +29,7 @@ describe('model methods', () => {
 
   afterAll(async () => {
     await db.queryObject(dropTablesQuery);
+    console.log('ON LINE 28')
     await db.release();
     await db.end();
   });
@@ -165,6 +166,33 @@ describe('model methods', () => {
       assertEquals(Endymion.rows, [{ name: 'Endymion' }]);
       assertEquals(Shrike.rows, [{ name: 'Shrike' }]);
       assertEquals(Consul.rows, [{ name: 'The Consul' }]);
+    });
+
+    it('it should throw an error because of a lack of a space around equal sign', async () => {
+      await assertRejects(async () => {
+        await Planet.insert('name = planet1').transaction();
+        await Planet.insert('name= planet2').transaction();
+        await Person.insert('name = planet3').transaction();
+        await Person.insert('name = planet4').endTransaction();
+      }, Error);
+    });
+
+    it('it should not manipulate the database because delete column malformed',async () => {
+
+      try {
+        await Person.delete().where('name = Luke Skywalker').transaction();
+        await Person.delete().where('name1 = Han Solo').transaction();
+
+        await Person.endTransaction();
+        
+      } catch (_e) {
+        // const luke = await db.queryObject(
+        //   `SELECT name FROM people WHERE name = 'Luke Skywalker'`,
+        // );
+        // assert(luke.rows.length > 0);
+        console.log('IN CATCH')
+        console.log(Person['sql'])
+      }
     });
   });
 });
