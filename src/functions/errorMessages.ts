@@ -86,6 +86,12 @@ function checkColumnsHelper(
   const errorMessage = (data: string) => {
     return `Column: ${data} does not exist on this model.`;
   };
+  // split column value to check for OR, AND, NOT, and LIKE
+  const keywords = new Set(['AND', 'OR', 'NOT', 'LIKE']);
+  const split = column.split(' ');
+  // only checks if the first value is a valid keyword, we can rely on postgres for any further checking
+  if (keywords.has(split[0])) column = split[split.length - 1];
+
   // throws an error on an incorrect column if a transaction is NOT in progress
   if (!modelColumns.includes(column)) {
     if (!model['transactionInProgress']) {
