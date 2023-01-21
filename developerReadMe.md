@@ -63,6 +63,14 @@ step).
 
 ## <u>Vendor & Import Map</u>
 
+The `deno vendor` built in tool is used to install all the `src` code of third party dependencies into a vendor directory. This improves security because now we can run Denogres with the flag `--no-remote` (disables fetching of remote dependencies) and we are free to edit the `src` code of vendored dependencies. Storing the `src` code of dependencies in the project directly like this comes with another security benefit, that the src code of the dependency is editable by the Denogres team. So if future teams discover vulnerabilities or bugs within dependencies, they can apply a monkey patch to the dependency instead of waiting for upstream changes by the development team behind the dependency.
+
+ The way the dependencies are currently imported throughout the application is that in the `vendor` folder, there is an `import_map.json` which is used as the entrypoint into the `vendor` folder. To access this entrypoint, `"importMap": "./vendor/import_map.json"` is added to the `deno.json` so Deno knows to look for imported dependencies from `vendor`. One caveat is that once vendor is used for third party dependencies, all dependencies necessary in the application need to be found in vendor. So in order to include new dependencies into the project, we have been overwriting the vendor directory with this command:
+ ```
+ deno vendor deps.ts https://deno.land/std@0.141.0/path/mod.ts https://deno.land/std@0.168.0/node/module_all.ts https://deno.land/x/dotenv@v3.2.0/load.ts https://deno.land/std@0.172.0/node/module_all.ts https://deno.land/std@0.173.0/node/module_all.ts https://deno.land/std@0.141.0/io/buffer.ts --force
+ ```
+ 
+
 ## <u>In-Progress</u>
 
 While testing was a main goal for Denogres-4.0, there is still room for
