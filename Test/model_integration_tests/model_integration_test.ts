@@ -163,7 +163,7 @@ describe('model methods', () => {
       assertEquals(Consul.rows, [{ name: 'The Consul' }]);
     });
 
-    it('it should throw an error if a single transaction query ', async () => {
+    it('The transaction should throw an error if a single query in the transaction fails', async () => {
       await assertRejects(async () => {
         await Planet.insert('name = planet1').transaction();
         await Planet.insert('name= planet2').transaction();
@@ -172,11 +172,9 @@ describe('model methods', () => {
       }, Error);
     });
 
-    it('The transaction should throw an error if a single query in the transaction fails', async () => {
+    it('If a transaction query fails, the transaction should not commit any queries to the database', async () => {
       try {
         await Person.delete().where('name = Yoda').transaction();
-        await Person.delete().where('name = Han Solo').transaction();
-
         await Person.select().endTransaction();
       } catch (_e) {
         const yoda = await db.queryObject(
@@ -186,7 +184,7 @@ describe('model methods', () => {
       }
     });
 
-    it('it should not manipulate the database with any of the sql queries in transaction because of an invalid transaction query early on in the transaction', async () => {
+    it('An invalid transaction query should not commit any well-formed queries in the transaction to the database', async () => {
       try {
         await Person.insert('name = Luke').transaction();
         await Person.delete().where('name1 = Han Solo').transaction();
