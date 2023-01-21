@@ -25,7 +25,6 @@ describe('model methods', () => {
 
   afterAll(async () => {
     await db.queryObject(dropTablesQuery);
-    console.log('ON LINE 28')
     await db.release();
     await pool.end();
   });
@@ -173,21 +172,40 @@ describe('model methods', () => {
       }, Error);
     });
 
-    it('it should not manipulate the database because delete column malformed',async () => {
-
+    it('it should not manipulate the database because delete column malformed', async () => {
       try {
-        await Person.delete().where('name = Luke Skywalker').transaction();
+        await Person.delete().where('name = Yoda').transaction();
         await Person.delete().where('name1 = Han Solo').transaction();
 
-        await Person.endTransaction();
-        
+        await Person.select().endTransaction();
       } catch (_e) {
-        // const luke = await db.queryObject(
-        //   `SELECT name FROM people WHERE name = 'Luke Skywalker'`,
-        // );
-        // assert(luke.rows.length > 0);
-        console.log('IN CATCH')
-        console.log(Person['sql'])
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+      }
+    });
+
+    it('it should not manipulate the database with any of the sql queries in transaction because of an invalid transactino query early on in the transaction', async () => {
+      try {
+        await Person.insert('name = Luke').transaction();
+        await Person.delete().where('name1 = Han Solo').transaction();
+        await Person.delete().where('name = Yoda').transaction;
+        await Planet.delete().where('name = Luke Skywalker');
+        await Person.select().endTransaction();
+      } catch (_e) {
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        const han = await db.queryObject(
+          `SELECT name from people WHERE name = 'Han Solo'`,
+        );
+        const luke = await db.queryObject(
+          `SELECT name from people WHERE name = 'Luke Skywalker'`,
+        );
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+        assertEquals(han.rows, [{ name: 'Han Solo' }]);
+        assertEquals(luke.rows, [{ name: 'Luke Skywalker' }]);
       }
     });
   });
