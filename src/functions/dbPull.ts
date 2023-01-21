@@ -97,7 +97,7 @@ export const generateModelFile = (tableListObj, enumObj) => {
   });
 
   return autoCreatedModels;
-}
+};
 
 // * reads PSQL database information, convert them into JS objects, then write them into the model.ts file
 export async function dbPull() {

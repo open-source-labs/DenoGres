@@ -38,6 +38,13 @@ interface IEnumEl {
   enum_value: string;
 }
 
+export interface DbData {
+  tableList: ITableQueryRecords[],
+  columnList: IColumnQueryRecords[],
+  constraintList: IConstraint[],
+  enumList: IEnumEl[]
+}
+
 // TYPE GUARD FUNCTIONS
 const recordObjectType = (record: object): record is ITableQueryRecords => {
   return 'table_name' in record;
@@ -73,8 +80,23 @@ const tableListQuery = `SELECT table_name FROM information_schema.tables
 WHERE table_schema='public'
 AND table_type='BASE TABLE';`;
 
+// MAIN FUNCTION: calls helper functions getDbData, introspectTables, and introspectEnums
+// in order to extract schema from user's database and return objects representing that schema
+export const introspect = async (
+  uri?: string,
+): Promise<[ITableListObj, IEnumObj]> => {
+  const { tableList, columnList, constraintList, enumList } = await getDbData(
+    uri,
+  );
+
+  const tableListObj = introspectTables(tableList, columnList, constraintList);
+  const enumObj = introspectEnums(enumList);
+
+  return [tableListObj, enumObj];
+};
+
 // * Grabs all the data needed to perform the INTROSPECT function
-export const getDbData = async (uri?: string) => {
+export const getDbData = async (uri?: string): Promise<DbData> => {
   const db = await ConnectDb(uri);
 
   const tableList = await db.queryObject(tableListQuery);
@@ -91,19 +113,10 @@ export const getDbData = async (uri?: string) => {
     enumList: enumList.rows,
   };
 };
-// Add enums to tablelist obj, OR Create a new seperate object for all the enums that THAT database has in it.
-// When you hit an enum that youre building out in dbpull, you can just query off of that object
-export const introspect = async (
-  uri?: string,
-): Promise<[ITableListObj, IEnumObj]> => {
-  const { tableList, columnList, constraintList, enumList } = await getDbData(
-    uri,
-  );
+
+export const introspectTables = (tableList, columnList, constraintList) => {
   // convert table list to an object
   const tableListObj: any = {};
-
-  // Create object to store enums
-  const enumObj: IEnumObj = {};
 
   // Add each table to the tableListObj for easier access
   tableList.forEach((el) => {
@@ -135,7 +148,7 @@ export const introspect = async (
         refObj['notNull'] = el.not_null;
       }
 
-      // ! didn't get to look over the length property
+      // * MAX LENGTH (if not null)
       if (el.character_maximum_length) {
         refObj['length'] = el.character_maximum_length;
       }
@@ -146,10 +159,10 @@ export const introspect = async (
       } else {
         // * DEFAULT
         if (typeof el.col_default === 'string') {
-          // ! used to be typed unknown
+          // gets rid of cast operators of the form "::"
           let defaultVal: any = el.col_default.replace(/\:\:[\w\W]*/, '');
 
-          // ! not entirely sure what this is for
+          // adds quotation marks around default values with cast operators of the form "CAST()"
           if (String(defaultVal).slice(-2) === '()') {
             defaultVal = '\'' + defaultVal + '\'';
           }
@@ -157,15 +170,6 @@ export const introspect = async (
           refObj['defaultVal'] = JSON.parse(JSON.stringify(defaultVal));
         }
       }
-    }
-  });
-
-  // * loop through each enum type in the schema
-  enumList.forEach((el) => {
-    // * key: ENUM name value: list of all the enumerations (categories of the enum type)
-    if (typeof el === 'object' && el !== null && enumElType(el)) {
-      const enumVals = el.enum_value.split(/ *, */);
-      enumObj[el.enum_name] = enumVals;
     }
   });
 
@@ -274,5 +278,21 @@ export const introspect = async (
     }
   });
 
-  return [tableListObj, enumObj];
+  return tableListObj;
+};
+
+const introspectEnums = (enumList) => {
+  // Create object to store enums
+  const enumObj: IEnumObj = {};
+
+  // * loop through each enum type in the schema
+  enumList.forEach((el) => {
+    // * key: ENUM name value: list of all the enumerations (categories of the enum type)
+    if (typeof el === 'object' && el !== null && enumElType(el)) {
+      const enumVals = el.enum_value.split(/ *, */);
+      enumObj[el.enum_name] = enumVals;
+    }
+  });
+
+  return enumObj;
 };

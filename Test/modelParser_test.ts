@@ -1,4 +1,4 @@
-import { parse } from "../src/functions/modelParser.ts";
+import { parse } from '../src/functions/modelParser.ts';
 import { assertEquals } from '../deps.ts';
 
 const sampleModelFile = `
@@ -40,18 +40,23 @@ const sampleModelFile = `
       },
     };
   }
-`
+`;
 
 Deno.test('modelParser converts a model.ts file into an object representing the database schema', () => {
   const expectedOutput = {
     planets: {
-      climate: { type: "varchar", notNull: false },
-      terrain: { type: "varchar", notNull: false },
-      surface_water: { type: "varchar", notNull: false },
-      rotation_period: { type: "int4", notNull: false },
-      _id: { type: "int4", notNull: true, autoIncrement: true, primaryKey: true },
-    }
-  }
+      climate: { type: 'varchar', notNull: false },
+      terrain: { type: 'varchar', notNull: false },
+      surface_water: { type: 'varchar', notNull: false },
+      rotation_period: { type: 'int4', notNull: false },
+      _id: {
+        type: 'int4',
+        notNull: true,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+    },
+  };
 
   const actualOutput = parse(sampleModelFile);
   assertEquals(expectedOutput, actualOutput);

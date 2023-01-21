@@ -34,7 +34,7 @@ export const parse = (data: string) => {
 
   data = data.replace(whitespaces, '');
   data = data.replace(/export/g, '\n');
-  data = data.replaceAll('\'', '\"');
+  data = data.replaceAll('\'', '"');
 
   // * since each class in model.ts represents a table in PSQL, each element in the 'classes'(constant) represents a table in PSQL
   const classes: any = data.match(/class\w+extendsModel.*\s?/g);
@@ -68,4 +68,4 @@ export const parse = (data: string) => {
   }
 
   return output;
-}
+};

@@ -4,16 +4,21 @@ import { generateModelFile } from '../src/functions/dbPull.ts';
 Deno.test('generateModelFile creates appropriate model.ts file for a given table object', () => {
   const exampleTableListObj = {
     planets: {
-      climate: { type: "varchar", notNull: false },
-      terrain: { type: "varchar", notNull: false },
-      surface_water: { type: "varchar", notNull: false },
-      rotation_period: { type: "int4", notNull: false },
-      _id: { type: "int4", notNull: true, autoIncrement: true, primaryKey: true },
-    }
+      climate: { type: 'varchar', notNull: false },
+      terrain: { type: 'varchar', notNull: false },
+      surface_water: { type: 'varchar', notNull: false },
+      rotation_period: { type: 'int4', notNull: false },
+      _id: {
+        type: 'int4',
+        notNull: true,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+    },
   };
 
   const expectedOutput =
-`import { Model } from 'https://deno.land/x/denogres/mod.ts'
+    `import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here
 
 
@@ -53,7 +58,7 @@ export class Planet extends Model {
   }
 }
 
-`
+`;
   const actualOutput = generateModelFile(exampleTableListObj, {});
   assertEquals(expectedOutput, actualOutput);
 });
