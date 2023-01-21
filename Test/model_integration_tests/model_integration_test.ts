@@ -3,6 +3,7 @@ import {
   assert,
   assertEquals,
   assertExists,
+  assertRejects,
   beforeAll,
   describe,
   it,
@@ -160,6 +161,58 @@ describe('model methods', () => {
       assertEquals(Endymion.rows, [{ name: 'Endymion' }]);
       assertEquals(Shrike.rows, [{ name: 'Shrike' }]);
       assertEquals(Consul.rows, [{ name: 'The Consul' }]);
+    });
+
+    it('The transaction should throw an error if a single query in the transaction fails', async () => {
+      await assertRejects(async () => {
+        await Planet.insert('name = planet1').transaction();
+        await Planet.insert('name= planet2').transaction();
+        await Person.insert('name = planet3').transaction();
+        await Person.insert('name = planet4').endTransaction();
+      }, Error);
+    });
+
+    it('If a transaction query fails, the transaction should not commit any queries to the database', async () => {
+      try {
+        await Person.delete().where('name = Yoda').transaction();
+        await Person.select().endTransaction();
+      } catch (_e) {
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+      }
+    });
+
+    it('An invalid transaction query should not commit any well-formed queries in the transaction to the database', async () => {
+      try {
+        await Person.insert('name = Luke').transaction();
+        await Person.delete().where('name1 = Han Solo').transaction();
+        await Person.delete().where('name = Yoda').transaction();
+        await Planet.delete().where('name = Luke Skywalker').endTransaction();
+      } catch (_e) {
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        const han = await db.queryObject(
+          `SELECT name from people WHERE name = 'Han Solo'`,
+        );
+        const luke = await db.queryObject(
+          `SELECT name from people WHERE name = 'Luke Skywalker'`,
+        );
+        let lukeInserted;
+        try {
+          lukeInserted = await db.queryObject(
+            `SELECT name from people WHERE name = Luke`,
+          );
+        } catch (e) {
+          console.log('ERROR', e);
+          assertEquals(lukeInserted, undefined);
+        }
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+        assertEquals(han.rows, [{ name: 'Han Solo' }]);
+        assertEquals(luke.rows, [{ name: 'Luke Skywalker' }]);
+      }
     });
   });
 });

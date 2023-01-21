@@ -57,10 +57,9 @@ export class Model {
         await db.queryObject(this.sql);
         Model.transactionInProgress = true;
       } catch (err) {
-        throw new Error('Connection to the database failed', err);
+        await this.rollback(err);
       }
-    } // rollsback if an error was thrown while building the query
-    else if (Model.transactionErrorMsg.length !== 0) {
+    } else if (Model.transactionErrorMsg.length !== 0) {
       await this.rollback(Model.transactionErrorMsg);
     } else {
       try {
@@ -112,7 +111,6 @@ export class Model {
       this.sql = '';
       Model.transactionErrorMsg = '';
     }
-
     throw new Error(`transaction failed. Rolled back because ${err}`);
   }
 
