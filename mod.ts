@@ -3,7 +3,7 @@ import { config, parse } from './deps.ts';
 import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
 import { init } from './src/functions/init.ts';
 import seed from './src/functions/seed.ts';
-import { resolve } from 'https://deno.land/std@0.141.0/path/win32.ts';
+// import { resolve } from 'https://deno.land/std@0.141.0/path/win32.ts';
 import sync from './src/functions/sync.ts';
 import { dbPull } from './src/functions/dbPull.ts';
 import restoreModel from './src/functions/restore.ts';

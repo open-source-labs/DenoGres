@@ -1,7 +1,7 @@
 import { ConnectDb, DisconnectDb } from './Db.ts';
 import { columnInfoQuery, enumQuery } from '../queries/introspection.ts';
 import { sqlDataTypes } from '../constants/sqlDataTypes.ts';
-import { join } from 'https://deno.land/std@0.141.0/path/win32.ts';
+// import { join } from 'https://deno.land/std@0.141.0/path/win32.ts';
 
 // INTERFACES
 interface ITableQueryRecords {
