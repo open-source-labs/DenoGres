@@ -163,7 +163,7 @@ describe('model methods', () => {
       assertEquals(Consul.rows, [{ name: 'The Consul' }]);
     });
 
-    it('it should throw an error because of a lack of a space around equal sign', async () => {
+    it('it should throw an error if a single transaction query ', async () => {
       await assertRejects(async () => {
         await Planet.insert('name = planet1').transaction();
         await Planet.insert('name= planet2').transaction();
@@ -172,10 +172,10 @@ describe('model methods', () => {
       }, Error);
     });
 
-    it('it should not manipulate the database because Yoda ', async () => {
+    it('The transaction should throw an error if a single query in the transaction fails', async () => {
       try {
         await Person.delete().where('name = Yoda').transaction();
-        await Person.delete().where('name1 = Han Solo').transaction();
+        await Person.delete().where('name = Han Solo').transaction();
 
         await Person.select().endTransaction();
       } catch (_e) {
