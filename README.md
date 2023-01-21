@@ -8,7 +8,8 @@ give you access to DenoGres's CLI functionality.
 
 > `deno install --allow-read --allow-write --allow-net --allow-env --allow-run --name denogres https://deno.land/x/denogres/mod.ts`
 
-After installation is complete, ensure deno is added to PATH.
+After installation is complete, following the instructions in your terminal to
+ensure DenoGres is added to PATH.
 
 ## Quick Start
 
@@ -76,39 +77,6 @@ Launch the DenoGres GUI by running the following CLI command:
 
 > `denogres --gui`
 
-![alt text](/denogres-gui/src/assets/NavBarImage.jpg?raw=true "NavBar")
-
-## Connections
-
-The Connections page allows users to connect to any database after providing its
-credentials. User can add and save multiple databases, but are only allowed to
-have one active connection at a time.
-
-![](/denogres-gui/src/assets/Connections.gif)
-
-## Console
-
-The Console page allows users to run database queries as needed. They can also
-be saved for later use.
-
-![](/denogres-gui/src/assets/Console.gif)
-
-The Console page also features active models for your databse tables. This
-allows users to have a reference when inputting query strings properly.
-
-![](/denogres-gui/src/assets/Model.gif)
-
-## Diagram
-
-The Diagram page offers a live ERD which visualizes the database for the user.
-This includes relational mapping for all of the database tables.
-
-Some key features of the ERD are its ability to be adjusted to the user's
-preference with a live interface and the ability to save the diagram as an
-image.
-
-![](/denogres-gui/src/assets/ReactFlow.gif)
-
 ## Migration Logs and Restore
 
 Any time a user opts to make a request for --db-pull or --db-sync, Denogres
@@ -125,6 +93,19 @@ To restore Models to a prior version, execute the following CLI command:
 
 > `denogres --restore [PREVIOUS_MODEL_FOLDER]`
 
+## Testing
+
+For develpers interested in contributing, to run all tests, use the command:
+
+> `deno task test`
+
+To run only unit and integration tests for Model methods, run:
+
+> `deno task model-tests`
+
+<i>Note</i>: integration tests will require environment variable `ENVIRONMENT`
+set to `test` as well as a `TEST_DB_URI`.
+
 ## Under Development
 
 DenoGres is continually evolving. Features currently in development include:
@@ -133,11 +114,18 @@ DenoGres is continually evolving. Features currently in development include:
   associations and composite unique keys.
 - "Compare" command (`denogres --compare`) will be implemented to display
   side-by-side diff between previous models.
+- A setter method will be appended to a model when an association is established
+  with another model.
+- The manyToMany function will create a new join table.
 - Migrations log will be visible within the GUI, so that users can
   track/view/compare model versions.
 - Two-way ERD that allows users to change relational data that is then reflected
   onto their actual database
 - Additional support for MySQL, SQL Server, etc.
+- A Diagram page will offer a live ERD to visualize the user's database (see
+  preview below)
+
+![](/denogres-gui/src/assets/ReactFlow.gif)
 
 ## Documentation
 
@@ -145,6 +133,17 @@ More information on how to use DenoGres and leverage all its wonderful
 abstraction functionality can be found here: https://denogres.deno.dev/
 
 ## Contributors
+
+### Version 4.0
+
+- Rachel Cheman | [GitHub](https://github.com/rcheman) |
+  [LinkedIn](https://www.linkedin.com/in/rachel-cheman/)
+- Mia Gussen | [GitHub](https://github.com/mjpg1) |
+  [LinkedIn](www.linkedin.com/in/mia-gussen)
+- Alexander Lin | [GitHub](https://github.com/alexanderlin) |
+  [LinkedIn](https://www.linkedin.com/in/alexander-lin-8aab79167/)
+- Jacob Martin | [GitHub](https://github.com/Solit95) |
+  [LinkedIn](www.linkedin.com/in/jmartin417)
 
 ### Version 3.0
 
