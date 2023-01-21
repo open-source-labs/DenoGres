@@ -80,12 +80,22 @@ entrypoint into the `vendor` folder. To access this entrypoint,
 knows to look for imported dependencies from `vendor`. One caveat is that once
 vendor is used for third party dependencies, all dependencies necessary in the
 application need to be found in vendor. So in order to include new dependencies
-into the project, we have been overwriting the vendor directory every time we needed to add a new dependency. This is the last deno vendor command we ran to include the `https://deno.land/std@0.141.0/io/buffer.ts` dependency in `vendor`:
+into the project, we have been overwriting the vendor directory every time we
+needed to add a new dependency. This is the last deno vendor command we ran to
+include the `https://deno.land/std@0.141.0/io/buffer.ts` dependency in `vendor`:
 
 ```
 deno vendor deps.ts https://deno.land/std@0.141.0/path/mod.ts https://deno.land/std@0.168.0/node/module_all.ts https://deno.land/x/dotenv@v3.2.0/load.ts https://deno.land/std@0.172.0/node/module_all.ts https://deno.land/std@0.173.0/node/module_all.ts https://deno.land/std@0.141.0/io/buffer.ts --force
 ```
-As you can see deno vendor can take multiple command-line arguments which can either be a local file (deps.ts is the only file included because most of our dependencies are exported from that file to the rest of our application) or a url to where the dependency is hosted online. We opted for manually importing the rest of the url's instead of adding it to the deps.ts file because either the dependency relied on another dependency or the dependency when imported just imported the file (ex from `./Test/dbPing_test.ts` : `import 'https://deno.land/x/dotenv@v3.2.0/load.ts';`).
+
+As you can see deno vendor can take multiple command-line arguments which can
+either be a local file (deps.ts is the only file included because most of our
+dependencies are exported from that file to the rest of our application) or a
+url to where the dependency is hosted online. We opted for manually importing
+the rest of the url's instead of adding it to the deps.ts file because either
+the dependency relied on another dependency or the dependency when imported just
+imported the file (ex from `./Test/dbPing_test.ts` :
+`import 'https://deno.land/x/dotenv@v3.2.0/load.ts';`).
 
 ## <u>In-Progress</u>
 
