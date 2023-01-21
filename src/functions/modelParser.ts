@@ -14,7 +14,6 @@ import { resolve } from '../../deps.ts';
 //     column_name2: {...}
 //   }
 // };
-
 export default async function modelParser(path = './models/model.ts') {
   path = resolve(path);
 
@@ -23,13 +22,19 @@ export default async function modelParser(path = './models/model.ts') {
     cmd: ['deno', 'fmt', path],
   }).status();
 
+  const data = Deno.readTextFileSync(path);
+  return parse(data);
+}
+
+// helper function that parses data from path
+export const parse = (data: string) => {
   const output: any = {};
 
   const whitespaces = /\s/g;
-  let data = Deno.readTextFileSync(path);
 
   data = data.replace(whitespaces, '');
   data = data.replace(/export/g, '\n');
+  data = data.replaceAll('\'', '\"');
 
   // * since each class in model.ts represents a table in PSQL, each element in the 'classes'(constant) represents a table in PSQL
   const classes: any = data.match(/class\w+extendsModel.*\s?/g);

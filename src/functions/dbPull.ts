@@ -6,17 +6,12 @@ import { resolve } from '../../deps.ts';
 
 export let wasFired: boolean;
 
-// * reads PSQL database information, convert them into JS objects, then write them into the model.ts file
-export async function dbPull() {
-  const [tableListObj, enumObj] = await introspect();
-
+export const generateModelFile = (tableListObj, enumObj) => {
   let autoCreatedModels =
     `import { Model } from 'https://deno.land/x/denogres/mod.ts'\n// user model definition comes here\n\n`;
 
   // iterate over the properties of tableListObj
   Object.keys(tableListObj).forEach((el) => {
-    // reference to table object
-    const tableObj = tableListObj[el];
     // create the class name
     const className = createClassName(el);
     // initialize interface code holder
@@ -29,12 +24,10 @@ export async function dbPull() {
     // iterate over each property within the columns object
     Object.keys(tableListObj[el]).forEach((colName) => {
       const columnObj = tableListObj[el][colName];
-      // console.log(columnObj);
 
       // add the column as a property to the interface, checking for enums first
       if (columnObj.type.includes('enum')) {
         const enumName = columnObj.enumName;
-
         const enumCapitalized = enumName[0].toUpperCase() + enumName.slice(1);
         interfaceCode += `  ${colName}: keyof typeof ${enumCapitalized}\n`;
       } else {
@@ -92,6 +85,7 @@ export async function dbPull() {
     // close the query for this table
     autoCreatedModels += `}\n\n`;
   });
+
   // Add all enums from enum object
   Object.keys(enumObj).forEach((el) => {
     const enumCapitalized = el[0].toUpperCase() + el.substring(1);
@@ -101,6 +95,16 @@ export async function dbPull() {
     });
     autoCreatedModels += `}\n\n`;
   });
+
+  return autoCreatedModels;
+}
+
+// * reads PSQL database information, convert them into JS objects, then write them into the model.ts file
+export async function dbPull() {
+  const [tableListObj, enumObj] = await introspect();
+
+  const autoCreatedModels = generateModelFile(tableListObj, enumObj);
+
   // Create the model.ts file
   Deno.writeTextFileSync('./models/model.ts', autoCreatedModels);
 
