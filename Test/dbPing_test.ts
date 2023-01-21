@@ -6,7 +6,7 @@ async function ping(db: PoolClient) {
   try {
     // queries the database to check if it is connected, expected result is 2
     const output = (await db.queryObject('SELECT 1 + 1 as result')).rows as [
-      { result: number }
+      { result: number },
     ];
     const result = output[0].result;
     return result === 2;
