@@ -172,7 +172,7 @@ describe('model methods', () => {
       }, Error);
     });
 
-    it('it should not manipulate the database because delete column malformed', async () => {
+    it('it should not manipulate the database because Yoda ', async () => {
       try {
         await Person.delete().where('name = Yoda').transaction();
         await Person.delete().where('name1 = Han Solo').transaction();
@@ -186,13 +186,12 @@ describe('model methods', () => {
       }
     });
 
-    it('it should not manipulate the database with any of the sql queries in transaction because of an invalid transactino query early on in the transaction', async () => {
+    it('it should not manipulate the database with any of the sql queries in transaction because of an invalid transaction query early on in the transaction', async () => {
       try {
         await Person.insert('name = Luke').transaction();
         await Person.delete().where('name1 = Han Solo').transaction();
-        await Person.delete().where('name = Yoda').transaction;
-        await Planet.delete().where('name = Luke Skywalker');
-        await Person.select().endTransaction();
+        await Person.delete().where('name = Yoda').transaction();
+        await Planet.delete().where('name = Luke Skywalker').endTransaction();
       } catch (_e) {
         const yoda = await db.queryObject(
           `SELECT name from people WHERE name = 'Yoda'`,
@@ -203,6 +202,15 @@ describe('model methods', () => {
         const luke = await db.queryObject(
           `SELECT name from people WHERE name = 'Luke Skywalker'`,
         );
+        let lukeInserted;
+        try {
+          lukeInserted = await db.queryObject(
+            `SELECT name from people WHERE name = Luke`,
+          );
+        } catch (e) {
+          console.log('ERROR', e);
+          assertEquals(lukeInserted, undefined);
+        }
         assertEquals(yoda.rows, [{ name: 'Yoda' }]);
         assertEquals(han.rows, [{ name: 'Han Solo' }]);
         assertEquals(luke.rows, [{ name: 'Luke Skywalker' }]);
