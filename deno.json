@@ -4,6 +4,7 @@
     "appDEV": "deno run -Ar --unstable \"https://deno.land/x/denogresdev/webview/webview.ts\"",
     "appPROD": "deno run -Ar --unstable \"https://deno.land/x/denogres/webview/webview.ts\"",
     "test": "deno test --no-check --allow-read --allow-net --allow-env --allow-write --allow-run --no-remote",
+    "model-tests": "deno test -A --no-check ./Test/model_test.ts && ./Test/model_integration_tests/model_integration_test.ts",
     "playground": "deno run -A ./playground/playground.ts"
   },
   "fmt": {
