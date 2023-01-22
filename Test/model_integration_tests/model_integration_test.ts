@@ -3,7 +3,7 @@ import {
   assert,
   assertEquals,
   assertExists,
-  assertThrows,
+  assertRejects,
   beforeAll,
   describe,
   it,
@@ -12,25 +12,21 @@ import { Pool, PoolClient } from '../../deps.ts';
 import { createTablesQuery, dropTablesQuery } from './seed_testdb.ts';
 import { Person, Planet } from '../sample_model.ts';
 import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
+
 describe('model methods', () => {
+  let pool: Pool;
   let db: PoolClient;
 
   beforeAll(async () => {
-    const pool = new Pool(Deno.env.get('TEST_DB_URI'), 1, true);
-    try {
-      db = await pool.connect();
-      await db.queryObject(createTablesQuery);
-    } catch (err) {
-      console.log(err);
-      await db.queryObject(dropTablesQuery);
-      await db.end();
-    }
+    pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
+    db = await pool.connect();
+    await db.queryObject(createTablesQuery);
   });
 
   afterAll(async () => {
     await db.queryObject(dropTablesQuery);
     await db.release();
-    await db.end();
+    await pool.end();
   });
 
   describe('save method', () => {
@@ -165,6 +161,58 @@ describe('model methods', () => {
       assertEquals(Endymion.rows, [{ name: 'Endymion' }]);
       assertEquals(Shrike.rows, [{ name: 'Shrike' }]);
       assertEquals(Consul.rows, [{ name: 'The Consul' }]);
+    });
+
+    it('The transaction should throw an error if a single query in the transaction fails', async () => {
+      await assertRejects(async () => {
+        await Planet.insert('name = planet1').transaction();
+        await Planet.insert('name= planet2').transaction();
+        await Person.insert('name = planet3').transaction();
+        await Person.insert('name = planet4').endTransaction();
+      }, Error);
+    });
+
+    it('If a transaction query fails, the transaction should not commit any queries to the database', async () => {
+      try {
+        await Person.delete().where('name = Yoda').transaction();
+        await Person.select().endTransaction();
+      } catch (_e) {
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+      }
+    });
+
+    it('An invalid transaction query should not commit any well-formed queries in the transaction to the database', async () => {
+      try {
+        await Person.insert('name = Luke').transaction();
+        await Person.delete().where('name1 = Han Solo').transaction();
+        await Person.delete().where('name = Yoda').transaction();
+        await Planet.delete().where('name = Luke Skywalker').endTransaction();
+      } catch (_e) {
+        const yoda = await db.queryObject(
+          `SELECT name from people WHERE name = 'Yoda'`,
+        );
+        const han = await db.queryObject(
+          `SELECT name from people WHERE name = 'Han Solo'`,
+        );
+        const luke = await db.queryObject(
+          `SELECT name from people WHERE name = 'Luke Skywalker'`,
+        );
+        let lukeInserted;
+        try {
+          lukeInserted = await db.queryObject(
+            `SELECT name from people WHERE name = Luke`,
+          );
+        } catch (e) {
+          console.log('ERROR', e);
+          assertEquals(lukeInserted, undefined);
+        }
+        assertEquals(yoda.rows, [{ name: 'Yoda' }]);
+        assertEquals(han.rows, [{ name: 'Han Solo' }]);
+        assertEquals(luke.rows, [{ name: 'Luke Skywalker' }]);
+      }
     });
   });
 });

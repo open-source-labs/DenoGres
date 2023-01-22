@@ -8,7 +8,7 @@
 // import { resolve } from "https://deno.land/std@0.141.0/path/win32.ts";
 import { dateFolder, today } from './checkDbPull.ts';
 import { dateFolderSync, todaySync } from './checkDbSync.ts';
-import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
+// import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
 
 export async function promptString(question: string) {
   console.log(question);

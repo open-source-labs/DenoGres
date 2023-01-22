@@ -57,10 +57,9 @@ export class Model {
         await db.queryObject(this.sql);
         Model.transactionInProgress = true;
       } catch (err) {
-        throw new Error('Connection to the database failed', err);
+        await this.rollback(err);
       }
-    } // rollsback if an error was thrown while building the query
-    else if (Model.transactionErrorMsg.length !== 0) {
+    } else if (Model.transactionErrorMsg.length !== 0) {
       await this.rollback(Model.transactionErrorMsg);
     } else {
       try {
@@ -105,10 +104,12 @@ export class Model {
     try {
       await db.queryObject('ROLLBACK;');
       await DisconnectDb(db);
-      Model.transactionInProgress = false;
-      this.sql = '';
     } catch (err) {
       throw new Error('Rollback failed: ', err);
+    } finally {
+      Model.transactionInProgress = false;
+      this.sql = '';
+      Model.transactionErrorMsg = '';
     }
     throw new Error(`transaction failed. Rolled back because ${err}`);
   }
@@ -532,9 +533,7 @@ export class Model {
       // note that this query will NOT be executed unless user explicitly executes
       // 'syncAssociation' method on association instance created below
       associationQuery = `
-      ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${
-        FIELD_TYPE[columnAtt.type]
-      };
+      ALTER TABLE ${this.table} ADD ${foreignKey_ColumnName} ${columnAtt.type};
       ALTER TABLE ${this.table} ADD CONSTRAINT fk_${foreignKey_ColumnName} FOREIGN KEY (${foreignKey_ColumnName}) REFERENCES ${targetModel.table} ON DELETE SET NULL ON UPDATE CASCADE
       ;`;
     }
@@ -634,7 +633,7 @@ export async function getMappingKeys<T>(
 } // end of getMappingKeys
 
 // helper function to find primary key of target table (often '_id' or 'id')
-export async function getprimaryKey<T>(
+export async function getprimaryKey(
   tableName: string,
   uri?: string,
 ): Promise<string | undefined | null> {
@@ -658,7 +657,8 @@ export async function getprimaryKey<T>(
     'rows' in result &&
     result.rows[0] !== null &&
     typeof result.rows[0] === 'object' &&
-    recordPk(result.rows[0])
+    'attname' in result.rows[0] &&
+    typeof result.rows[0].attname === 'string'
   ) {
     return result.rows[0].attname;
   }
