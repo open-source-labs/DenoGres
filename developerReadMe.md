@@ -110,13 +110,13 @@ If `vendor` is giving issues that cannot be solved immediately, removing
 `"importMap": "./vendor/import_map.json"` line in `deno.json` will disable
 vendor and depdendency resolution will revert to Deno defaults.
 
-It may be useful to regenerate the entire `vendor` directory. The steps the do
+It may be useful to regenerate the entire `vendor` directory (should not be done if it can be helped). The steps to do
 this with the current dependencies are:
 
 1. delete the `vendor` folder in the root directory and remove
    `"importMap": "./vendor/import_map.json"` from `deno.json`
-2. run
-   `deno vendor deps.ts https://deno.land/std@0.141.0/path/mod.ts https://deno.land/std@0.168.0/node/module_all.ts https://deno.land/x/dotenv@v3.2.0/load.ts https://deno.land/std@0.173.0/node/module_all.ts`
+2. run this command in the terminal: 
+   `deno vendor deps.ts https://deno.land/x/dotenv@v3.2.0/load.ts https://deno.land/std@0.173.0/node/module_all.ts`
 
 ## <u>In-Progress</u>
 
