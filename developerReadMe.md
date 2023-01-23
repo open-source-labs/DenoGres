@@ -108,7 +108,7 @@ imported the file (ex from `./Test/dbPing_test.ts` :
 
 If `vendor` is giving issues that cannot be solved immediately, removing
 `"importMap": "./vendor/import_map.json"` line in `deno.json` will disable
-vendor and depdendency resolution will revert to Deno defaults.
+vendor and dependency resolution will revert to Deno defaults.
 
 It may be useful to regenerate the entire `vendor` directory (should not be done
 if it can be helped). The steps to do this with the current dependencies are:
