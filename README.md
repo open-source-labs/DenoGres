@@ -99,10 +99,6 @@ For develpers interested in contributing, to run all tests, use the command:
 
 > `deno task test`
 
-To run only unit and integration tests for Model methods, run:
-
-> `deno task model-tests`
-
 <i>Note</i>: integration tests will require environment variable `ENVIRONMENT`
 set to `test` as well as a `TEST_DB_URI`.
 
