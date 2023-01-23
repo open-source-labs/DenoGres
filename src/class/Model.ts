@@ -126,8 +126,8 @@ export class Model {
     const keys = Object.keys(this).filter((keys) => keys !== 'record'); // keys added by the user (representing column names)
     const values = Object.values(this).filter(
       (
-        values // values added by the user (to be added at those columns)
-      ) => !(typeof values === 'object' && values !== null)
+        values, // values added by the user (to be added at those columns)
+      ) => !(typeof values === 'object' && values !== null),
     );
 
     Model.sql = ''; // ensures that sql-query-in-progress is empty
@@ -157,8 +157,8 @@ export class Model {
     const newKeys = Object.keys(this).filter((keys) => keys !== 'record'); // new keys added by user
     const newValues = Object.values(this).filter(
       (
-        values // new values added by user
-      ) => !(typeof values === 'object' && values !== null)
+        values, // new values added by user
+      ) => !(typeof values === 'object' && values !== null),
     );
     const keys = Object.keys(this.record); // keys previously added by user (and stored in record by 'save' method)
     const values = Object.values(this.record); // values previously added by user
@@ -340,7 +340,8 @@ export class Model {
     checkQueryString(this.sql.length, 'innerJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
     checkColumns(this.columns, column1, Model);
-    this.sql += ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` INNER JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -350,7 +351,8 @@ export class Model {
     checkQueryString(this.sql.length, 'leftJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
     checkColumns(this.columns, column1, Model);
-    this.sql += ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` LEFT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -360,7 +362,8 @@ export class Model {
     checkQueryString(this.sql.length, 'rightJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
     checkColumns(this.columns, column1, Model);
-    this.sql += ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` RIGHT JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -370,7 +373,8 @@ export class Model {
     checkQueryString(this.sql.length, 'fullJoin', Model, 'chain');
     // currently only checking column 1 since that is in the current model
     checkColumns(this.columns, column1, Model);
-    this.sql += ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
+    this.sql +=
+      ` FULL JOIN ${table2} ON ${this.table}.${column1} = ${table2}.${column2}`;
     return this;
   }
 
@@ -395,7 +399,7 @@ export class Model {
 
     if (order !== 'ASC' && order !== 'DESC') {
       throw new Error(
-        `Error in sort method: order argument should be 'ASC' or 'DESC'`
+        `Error in sort method: order argument should be 'ASC' or 'DESC'`,
       );
     }
     if (order === 'ASC' || order === 'DESC') {
@@ -484,7 +488,7 @@ export class Model {
   // const ottawaCountry = await ottawa.getCountry();
   static async belongsTo(
     targetModel: typeof Model,
-    options?: { associationName: string }
+    options?: { associationName: string },
   ) {
     let foreignKey_ColumnName: string;
     let mappingTarget_ColumnName: string;
@@ -569,7 +573,7 @@ export class Model {
     const mappings = await getMappingKeys(targetModel.table, this.table);
     if (!mappings) {
       throw new Error(
-        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.'
+        'No association exists between the current and target models. Use the "belongsTo" method to establish a new relationship. Or use this method to retrieve an existing association between models.',
       );
     }
     const mapping_ColumnName = mappings.target_keyname; // name of the primary key on the current table
@@ -596,7 +600,7 @@ export class Model {
 export async function getMappingKeys<T>(
   sourcTable: string,
   targetTable: string,
-  uri?: string
+  uri?: string,
 ): Promise<{ [key: string]: string } | undefined | null> {
   const queryText = `SELECT 
   c.conrelid::regclass AS source_table, 
@@ -631,7 +635,7 @@ export async function getMappingKeys<T>(
 // helper function to find primary key of target table (often '_id' or 'id')
 export async function getprimaryKey(
   tableName: string,
-  uri?: string
+  uri?: string,
 ): Promise<string | undefined | null> {
   const queryText = `SELECT a.attname 
   FROM pg_index i
@@ -664,7 +668,7 @@ export async function getprimaryKey(
 export async function manyToMany(
   modelA: typeof Model,
   modelB: typeof Model,
-  options: { through: typeof Model }
+  options: { through: typeof Model },
 ) {
   const throughModel = options.through; // ex: 'people_in_films'
   const mapKeysA = await getMappingKeys(throughModel.table, modelA.table); // keys linking the join table and modelA
