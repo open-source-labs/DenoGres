@@ -32,11 +32,9 @@ export const tableSync = async (path: string, overwrite: boolean) => {
   try {
     // * schema information from the PSQL DB
     const dbData = await introspect();
-    console.log('on line 35 of sync');
     dbTables = dbData[0];
     // * schema information from the local model.ts file
     models = await modelParser(path);
-    console.log('on line 39 of sync');
   } catch (err) {
     throw new Error(err);
   }

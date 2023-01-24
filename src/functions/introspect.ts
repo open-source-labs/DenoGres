@@ -188,8 +188,8 @@ export const introspectTables = (tableList, columnList, constraintList) => {
             .split(',');
         } else {
           console.log(
-            'tableListObj[el.table_name]: ',
-            tableListObj[el.table_name],
+            'el.table_name: ',
+            el.table_name,
           );
           tableListObj[el.table_name][key]['primaryKey'] = true;
         }
