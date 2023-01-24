@@ -18,12 +18,12 @@ export default async function modelParser(path = './models/model.ts') {
   path = resolve(path);
 
   // * format the document for consistent parsing functionality
-  const process =  Deno.run({
+  const process = Deno.run({
     cmd: ['deno', 'fmt', path],
-  })
+  });
   await process.status();
   Deno.close(process.rid);
-  
+
   const data = Deno.readTextFileSync(path);
   return parse(data);
 }

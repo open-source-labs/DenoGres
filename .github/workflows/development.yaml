@@ -42,11 +42,9 @@ jobs:
           deno-version: v1.x
       - name: Verify formatting
         run: deno fmt --check
-      - name: Run model method unit tests
-        run: deno test -A --no-check ./Test/model_test.ts
-      - name: Run model method integration tests
+      - name: Run tests
         env:
           ENVIRONMENT: test
           # uri for db instance running in container (needed for testing methods that invoke the ConnectDb func)
           TEST_DB_URI: postgresql://postgres:postgres@localhost:5432/postgres
-        run: deno test -A --no-check ./Test/model_integration_tests/
+        run: deno task test

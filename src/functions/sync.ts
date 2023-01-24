@@ -18,7 +18,7 @@ export default async function sync(
   }
 
   await enumSync(path); // syncs changes made to enum types in model.ts with database
-  await tableSync(path, overwrite) // syncs changes made to tables in model.ts
+  await tableSync(path, overwrite); // syncs changes made to tables in model.ts
 
   // * Used for migration feature (backing up/restoring data)
   await checkDbSync();
@@ -109,7 +109,7 @@ export const tableSync = async (path: string, overwrite: boolean) => {
   } catch (err) {
     throw new Error(err);
   }
-}
+};
 
 // helper function returns query string for creating multiple new tables in db
 const getCreateTablesQuery = (createTablesList: string[], models: any) => {
@@ -376,7 +376,9 @@ const getUpdateTablesQuery = async (
         models,
         dbTables,
       );
-      updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
+      updateColumnsQuery.length
+        ? updateTablesQuery += updateColumnsQuery
+        : null;
     } catch (err) {
       throw new Error(err);
     }
@@ -865,8 +867,9 @@ const objectLooselyEquals = (modelObject: any, dbObject: any) => {
 
   const keysMatch = JSON.stringify(Object.keys(modelObject).sort()) ===
     JSON.stringify(Object.keys(dbObject).sort());
-  const valuesMatch = removeWhitespaces(JSON.stringify(Object.values(modelObject).sort())) ===
-    removeWhitespaces(JSON.stringify(Object.values(dbObject).sort()));
+  const valuesMatch =
+    removeWhitespaces(JSON.stringify(Object.values(modelObject).sort())) ===
+      removeWhitespaces(JSON.stringify(Object.values(dbObject).sort()));
 
   return keysMatch && valuesMatch;
 };
