@@ -4,18 +4,12 @@ import modelParser from './modelParser.ts';
 import { enumSync } from './enumSync.ts';
 import { checkDbSync } from './checkDbSync.ts';
 
-const removeWhitespaces = (string: string) => string.replace(/\s/g, '');
-
-const objectLooselyEquals = (modelObject: any, dbObject: any) => {
-  return JSON.stringify(Object.keys(modelObject).sort()) ===
-      JSON.stringify(Object.keys(dbObject).sort()) &&
-    removeWhitespaces(JSON.stringify(Object.values(modelObject).sort())) ===
-      removeWhitespaces(JSON.stringify(Object.values(dbObject).sort()));
-};
-
 // * take schema information in the model.ts and upload into the PSQL database
 // * overwrite: if the user passes an additional optional flag -x, overwrite will be come true, which will not prompt the user whenever deleting any table/column
-export default async function sync(overwrite = false) {
+export default async function sync(
+  overwrite = false,
+  path = './models/model.ts',
+) {
   // * if the optional -x flag wasn't passed in, alert the user
   if (!overwrite) {
     console.log(
@@ -23,17 +17,30 @@ export default async function sync(overwrite = false) {
     );
   }
 
+  await enumSync(path); // syncs changes made to enum types in model.ts with database
+  await tableSync(path, overwrite); // syncs changes made to tables in model.ts
+
+  // * Used for migration feature (backing up/restoring data)
+  await checkDbSync();
+}
+
+// generates and sends a master query string to the user's db to sync model.ts file changes
+export const tableSync = async (path: string, overwrite: boolean) => {
+  let dbTables;
+  let models;
+
+  try {
+    // * schema information from the PSQL DB
+    const dbData = await introspect();
+    dbTables = dbData[0];
+    // * schema information from the local model.ts file
+    models = await modelParser(path);
+  } catch (err) {
+    throw new Error(err);
+  }
+
   // * compilation of all the queries that will be sent to PSQL DB (for ACID Compliance)
   let masterQuery = ``;
-
-  // * schema information from the PSQL DB
-  const [dbTables] = await introspect();
-  const db = await ConnectDb();
-
-  // * schema information from the local model.ts file
-  const models = await modelParser();
-
-  await enumSync(); // syncs changes made to enum types in model.ts with database
 
   const modelTableNames: Set<string> = new Set(Object.keys(models));
   const dbTableNames: Set<string> = new Set(Object.keys(dbTables));
@@ -78,36 +85,33 @@ export default async function sync(overwrite = false) {
 
   const deleteTablesList = Array.from(dbTableNames);
 
-  // * List of tables to create/delete/update
-  // console.log("List of TABLES to CREATE", createTablesList);
-  // console.log("List of TABLES to DELETE", deleteTablesList);
-  // console.log("List of TABLES to UPDATE", updateTablesList);
+  try {
+    // use helper functions to get query strings for updating database and
+    // append query strings to master query string
+    const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
+    deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
 
-  // use helper functions to get query strings for updating database and
-  // append query strings to master query string
-  const deleteTablesQuery = getDeleteTablesQuery(deleteTablesList, overwrite);
-  deleteTablesQuery.length ? masterQuery += await deleteTablesQuery : null;
+    const createTablesQuery = getCreateTablesQuery(createTablesList, models);
+    createTablesQuery.length ? masterQuery += await createTablesQuery : null;
 
-  const createTablesQuery = getCreateTablesQuery(createTablesList, models);
-  createTablesQuery.length ? masterQuery += await createTablesQuery : null;
+    const updateTablesQuery: any = await getUpdateTablesQuery(
+      updateTablesList,
+      models,
+      dbTables,
+      overwrite,
+    );
+    updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
 
-  const updateTablesQuery: any = await getUpdateTablesQuery(
-    updateTablesList,
-    models,
-    dbTables,
-    overwrite,
-  );
-  updateTablesQuery.length ? masterQuery += await updateTablesQuery : null;
+    // * Single query that will be sent to PostgreSQL Database (sync will send only ONE query to the PSQL DB for ACID compliance)
+    const db = await ConnectDb();
+    await db.queryObject(masterQuery);
+    DisconnectDb(db);
+  } catch (err) {
+    throw new Error(err);
+  }
+};
 
-  // * Single query that will be sent to PostgreSQL Database (sync will send only ONE query to the PSQL DB for ACID compliance)
-  await db.queryObject(masterQuery);
-
-  // * Used for migration feature (backing up/restoring data)
-  await checkDbSync();
-
-  DisconnectDb(db);
-}
-
+// helper function returns query string for creating multiple new tables in db
 const getCreateTablesQuery = (createTablesList: string[], models: any) => {
   let getCreateTablesQuery = ``;
 
@@ -120,13 +124,12 @@ const getCreateTablesQuery = (createTablesList: string[], models: any) => {
   return getCreateTablesQuery;
 };
 
+// helper function returns query string for creating a single new table in the db
 const getCreateTableQuery = (tableName: string, columns: any) => {
   let createTableQuery = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
 
   let constraints = '';
-
   const associations = [];
-
   const checks: any = [];
 
   for (const column in columns) {
@@ -146,6 +149,7 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
         }
         case 'checks': {
           checks.push(columns[column].checks);
+          break;
         }
         case 'primaryKey': {
           if (columns[column].primaryKey === true) {
@@ -165,9 +169,6 @@ const getCreateTableQuery = (tableName: string, columns: any) => {
         }
         case 'defaultVal': {
           constraints += ` DEFAULT ${columns[column].defaultVal}`;
-          break;
-        }
-        default: {
           break;
         }
       }
@@ -258,7 +259,8 @@ const getDeleteTablesQuery = (
           break;
         }
         default: {
-          break;
+          console.log('No confirmation--table will not be deleted');
+          return '';
         }
       }
     }
@@ -327,11 +329,7 @@ const getUpdateTablesQuery = async (
         const modelChecks = modelConstraints.checks;
         const dbChecks = dbConstraints.checks;
 
-        if (
-          !objectLooselyEquals(modelChecks, dbChecks)
-        ) {
-          return true;
-        }
+        return (!objectLooselyEquals(modelChecks, dbChecks));
       }
 
       return false;
@@ -358,20 +356,6 @@ const getUpdateTablesQuery = async (
 
     const deleteColumnsList = Array.from(dbColumnNames);
 
-    // * Shows list of columns to create/delete/update (Part of updating a table)
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to CREATE`,
-    //   createColumnsList,
-    // );
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to DELETE`,
-    //   deleteColumnsList,
-    // );
-    // console.log(
-    //   ` UPDATE TABLE (${tableName}): List of COLUMNS to UPDATE`,
-    //   updateColumnsList,
-    // );
-
     const createColumnsQuery = getCreateColumnsQuery(
       tableName,
       createColumnsList,
@@ -386,14 +370,19 @@ const getUpdateTablesQuery = async (
     );
     deleteColumnsQuery.length ? updateTablesQuery += deleteColumnsQuery : null;
 
-    const updateColumnsQuery: any = await getUpdateColumnsQuery(
-      tableName,
-      updateColumnsList,
-      models,
-      dbTables,
-    );
-
-    updateColumnsQuery.length ? updateTablesQuery += updateColumnsQuery : null;
+    try {
+      const updateColumnsQuery: any = await getUpdateColumnsQuery(
+        tableName,
+        updateColumnsList,
+        models,
+        dbTables,
+      );
+      updateColumnsQuery.length
+        ? updateTablesQuery += updateColumnsQuery
+        : null;
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   return updateTablesQuery;
@@ -514,9 +503,6 @@ const getCreateColumnsQuery = (
         case 'length': {
           break;
         }
-        default: {
-          break;
-        }
       }
     }
 
@@ -569,8 +555,8 @@ const getUpdateColumnsQuery = async (
   models: any,
   dbTables: any,
 ) => {
-  const db = await ConnectDb();
   let updateColumnsQuery = ``;
+  let constraintsListQueryObject;
 
   // * query that gets all constraints in a given table
   const constraintsListQuery =
@@ -581,7 +567,13 @@ const getUpdateColumnsQuery = async (
   INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
   AND class.relname = '${tableName}';`;
 
-  const constraintsListQueryObject = await db.queryObject(constraintsListQuery);
+  try {
+    const db = await ConnectDb();
+    constraintsListQueryObject = await db.queryObject(constraintsListQuery);
+    await DisconnectDb(db);
+  } catch (err) {
+    throw new Error(err);
+  }
 
   const constraintsList: any = constraintsListQueryObject.rows;
 
@@ -642,8 +634,6 @@ const getUpdateColumnsQuery = async (
       }
       case 'u': {
         tableConstraints[columnName][contype][conname] = condef;
-      }
-      default: {
         break;
       }
     }
@@ -863,7 +853,18 @@ const getUpdateColumnsQuery = async (
     }
   }
 
-  await DisconnectDb(db);
-
   return updateColumnsQuery;
+};
+
+// helper function returns true if user's db and local model schemas match
+const objectLooselyEquals = (modelObject: any, dbObject: any) => {
+  const removeWhitespaces = (string: string) => string.replace(/\s/g, '');
+
+  const keysMatch = JSON.stringify(Object.keys(modelObject).sort()) ===
+    JSON.stringify(Object.keys(dbObject).sort());
+  const valuesMatch =
+    removeWhitespaces(JSON.stringify(Object.values(modelObject).sort())) ===
+      removeWhitespaces(JSON.stringify(Object.values(dbObject).sort()));
+
+  return keysMatch && valuesMatch;
 };

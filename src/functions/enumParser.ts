@@ -1,6 +1,8 @@
 //* Runs through model.ts file and returns an object with all enum types as keys, and their values as array of strings
-export const enumParser = (): Record<string, unknown[]> => {
-  const modelText = Deno.readTextFileSync('./models/model.ts');
+export const enumParser = (
+  path = './models/model.ts',
+): Record<string, unknown[]> => {
+  const modelText = Deno.readTextFileSync(path);
 
   const enumText = modelText.replaceAll(
     /export interface \w+ {[\n +\w+: \w+]+}/g,

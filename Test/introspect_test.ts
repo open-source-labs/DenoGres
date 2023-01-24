@@ -1,76 +1,102 @@
-import { assert, assertEquals } from '../deps.ts';
-import { introspect } from '../src/functions/introspect.ts';
+import {
+  afterAll,
+  assert,
+  assertEquals,
+  beforeAll,
+  describe,
+  it,
+  Pool,
+  PoolClient,
+} from '../deps.ts';
+import {
+  DbData,
+  getDbData,
+  introspectTables,
+} from '../src/functions/introspect.ts';
+import {
+  createTablesQuery,
+  dropTablesQuery,
+} from './model_integration_tests/seed_testdb.ts';
 
-// All tests to be ran with DenoGres Test DB
+describe('introspect function and helper functions', () => {
+  let pool: Pool;
+  let db: PoolClient;
+  let dbData: DbData;
 
-Deno.test('Introspection Table Name Test', async function () {
-  const [tableListObj] = await introspect();
-  assert(Object.keys(tableListObj).includes('customers'));
-  assert(Object.keys(tableListObj).includes('person'));
-  assert(Object.keys(tableListObj).includes('contacts'));
-  assert(Object.keys(tableListObj).includes('products'));
+  beforeAll(async () => {
+    pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
+    db = await pool.connect();
+    await db.queryObject(createTablesQuery);
+  });
+
+  afterAll(async () => {
+    await db.queryObject(dropTablesQuery);
+    await db.release();
+    await pool.end();
+  });
+
+  it('getDbData returns object with lists of tables, columns, constraints, and enums in db', async () => {
+    dbData = await getDbData(Deno.env.get('TEST_DB_URI'));
+    const { tableList, columnList, constraintList, enumList } = dbData;
+
+    const tableNames = tableList.map((obj) => obj.table_name);
+    assertEquals(tableNames.length, 11);
+    assert(tableNames.includes('species'));
+
+    const columnNames = columnList.map((obj) => obj.column_name);
+    assertEquals(columnNames.length, 70);
+    assert(columnNames.includes('height'));
+
+    const constraintNames = constraintList.map((obj) => obj.conname);
+    assertEquals(constraintNames.length, 25);
+    assert(constraintNames.includes('planets_in_films_pk'));
+
+    assertEquals(enumList.length, 0);
+  });
+
+  it('introspectTables returns an object representing the db schema when invoked with lists of tables, columns, and constraints', () => {
+    const { tableList, columnList, constraintList } = dbData;
+    const tableListObj = introspectTables(
+      tableList,
+      columnList,
+      constraintList,
+    );
+
+    // each key in the tableListObj should correspond to a table from the tableList
+    const tableNames = tableList.map((obj) => obj.table_name);
+    assertEquals(Object.keys(tableListObj).length, tableNames.length);
+    assertEquals(Object.keys(tableListObj), tableNames);
+
+    // each key in the tableListObj should have as its value an object with keys representing that table's columns
+    for (const table in tableListObj) {
+      const columns = tableListObj[table];
+      const actualColumnNames = Object.keys(columns);
+      const expectedColumnNames = columnList.filter((col) =>
+        col.table_name === table
+      ).map((col) => col.column_name);
+      assertEquals(actualColumnNames, expectedColumnNames);
+
+      // each column should have properties "type" and "notNull"
+      assert(
+        Object.values(columns).every((col) =>
+          'type' in col && 'notNull' in col
+        ),
+      );
+
+      /**
+       * not currently testing these column attributes:
+       * - that columns have a max length property when not null
+       * - that columns have an autoincrement property (when appropriate)
+       * - that columns have a default value (when not null)
+       * - constraints (primary and foreign keys)
+       * - associations (which should have a name, mappedTable, and mappedColumn)
+       */
+    }
+  });
 });
 
-Deno.test('Introspection Table Column Name Test', async function () {
-  const [tableListObj] = await introspect();
-  assert(Object.keys(tableListObj.customers.columns).includes('customer_name'));
-  assert(Object.keys(tableListObj.customers.columns).includes('customer_id'));
-  assert(Object.keys(tableListObj.customers.columns).includes('username'));
-  assert(Object.keys(tableListObj.products.columns).includes('product_no'));
-  assert(Object.keys(tableListObj.products.columns).includes('name'));
-  assert(Object.keys(tableListObj.products.columns).includes('sale_item'));
-  assert(Object.keys(tableListObj.products.columns).includes('price'));
-  assert(
-    Object.keys(tableListObj.products.columns).includes('discounted_price'),
-  );
-  assert(Object.keys(tableListObj.contacts.columns).includes('contact_id'));
-  assert(Object.keys(tableListObj.contacts.columns).includes('customer_id'));
-  assert(Object.keys(tableListObj.contacts.columns).includes('contact_name'));
-  assert(Object.keys(tableListObj.contacts.columns).includes('phone'));
-  assert(Object.keys(tableListObj.contacts.columns).includes('email'));
-  assert(Object.keys(tableListObj.contacts.columns).includes('password'));
-  assert(Object.keys(tableListObj.person.columns).includes('name'));
-  assert(Object.keys(tableListObj.person.columns).includes('current_mood'));
-});
-
-Deno.test('Introspection Table Column Type Test', async function () {
-  const [tableListObj] = await introspect();
-  assertEquals(tableListObj.customers.columns.customer_name.type, 'varchar');
-  assertEquals(tableListObj.customers.columns.customer_id.type, 'int4');
-  assertEquals(tableListObj.products.columns.price.type, 'numeric');
-  assertEquals(tableListObj.products.columns.name.type, 'text');
-  assertEquals(tableListObj.products.columns.name.type, 'text');
-  assertEquals(tableListObj.person.columns.current_mood.type, 'enum: mood');
-});
-
-Deno.test('Introspection Column Constraint Test', async function () {
-  const [tableListObj] = await introspect();
-  assertEquals(tableListObj.customers.columns.customer_name.notNull, true);
-  assertEquals(tableListObj.customers.columns.customer_name.length, 255);
-  assertEquals(tableListObj.customers.columns.customer_id.autoIncrement, true);
-  assertEquals(tableListObj.customers.columns.customer_id.primaryKey, true);
-  assertEquals(tableListObj.products.columns.sale_item.defaultVal, false);
-  assertEquals(tableListObj.contacts.columns.email.unique, true);
-});
-
-Deno.test('Introspection Table Constraint Test', async function () {
-  const [tableListObj] = await introspect();
-  assert(tableListObj.products.checks.includes('(price > discounted_price)'));
-  assert(Array.isArray(tableListObj.products.unique));
-  assertEquals(tableListObj.products.unique[0], ['product_no', 'name']);
-});
-
-Deno.test('Enum Object Test', async function () {
-  const [tableListObj, enumObj] = await introspect();
-  assertEquals(enumObj.color, [
-    'violet',
-    'green',
-    'blue',
-    'indigo',
-    'red',
-    'orange',
-    'yellow',
-  ]);
-  assert(Object.keys(enumObj).includes('mood'));
-  assertEquals(enumObj.mood, ['ok', 'happy', 'sad']);
-});
+/**
+ * not currently testing:
+ * - details of the introspectTables function (see above)
+ * - the introspectEnums function
+ */

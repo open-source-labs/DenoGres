@@ -1,157 +1,69 @@
-import { assert } from '../deps.ts';
-import { dbPull } from '../src/functions/dbPull.ts';
+import { assertEquals } from '../deps.ts';
+import { generateModelFile } from '../src/functions/dbPull.ts';
 
-const generatedModel =
-  `import { Model } from 'https://deno.land/x/denogres/mod.ts'
+Deno.test('generateModelFile creates appropriate model.ts file for a given table object', () => {
+  const exampleTableListObj = {
+    planets: {
+      climate: { type: 'varchar', notNull: false },
+      terrain: { type: 'varchar', notNull: false },
+      surface_water: { type: 'varchar', notNull: false },
+      rotation_period: { type: 'int4', notNull: false },
+      _id: {
+        type: 'int4',
+        notNull: true,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+    },
+  };
+
+  const expectedOutput =
+    `import { Model } from 'https://deno.land/x/denogres/mod.ts'
 // user model definition comes here
 
 
-export interface Customer {
-  customer_name: string
-  username: string
-  customer_id: number
+export interface Planet {
+  climate: string
+  terrain: string
+  surface_water: string
+  rotation_period: number
+  _id: number
 }
 
-export class Customer extends Model {
-  static table = 'customers';
+export class Planet extends Model {
+  static table = 'planets';
   static columns = {
-    customer_name: {
+    climate: {
       type: 'varchar',
-      length: 255,
-      notNull: true,
+      notNull: false,
     },
-    username: {
+    terrain: {
       type: 'varchar',
-      length: 50,
-      notNull: true,
+      notNull: false,
     },
-    customer_id: {
+    surface_water: {
+      type: 'varchar',
+      notNull: false,
+    },
+    rotation_period: {
+      type: 'int4',
+      notNull: false,
+    },
+    _id: {
       type: 'int4',
       notNull: true,
-      primaryKey: true,
       autoIncrement: true,
-    },
-  }
-}
-
-
-export interface Product {
-  sale_item: string
-  price: number
-  product_no: number
-  name: string
-  discounted_price: number
-}
-
-export class Product extends Model {
-  static table = 'products';
-  static columns = {
-    sale_item: {
-      type: 'varchar',
-    },
-    price: {
-      type: 'numeric',
-    },
-    product_no: {
-      type: 'int4',
-    },
-    name: {
-      type: 'text',
-    },
-    discounted_price: {
-      type: 'numeric',
-    },
-  }
-  static checks = ["(price > (0::numeric))","(discounted_price > (0::numeric))","(price > discounted_price)"]
-  static unique = [["product_no","name"]]
-}
-
-
-export interface Contact {
-  password: string
-  contact_name: string
-  contact_id: number
-  phone: string
-  customer_id: number
-  email: string
-}
-
-export class Contact extends Model {
-  static table = 'contacts';
-  static columns = {
-    password: {
-      type: 'varchar',
-      length: 30,
-      notNull: true,
-    },
-    contact_name: {
-      type: 'varchar',
-      length: 255,
-      notNull: true,
-    },
-    contact_id: {
-      type: 'int4',
-      notNull: true,
       primaryKey: true,
-      autoIncrement: true,
-    },
-    phone: {
-      type: 'varchar',
-      length: 15,
-    },
-    customer_id: {
-      type: 'int4',
-      association: {
-        table: 'customers',
-        mappedCol: 'customer_id',
-      }
-    },
-    email: {
-      type: 'varchar',
-      length: 100,
-      notNull: true,
-      unique: true,
     },
   }
 }
 
-
-export interface Person {
-  name: string
-  current_mood: keyof typeof Mood
-}
-
-export class Person extends Model {
-  static table = 'person';
-  static columns = {
-    name: {
-      type: 'text',
-    },
-    current_mood: {
-      type: 'enum',
-      enumName: 'mood'
-    },
-  }
-}
-
-export enum Color {
-red,
-orange,
-yellow,
-green,
-blue,
-indigo,
-violet,
-}
-
-export enum Mood {
-sad,
-ok,
-happy,
-}`;
-
-Deno.test('DbPull Model Generation Test', async function () {
-  await dbPull();
-  const models = Deno.readTextFileSync('./models/model.ts');
-  assert(models.includes(generatedModel));
+`;
+  const actualOutput = generateModelFile(exampleTableListObj, {});
+  assertEquals(expectedOutput, actualOutput);
 });
+
+/**
+ * not tested:
+ * - that generateModelFile works with a non-empty enum object
+ */
