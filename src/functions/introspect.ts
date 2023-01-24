@@ -92,7 +92,6 @@ export const introspect = async (
 
   const tableListObj = introspectTables(tableList, columnList, constraintList);
   const enumObj = introspectEnums(enumList);
-  console.log('constraintList: ', constraintList);
 
   return [tableListObj, enumObj];
 };
