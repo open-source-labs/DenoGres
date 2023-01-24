@@ -14,10 +14,10 @@ const enumRowGuard = (record: object): record is IEnumRow => {
 };
 
 // syncs changes made to enum types in model.ts with the database
-export const enumSync = async () => {
+export const enumSync = async (path = './models/model.ts') => {
   let enumCreateAlter = ``;
 
-  const modelEnum = enumParser(); //* This runs through the model.ts file and returns an object with all enum types as keys, and their values as array of strings
+  const modelEnum = enumParser(path); //* This runs through the model.ts file and returns an object with all enum types as keys, and their values as array of strings
   const db = await ConnectDb();
 
   const results = await db.queryObject(enumQuery);
@@ -40,13 +40,13 @@ export const enumSync = async () => {
       };
 
       //* if enum in database doesn't exist on model, remove enum from database
-      if (!modelEnum[el.enum_name]) { // TESTED
+      if (!modelEnum[el.enum_name]) {
         enumCreateAlter += `DROP type ${el.enum_name} CASCADE; `;
       } else {
         //* If the enum object and the values from modelEnum do not align
         if (JSON.stringify(el) !== JSON.stringify(modelEnum[el.enum_name])) {
           // if the db and model do not align determine what needs to change
-          // console.log('Stringify Failed');
+          console.log('Stringify Failed');
         }
       }
     }
@@ -87,11 +87,11 @@ export const enumSync = async () => {
           deleteEnum = true;
         }
 
-        if (deleteEnum) { // TESTED
+        if (deleteEnum) {
           const enumList = '\'' + tempDBEnumVal.join('\',\'') + '\'';
           enumCreateAlter +=
             `DROP type ${key} CASCADE; CREATE type ${key} as enum (${enumList})`;
-        } else { // TESTED
+        } else {
           const rev = modelEnum[key].reverse();
           rev.forEach((val, idx) => {
             // if not currently in the enum add it

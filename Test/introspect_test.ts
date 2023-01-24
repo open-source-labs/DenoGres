@@ -9,11 +9,14 @@ import {
   PoolClient,
 } from '../deps.ts';
 import {
+  DbData,
   getDbData,
   introspectTables,
-  DbData
 } from '../src/functions/introspect.ts';
-import { createTablesQuery, dropTablesQuery } from './model_integration_tests/seed_testdb.ts';
+import {
+  createTablesQuery,
+  dropTablesQuery,
+} from './model_integration_tests/seed_testdb.ts';
 
 describe('introspect function and helper functions', () => {
   let pool: Pool;
@@ -36,15 +39,15 @@ describe('introspect function and helper functions', () => {
     dbData = await getDbData(Deno.env.get('TEST_DB_URI'));
     const { tableList, columnList, constraintList, enumList } = dbData;
 
-    const tableNames = tableList.map(obj => obj.table_name);
+    const tableNames = tableList.map((obj) => obj.table_name);
     assertEquals(tableNames.length, 11);
     assert(tableNames.includes('species'));
 
-    const columnNames = columnList.map(obj => obj.column_name);
+    const columnNames = columnList.map((obj) => obj.column_name);
     assertEquals(columnNames.length, 70);
     assert(columnNames.includes('height'));
 
-    const constraintNames = constraintList.map(obj => obj.conname);
+    const constraintNames = constraintList.map((obj) => obj.conname);
     assertEquals(constraintNames.length, 25);
     assert(constraintNames.includes('planets_in_films_pk'));
 
@@ -53,10 +56,14 @@ describe('introspect function and helper functions', () => {
 
   it('introspectTables returns an object representing the db schema when invoked with lists of tables, columns, and constraints', () => {
     const { tableList, columnList, constraintList } = dbData;
-    const tableListObj = introspectTables(tableList, columnList, constraintList);
-    
+    const tableListObj = introspectTables(
+      tableList,
+      columnList,
+      constraintList,
+    );
+
     // each key in the tableListObj should correspond to a table from the tableList
-    const tableNames = tableList.map(obj => obj.table_name);
+    const tableNames = tableList.map((obj) => obj.table_name);
     assertEquals(Object.keys(tableListObj).length, tableNames.length);
     assertEquals(Object.keys(tableListObj), tableNames);
 
@@ -64,11 +71,17 @@ describe('introspect function and helper functions', () => {
     for (const table in tableListObj) {
       const columns = tableListObj[table];
       const actualColumnNames = Object.keys(columns);
-      const expectedColumnNames = columnList.filter(col => col.table_name === table).map(col => col.column_name);
+      const expectedColumnNames = columnList.filter((col) =>
+        col.table_name === table
+      ).map((col) => col.column_name);
       assertEquals(actualColumnNames, expectedColumnNames);
 
       // each column should have properties "type" and "notNull"
-      assert(Object.values(columns).every(col => 'type' in col && 'notNull' in col));
+      assert(
+        Object.values(columns).every((col) =>
+          'type' in col && 'notNull' in col
+        ),
+      );
 
       /**
        * not currently testing these column attributes:

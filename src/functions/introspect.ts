@@ -39,10 +39,10 @@ interface IEnumEl {
 }
 
 export interface DbData {
-  tableList: ITableQueryRecords[],
-  columnList: IColumnQueryRecords[],
-  constraintList: IConstraint[],
-  enumList: IEnumEl[]
+  tableList: ITableQueryRecords[];
+  columnList: IColumnQueryRecords[];
+  constraintList: IConstraint[];
+  enumList: IEnumEl[];
 }
 
 // TYPE GUARD FUNCTIONS
@@ -104,7 +104,7 @@ export const getDbData = async (uri?: string): Promise<DbData> => {
   const constraintList = await db.queryObject(tableConstQuery);
   const enumList = await db.queryObject(enumQuery);
 
-  DisconnectDb(db);
+  await DisconnectDb(db);
 
   return {
     tableList: tableList.rows,

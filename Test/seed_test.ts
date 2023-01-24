@@ -531,7 +531,3 @@ Deno.test(
     // DisconnectDb(db);
   },
 );
-
-// const people = denogres.Person;
-
-// console.log(await people.select('*').query());
