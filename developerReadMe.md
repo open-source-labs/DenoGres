@@ -121,7 +121,7 @@ Here's a few ideas that could guide future iterators in development:
   compatibility with Deno and Fresh)
 - Theoretically, it would be interesting to incorparate compatibility with other
   popular database management systems such as MySQL, but based on the structure
-  of the mdoel class (which uses [Deno Postgres](https://deno-postgres.com/#/)
+  of the model class (which uses [Deno Postgres](https://deno-postgres.com/#/)
   under the hood), this would be a large undertaking.
 
 ## <u>Deployment</u>
