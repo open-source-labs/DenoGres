@@ -73,11 +73,12 @@ const tableConstQuery = `SELECT tables.schemaname, class.relname AS table_name,
 pg_get_constraintdef(pg_constraint.oid) AS condef, contype, conname
 FROM pg_class class
 INNER JOIN pg_tables tables on class.relname = tables.tablename
-INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid;`;
+INNER JOIN pg_constraint ON class.oid = pg_constraint.conrelid
+WHERE tables.schemaname NOT IN ('pg_catalog', 'information_schema')`;
 
 // returns all the user-defined table names in the db
 const tableListQuery = `SELECT table_name FROM information_schema.tables
-WHERE table_schema='public'
+WHERE table_schema not in ('pg_catalog', 'information_schema')
 AND table_type='BASE TABLE';`;
 
 // MAIN FUNCTION: calls helper functions getDbData, introspectTables, and introspectEnums
@@ -91,6 +92,7 @@ export const introspect = async (
 
   const tableListObj = introspectTables(tableList, columnList, constraintList);
   const enumObj = introspectEnums(enumList);
+  console.log('constraintList: ', constraintList);
 
   return [tableListObj, enumObj];
 };
@@ -187,10 +189,6 @@ export const introspectTables = (tableList, columnList, constraintList) => {
           tableListObj[el.table_name].primaryKey = key.replaceAll(' ', '')
             .split(',');
         } else {
-          console.log(
-            'el.table_name: ',
-            el.table_name,
-          );
           tableListObj[el.table_name][key]['primaryKey'] = true;
         }
         // * unique
