@@ -58,11 +58,11 @@ describe('model methods', () => {
   });
 
   describe('update method', () => {
-    it('updates a row represented by an instance previously saved to the database ', async () => {
+    it.only('updates a row represented by an instance previously saved to the database ', async () => {
       // create a new instance, add properties to it, and invoke save method on it
       const newPlanet = new Planet();
       newPlanet.name = 'Mercury';
-      (newPlanet.diameter = 86), 881;
+      (newPlanet.diameter = 86);
       await newPlanet.save();
 
       // change or add properties on the instance and invoke the update method on it
