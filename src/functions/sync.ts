@@ -259,7 +259,8 @@ const getDeleteTablesQuery = (
           break;
         }
         default: {
-          break;
+          console.log('No confirmation--table will not be deleted');
+          return '';
         }
       }
     }
@@ -502,9 +503,6 @@ const getCreateColumnsQuery = (
         case 'length': {
           break;
         }
-        default: {
-          break;
-        }
       }
     }
 
@@ -636,9 +634,6 @@ const getUpdateColumnsQuery = async (
       }
       case 'u': {
         tableConstraints[columnName][contype][conname] = condef;
-        break;
-      }
-      default: {
         break;
       }
     }
