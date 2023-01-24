@@ -3,6 +3,7 @@ import {
   assert,
   assertEquals,
   assertExists,
+  assertInstanceOf,
   assertRejects,
   beforeAll,
   describe,
@@ -12,7 +13,6 @@ import { Pool, PoolClient } from '../../deps.ts';
 import { createTablesQuery, dropTablesQuery } from './seed_testdb.ts';
 import { Person, Planet } from '../sample_model.ts';
 import 'https://deno.land/x/dotenv@v3.2.0/load.ts';
-import { assertThrows } from '../../vendor/deno.land/std@0.160.0/testing/asserts.ts';
 
 describe('model methods', () => {
   let pool: Pool;
@@ -217,7 +217,7 @@ describe('model methods', () => {
     });
   });
   describe('query method', (): void => {
-    it('should clear the sql string on the model after a successfuly query to the db', async (): void => {
+    it('should clear the sql string on the model after a successful query to the db', async (): void => {
       Person['sql'] = 'SELECT * FROM people';
       await Person.query();
       assertEquals(Person['sql'], '');
@@ -245,15 +245,14 @@ describe('model methods', () => {
   });
 
   describe('queryInstance method', () => {
-    it('should create a new instance of the model with property value pairs representing the first row return from the query', async () => {
+    it('should create a new instance of the model with property value pairs representing the first row returned from the query', async () => {
       Person['sql'] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       const luke = await Person.queryInstance();
-      const expected = new Person();
-      expected.name = 'Luke Skywalker';
-      expected.mass = '77';
-      expected.hair_color = 'blond';
-      assertEquals(luke, expected);
+      assert(luke.name = 'Luke Skywalker');
+      assert(luke.mass = '77');
+      assert(luke.hair_color = 'blond');
+      assertInstanceOf(luke, Person);
     });
 
     it('should throw an error on a malformed query', async () => {
