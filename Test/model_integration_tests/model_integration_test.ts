@@ -3,6 +3,7 @@ import {
   assert,
   assertEquals,
   assertExists,
+  assertInstanceOf,
   assertRejects,
   beforeAll,
   describe,
@@ -61,7 +62,7 @@ describe('model methods', () => {
       // create a new instance, add properties to it, and invoke save method on it
       const newPlanet = new Planet();
       newPlanet.name = 'Mercury';
-      newPlanet.diameter = 86, 881;
+      newPlanet.diameter = 86;
       await newPlanet.save();
 
       // change or add properties on the instance and invoke the update method on it
@@ -213,6 +214,58 @@ describe('model methods', () => {
         assertEquals(han.rows, [{ name: 'Han Solo' }]);
         assertEquals(luke.rows, [{ name: 'Luke Skywalker' }]);
       }
+    });
+  });
+  describe('query method', (): void => {
+    it('should clear the sql string on the model after a successful query to the db', async (): void => {
+      Person['sql'] = 'SELECT * FROM people';
+      await Person.query();
+      assertEquals(Person['sql'], '');
+    });
+
+    it('should clear the sql string on the model after an unsuccessful query to the db', async () => {
+      Person['sql'] = 'SELECT namee1 FROM people';
+      try {
+        await Person.query();
+      } catch {
+        assertEquals(Person['sql'], '');
+      }
+    });
+
+    it('should throw an error on a malformed query', async () => {
+      Person['sql'] = 'SELECT namee1 FROM people';
+      await assertRejects(async () => await Person.query(), Error);
+    });
+
+    it('should successfully query the database with a properly formed query string and return result', async () => {
+      Person['sql'] = `SELECT name FROM people WHERE name = 'Luke Skywalker'`;
+      const luke = await Person.query();
+      assertEquals(luke, [{ name: 'Luke Skywalker' }]);
+    });
+  });
+
+  describe('queryInstance method', () => {
+    it('should create a new instance of the model with property value pairs representing the first row returned from the query', async () => {
+      Person['sql'] =
+        `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      const luke = await Person.queryInstance();
+      assert(luke.name = 'Luke Skywalker');
+      assert(luke.mass = '77');
+      assert(luke.hair_color = 'blond');
+      assertInstanceOf(luke, Person);
+    });
+
+    it('should throw an error on a malformed query', async () => {
+      Person['sql'] =
+        `SELECT name, weight, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      await assertRejects(async () => await Person.queryInstance(), Error);
+    });
+
+    it('should reset the "sql" property on the model to an empty string', async () => {
+      Person['sql'] =
+        `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      await Person.queryInstance();
+      assertEquals(Person['sql'], '');
     });
   });
 });

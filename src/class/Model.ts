@@ -3,6 +3,7 @@ import { BelongsTo, HasMany, HasOne, ManyToMany } from './Association.ts';
 import { FIELD_TYPE } from '../constants/sqlDataTypes.ts';
 import { checkColumns, checkQueryString } from '../functions/errorMessages.ts';
 import { PoolClient } from '../../deps.ts';
+import { QueryObjectResult } from '../../vendor/deno.land/x/postgres@v0.17.0/query/query.ts';
 
 export class Model {
   [k: string]: any; // index signature
@@ -459,11 +460,13 @@ export class Model {
       queryResult = await db.queryObject(this.sql);
     } catch (err) {
       console.log(err);
+      throw new Error(err);
+    } finally {
+      this.sql = '';
+      await DisconnectDb(db);
     }
-    // clear the query string and return the resulting rows from the query if any
-    this.sql = '';
-    await DisconnectDb(db);
     return queryResult ? queryResult.rows : undefined;
+    // clear the query string and return the resulting rows from the query if any
   }
 
   // can chain this method on after the 'select' method to query the db
@@ -472,11 +475,19 @@ export class Model {
   static async queryInstance(uri?: string, print?: string) {
     // checks that the user is chaining this after other methods
     checkQueryString(this.sql.length, 'queryInstance', Model, 'chain');
+    let queryResult: QueryObjectResult;
     const db = await ConnectDb(uri);
-    if (!this.sql.includes('SELECT a.attname') && print) console.log(this.sql);
-    const queryResult = await db.queryObject(this.sql);
-    this.sql = '';
-    DisconnectDb(db);
+    try {
+      if (!this.sql.includes('SELECT a.attname') && print) {
+        console.log(this.sql);
+      }
+      queryResult = await db.queryObject(this.sql);
+    } catch (err) {
+      throw new Error(err);
+    } finally {
+      this.sql = '';
+      await DisconnectDb(db);
+    }
     return Object.assign(new this(), queryResult.rows[0]);
   }
 
