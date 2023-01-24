@@ -131,7 +131,9 @@ describe('sync function and helper functions', () => {
         "_id" serial NOT NULL,
         "name" varchar NOT NULL,
         CONSTRAINT "people_pk" PRIMARY KEY ("_id")
-      )
+      ) WITH (
+        OIDS=FALSE
+      );
     `);
 
     // add the table model to the model.ts file with added 'birth year' column
@@ -176,7 +178,9 @@ describe('sync function and helper functions', () => {
         "_id" serial NOT NULL,
         "name" varchar NOT NULL,
         CONSTRAINT "people_pk" PRIMARY KEY ("_id")
-      )
+      ) WITH (
+        OIDS=FALSE
+      );
     `);
 
     // add the table model to the model.ts file without the 'name' column
@@ -209,7 +213,7 @@ describe('sync function and helper functions', () => {
   it('the tableSync function updates a column with new constraints if added to the model.ts file', async () => {
     // manually add a table to the database
     await db.queryObject(
-      'CREATE TABLE pecies ("_id" serial NOT NULL, "name" varchar NOT NULL)',
+      'CREATE TABLE pecies ("_id" serial NOT NULL, "name" varchar NOT NULL) WITH (OIDS=FALSE);',
     );
 
     const tableWithPKConstraint = `

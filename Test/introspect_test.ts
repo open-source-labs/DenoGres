@@ -47,7 +47,7 @@ describe('introspect function and helper functions', () => {
     assertEquals(columnNames.length, 70);
     assert(columnNames.includes('height'));
 
-    const constraintNames = constraintList.map((obj) => obj.conname);
+    const constraintNames = constraintList.filter(obj => obj.schemaname === 'public').map((obj) => obj.conname);
     assertEquals(constraintNames.length, 25);
     assert(constraintNames.includes('planets_in_films_pk'));
 

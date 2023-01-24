@@ -187,6 +187,7 @@ export const introspectTables = (tableList, columnList, constraintList) => {
           tableListObj[el.table_name].primaryKey = key.replaceAll(' ', '')
             .split(',');
         } else {
+          console.log('tableListObj[el.table_name]: ', tableListObj[el.table_name]);
           tableListObj[el.table_name][key]['primaryKey'] = true;
         }
         // * unique
