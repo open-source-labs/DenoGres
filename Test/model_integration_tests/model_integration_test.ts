@@ -245,7 +245,6 @@ describe('model methods', () => {
   });
 
   describe('queryInstance method', () => {
-
     it('should create a new instance of the model with property value pairs representing the first row return from the query', async () => {
       Person['sql'] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
@@ -257,17 +256,17 @@ describe('model methods', () => {
       assertEquals(luke, expected);
     });
 
-    it('should throw an error on a malformed query', async () =>{
+    it('should throw an error on a malformed query', async () => {
       Person['sql'] =
         `SELECT name, weight, hair_color FROM people WHERE name = 'Luke Skywalker'`;
-      await assertRejects(async () => await Person.queryInstance(), Error)
-    })
+      await assertRejects(async () => await Person.queryInstance(), Error);
+    });
 
     it.only('should reset the "sql" property on the model to an empty string', async () => {
       Person['sql'] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
-        await Person.queryInstance();
-        assertEquals(Person['sql'], '');
+      await Person.queryInstance();
+      assertEquals(Person['sql'], '');
     });
   });
 });
