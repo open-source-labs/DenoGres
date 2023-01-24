@@ -659,7 +659,7 @@ export async function getprimaryKey(
   try {
     result = await db.queryObject(queryText, [tableName]);
   } catch (error) {
-    console.error(error);
+    throw new Error(error);
   } finally {
     DisconnectDb(db);
   }
