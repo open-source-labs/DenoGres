@@ -262,7 +262,7 @@ describe('model methods', () => {
       await assertRejects(async () => await Person.queryInstance(), Error);
     });
 
-    it.only('should reset the "sql" property on the model to an empty string', async () => {
+    it('should reset the "sql" property on the model to an empty string', async () => {
       Person['sql'] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       await Person.queryInstance();
