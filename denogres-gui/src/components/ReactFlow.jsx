@@ -11,6 +11,7 @@ import 'reactflow/dist/style.css';
 import TableNode from './TableNode.jsx';
 import DownloadButton from './Download.tsx';
 import { useNavigate } from 'react-router-dom';
+
 function iterateColors(colors) {
   let index = 0;
 

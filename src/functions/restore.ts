@@ -1,12 +1,12 @@
 //! FILE is a WIP
 
-import { readLines } from "https://deno.land/std@0.141.0/io/buffer.ts";
+// import { readLines } from 'https://deno.land/std@0.141.0/io/buffer.ts';
 // import { promptString } from "./myLog.ts";
 // import { resolve } from "https://deno.land/std@0.155.0/path/win32.ts";
-import sync from "./sync.ts";
+import sync from './sync.ts';
 
 function isString(filePath: string | null): filePath is string {
-  return typeof filePath === "string";
+  return typeof filePath === 'string';
 }
 
 /** This function will do the following
@@ -16,16 +16,16 @@ function isString(filePath: string | null): filePath is string {
  * * (4): If no is entered as decision, nothing will happen, function will exit.
  */
 export default function restoreModel() {
-  let filePath: string | null = prompt("Enter path of model to restore: ");
+  let filePath: string | null = prompt('Enter path of model to restore: ');
   //* check if current file path exists
 
   if (isString(filePath)) {
     // filePath = resolve(filePath?.replace(/\s/g, ""), "/build_model.ts");
     // filePath = resolve(filePath, "/build_model.ts");
-    if (filePath.includes("modelBuild")) {
-      filePath = filePath + "/build_model.ts";
-    } else if (filePath.includes("syncedModel")) {
-      filePath = filePath + "/synced_build.ts";
+    if (filePath.includes('modelBuild')) {
+      filePath = filePath + '/build_model.ts';
+    } else if (filePath.includes('syncedModel')) {
+      filePath = filePath + '/synced_build.ts';
     }
 
     // console.log("FILEPATH", filePath);
@@ -37,20 +37,20 @@ export default function restoreModel() {
     );
 
     if (isString(decision)) {
-      decision = decision?.replace(/\s/g, "").toLowerCase();
+      decision = decision?.replace(/\s/g, '').toLowerCase();
 
       switch (decision) {
-        case "yes":
-        case "y": {
-          Deno.writeTextFileSync("./models/model.ts", restoreModel);
+        case 'yes':
+        case 'y': {
+          Deno.writeTextFileSync('./models/model.ts', restoreModel);
 
-          console.log("Syncing your database...");
+          console.log('Syncing your database...');
 
           sync(true);
           return;
         }
-        case "no": {
-          console.log("Exiting restoration");
+        case 'no': {
+          console.log('Exiting restoration');
         }
         default:
       }
