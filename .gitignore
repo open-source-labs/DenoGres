@@ -1,7 +1,7 @@
 .env
 .vscode
-function.ts
-/application/user/uri.ts
-/application/fresh.gen.ts
-Test/henryPlayground.ts
-Test/henryPlayground.ts
+.DS_Store
+denogres-gui/node_modules
+denogres-gui/api/userDB.env
+denogres-gui/.vite/
+denogres-gui/.vscode/

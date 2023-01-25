@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run -A --node-modules-dir npm:vite",
+    "build": "deno run -A --node-modules-dir npm:vite build",
+    "preview": "deno run -A --node-modules-dir npm:vite preview",
+    "serve": "deno run --allow-env --allow-net --allow-read ./api/server.ts",
+    "dev-serve": "denon run --allow-env --allow-net --allow-read ./api/server.ts"
+  }
+}

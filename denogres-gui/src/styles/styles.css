@@ -1,0 +1,1068 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  height: 100vh;
+  width: 100vw;
+  max-height: 100vh;
+  max-width: 100vw;
+  color-scheme: light dark;
+  color: whitesmoke;
+  background-color: #242424;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  display: block;
+  justify-content: space-between;
+  margin: 0;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  display: flex;
+  justify-content: space-between;
+  place-items: center;
+  min-width: 647px;
+  min-height: 100vh;
+  width: 97%;
+  overflow: auto;
+  margin: 0;
+  /* flex-direction: row; */
+}
+
+.denogresLogo {
+  margin: 0;
+  width: 95vw;
+}
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 0.25rem;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+.home-overflow {
+  overflow-y: scroll;
+  max-height: 100vh;
+}
+.home-main-1 {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  /* margin-right: 5vw; */
+}
+
+#headerHome {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#connectionHead {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.denogresLogo {
+  max-width: 85vw;
+}
+
+.logoutGui {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8vw;
+  margin-left: 40vw;
+  display: flex;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 500px;
+  width: 400px;
+  /* background-color: rgb(190, 159, 200) ; */
+}
+.logoutHolder {
+  height: 100px;
+  width: 100px;
+  margin-bottom: 1vw;
+}
+.logoutText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#lm1 {
+  font-size: 25px;
+}
+#lm2 {
+  font-size: 25px;
+}
+#lm3 {
+  border: 1px solid black;
+  margin-top: 5vw;
+  width: 390px;
+  border-radius: 15px;
+}
+/*react flow styles- default*/
+.react-flow__container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.react-flow__pane {
+  z-index: 1;
+  cursor: -webkit-grab;
+  cursor: grab;
+  border: thin black;
+  /* background-color: rgb(236, 244, 253); */
+}
+.react-flow__pane.dragging {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+.react-flow__viewport {
+  transform-origin: 0 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.react-flow__renderer {
+  z-index: 4;
+}
+.react-flow__selectionpane {
+  z-index: 5;
+}
+.react-flow__nodesselection-rect:focus,
+.react-flow__nodesselection-rect:focus-visible {
+  outline: none;
+}
+.react-flow .react-flow__edges {
+  pointer-events: none;
+  overflow: visible;
+}
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: #b1b1b7;
+  stroke-width: 1;
+  fill: none;
+}
+.react-flow__edge {
+  pointer-events: visibleStroke;
+  cursor: pointer;
+}
+.react-flow__edge.animated path {
+  stroke-dasharray: 5;
+  -webkit-animation: dashdraw 0.5s linear infinite;
+  animation: dashdraw 0.5s linear infinite;
+}
+.react-flow__edge.inactive {
+  pointer-events: none;
+}
+.react-flow__edge.selected,
+.react-flow__edge:focus,
+.react-flow__edge:focus-visible {
+  outline: none;
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: #555;
+}
+.react-flow__edge-textwrapper {
+  pointer-events: all;
+}
+.react-flow__edge-textbg {
+  fill: #4a7187;
+}
+
+.react-flow__edge-text {
+  fill: #f8f4eb;
+}
+
+.react-flow__edge .react-flow__edge-text {
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+.react-flow__connection {
+  pointer-events: none;
+}
+.react-flow__connection.animated {
+  stroke-dasharray: 5;
+  -webkit-animation: dashdraw 0.5s linear infinite;
+  animation: dashdraw 0.5s linear infinite;
+}
+.react-flow__connectionline {
+  z-index: 1001;
+}
+.react-flow__nodes {
+  pointer-events: none;
+  transform-origin: 0 0;
+}
+.react-flow__node {
+  position: absolute;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  pointer-events: all;
+  transform-origin: 0 0;
+  box-sizing: border-box;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+.react-flow__node.dragging {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+.react-flow__nodesselection {
+  z-index: 3;
+  transform-origin: left top;
+  pointer-events: none;
+}
+.react-flow__nodesselection-rect {
+  position: absolute;
+  pointer-events: all;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+.react-flow__handle {
+  position: absolute;
+  pointer-events: none;
+  min-width: 5px;
+  min-height: 5px;
+  width: 6px;
+  height: 6px;
+  background: #1a192b;
+  border: 1px solid white;
+  border-radius: 100%;
+}
+.react-flow__handle.connectable {
+  pointer-events: all;
+  cursor: crosshair;
+}
+.react-flow__handle-bottom {
+  top: auto;
+  left: 50%;
+  bottom: -4px;
+  transform: translate(-50%, 0);
+}
+.react-flow__handle-top {
+  left: 50%;
+  top: -4px;
+  transform: translate(-50%, 0);
+}
+.react-flow__handle-left {
+  top: 50%;
+  left: -4px;
+  transform: translate(0, -50%);
+}
+.react-flow__handle-right {
+  right: -4px;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+.react-flow__edgeupdater {
+  cursor: move;
+  pointer-events: all;
+}
+.react-flow__panel {
+  position: absolute;
+  z-index: 5;
+  margin: 15px;
+}
+.react-flow__panel.top {
+  top: 0;
+}
+.react-flow__panel.bottom {
+  bottom: 0;
+}
+.react-flow__panel.left {
+  left: 0;
+}
+.react-flow__panel.right {
+  right: 0;
+}
+.react-flow__panel.center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.react-flow__attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 3px;
+  margin: 0;
+}
+.react-flow__attribution a {
+  text-decoration: none;
+  color: #999;
+}
+@-webkit-keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+}
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+}
+.react-flow__edge.updating .react-flow__edge-path {
+  stroke: #777;
+}
+.react-flow__edge-text {
+  font-size: 10px;
+}
+.react-flow__node-default,
+.react-flow__node-input,
+.react-flow__node-output,
+.react-flow__node-group {
+  padding: 10px;
+  border-radius: 3px;
+  width: 150px;
+  font-size: 12px;
+  color: #222;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #1a192b;
+  background-color: white;
+}
+.react-flow__node-default.selectable:hover,
+.react-flow__node-input.selectable:hover,
+.react-flow__node-output.selectable:hover,
+.react-flow__node-group.selectable:hover {
+  box-shadow: 0 1px 4px 1px rgba(0, 0, 0, 0.08);
+}
+.react-flow__node-default.selectable.selected,
+.react-flow__node-default.selectable:focus,
+.react-flow__node-default.selectable:focus-visible,
+.react-flow__node-input.selectable.selected,
+.react-flow__node-input.selectable:focus,
+.react-flow__node-input.selectable:focus-visible,
+.react-flow__node-output.selectable.selected,
+.react-flow__node-output.selectable:focus,
+.react-flow__node-output.selectable:focus-visible,
+.react-flow__node-group.selectable.selected,
+.react-flow__node-group.selectable:focus,
+.react-flow__node-group.selectable:focus-visible {
+  box-shadow: 0 0 0 0.5px #1a192b;
+  outline: none;
+}
+.react-flow__node-group {
+  background-color: rgba(240, 240, 240, 0.25);
+}
+.react-flow__nodesselection-rect,
+.react-flow__selection {
+  background: rgba(0, 89, 220, 0.08);
+  border: 1px dotted rgba(0, 89, 220, 0.8);
+}
+.react-flow__nodesselection-rect:focus,
+.react-flow__nodesselection-rect:focus-visible,
+.react-flow__selection:focus,
+.react-flow__selection:focus-visible {
+  outline: none;
+}
+.react-flow__controls {
+  box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.08);
+}
+.react-flow__controls-button {
+  border: none;
+  background: #fefefe;
+  border-bottom: 1px solid #eee;
+  box-sizing: content-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  padding: 5px;
+}
+.react-flow__controls-button:hover {
+  background: #f4f4f4;
+}
+.react-flow__controls-button svg {
+  width: 100%;
+  max-width: 12px;
+  max-height: 12px;
+}
+.react-flow__minimap {
+  background-color: #fff;
+}
+
+/*custom react flow styling*/
+.react-flow-div {
+  display: flex;
+  height: 80vh;
+  width: 85vw;
+  margin-top: 5vh;
+}
+.flow {
+  border: 1px solid rgb(113, 147, 169);
+  background: #fbf3de;
+  border-width: 5px;
+  border-radius: 5px;
+  margin: 10px;
+}
+
+.table-node {
+  height: auto;
+  width: auto;
+  border: 3px solid rgb(113, 147, 169);
+  padding: 0px;
+  border-radius: 4px;
+  color: #f8f4eb;
+  background-color: #f8f4eb;
+}
+
+.table-node label {
+  display: block;
+  text-align: left;
+  color: 7 89 133;
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+  padding: 5px;
+  background-color: rgb(185, 159, 200);
+}
+/* .columnBox {
+  display: flex;
+  justify-content: center;
+} */
+table {
+  border-collapse: collapse;
+}
+
+/* td {
+  font-weight: normal;
+  font-size: 12px;
+  padding: 3px;
+  padding-left: 6px;
+  padding-right: 10px;
+  text-align: left;
+  color: #273943;
+} */
+
+td {
+  font-weight: normal;
+  font-size: 12px;
+  padding-left: 6px;
+  padding-right: 3px;
+  color: rgb(185, 159, 200);
+  text-align: center;
+  border-right: 1px solid rgb(113, 147, 169);
+}
+
+th {
+  font-weight: normal;
+  font-size: 12px;
+  padding-left: 6px;
+  padding-right: 3px;
+  color: rgb(113, 147, 169);
+  text-align: left;
+  border-right: 1px solid rgb(113, 147, 169);
+}
+
+.last-th th {
+  font-weight: normal;
+  font-size: 12px;
+  padding-left: 6px;
+  padding-right: 3px;
+  color: rgb(113, 147, 169);
+  border-right: 0px solid;
+}
+
+.empty-row {
+  height: 20px;
+}
+
+tr {
+  border-bottom: 1px solid rgb(113, 147, 169);
+}
+.testMargin {
+  display: flex;
+  align-items: center;
+}
+.head-row {
+  border-bottom: none;
+  /* padding-left: 10px; */
+  /* text-align: left; */
+}
+
+.icon {
+  border: none;
+  background: none;
+  font-size: small;
+}
+.icon-class {
+  color: rgb(105, 105, 105);
+}
+.icon:hover {
+  color: #618fa7;
+}
+
+/*page stuff*/
+
+.connections-page {
+  /* margin: auto; */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  margin-left: 23vw;
+  margin-top: 5vh;
+  max-height: 100vh;
+  overflow-y: scroll;
+  max-width: 100vw;
+}
+.connections-list {
+  margin: auto;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 80vh;
+  width: 300px;
+  margin-right: 10vw;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.connections-form {
+  margin: auto;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 80vh;
+  width: 600px;
+  padding: 30px;
+}
+
+.connections-form-fields {
+  display: flex;
+  align-items: space-between;
+  flex-direction: column;
+}
+
+.connections-input {
+  border: 2px solid rgb(190, 159, 200);
+  border-radius: 10px;
+  height: 35px;
+  font-size: 20px;
+}
+
+.connections-buttons {
+  margin-top: 50px;
+  display: flex;
+  /* align-items: space-between;
+  justify-content: space-around; */
+  flex-direction: column;
+  max-height: 200px;
+}
+.connections-button {
+  margin-top: 20px;
+}
+
+.console-page {
+  margin: auto;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: row;
+  margin-left: 5vh;
+}
+
+/* .savedQueriesAndActiveModels {
+  margin: auto;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 80vh;
+  width: 300px;
+  margin-right: 20vh;
+  padding: 30px;
+  display: flex;
+
+  align-items: center;
+  flex-direction: column;
+} */
+
+.savedQueries {
+  margin-top: 15px;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 40vh;
+  width: 300px;
+  margin-right: 15px;
+  margin-left: 16vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.activeModels {
+  margin-top: 15px;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 40vh;
+  width: 300px;
+  margin-right: 15px;
+  margin-left: 16vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.activeModelsNames {
+  overflow: scroll;
+}
+
+.model {
+  float: right;
+  overflow: scroll;
+  max-height: 18rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.query-console {
+  margin-top: 30px;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 40vh;
+  width: 750px;
+  margin-right: 20vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.query-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-content: space-between;
+  width: 105%;
+}
+
+.query-button {
+  margin-right: 10px;
+}
+
+.query-input-small {
+  border: 2px solid rgb(190, 159, 200);
+  border-radius: 10px;
+  height: 35px;
+  font-size: 20px;
+  width: 80%;
+}
+
+.query-input-large {
+  border: 2px solid rgb(190, 159, 200);
+  border-radius: 10px;
+  height: 35px;
+  font-size: 20px;
+  width: 100%;
+  height: 55%;
+}
+
+.my-1 {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+@media screen and (max-width: 1576px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 82vw;
+  }
+  .connections-page {
+    margin-left: 10vw;
+  }
+  .connections-list {
+    margin-right: 5vw;
+  }
+  .savedQueries {
+    margin-left: 2.5vw;
+  }
+  .activeModels {
+    margin-left: 2.5vw;
+  }
+}
+
+@media screen and (max-width: 1100px) {
+  /* CSS rules for pages with a width under 1100 pixels go here */
+  .react-flow-div {
+    width: 80vw;
+  }
+}
+
+@media screen and (max-width: 917px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 78vw;
+  }
+}
+
+@media screen and (max-width: 786px) {
+  /* CSS rules for pages with a width under 1576 pixels go here */
+  .react-flow-div {
+    width: 75vw;
+  }
+}
+
+.download-btn {
+  position: absolute;
+  bottom: 100px;
+  right: 50px;
+  z-index: 10;
+  border: 1px solid #eee;
+  background: #rgb(185, 159, 200);
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.download-btn:hover {
+  opacity: 0.9;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 360px;
+  right: 0;
+  bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  z-index: 50;
+  outline: none;
+  focus: outline-none;
+  width: 17.5rem;
+}
+
+.modal-container {
+  position: relative;
+  width: auto;
+  margin: 6px auto;
+  padding: 20px;
+  /* max-width: 30rem; */
+  max-height: 60vh;
+}
+
+.modal {
+  position: relative;
+  background-color: white;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 0.25rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: between;
+  padding: 5px;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-close-button {
+  position: relative;
+  padding: 1px;
+  background-color: transparent;
+  border: 0;
+  color: currentColor;
+  opacity: 0.5;
+  float: right;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 1px 0 #fff;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 6px;
+  border-top: 1px solid #ddd;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.modal-button {
+  background-color: gray;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-button:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+.resultsModel {
+  background-color: #f7fafc;
+  margin: 3px;
+  padding: 5px 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  color: #4a5568;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border-radius: 4px;
+  overflow-x: scroll;
+  width: 15rem;
+}
+
+.login {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+  height: 500px;
+  width: 400px;
+}
+
+.login-signup-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 300px;
+}
+
+.login-title {
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.username {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.password {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.login-infor {
+  height: 200px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
+.resultData {
+  margin-top: 15px;
+  background-color: white;
+  margin-right: 20vh;
+  border-radius: 3px;
+  padding: 3px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  height: 44vh;
+  width: 800px;
+  border: 2px solid rgb(113, 147, 169);
+  border-radius: 15px;
+}
+
+.results {
+  margin-top: 15px;
+
+  height: 40vh;
+  width: 750px;
+  margin-right: 20vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.resultDivs {
+  background-color: #f7fafc;
+  margin: 3px;
+  padding: 5px 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  color: #4a5568;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border-radius: 4px;
+}
+
+@media screen and (max-width: 1100px) {
+  /* CSS rules for pages with a width under 1100 pixels go here */
+  .react-flow-div {
+    width: 832px;
+    height: 720px;
+  }
+  :root {
+    max-height: 768px;
+  }
+  .connections-page {
+    height: 100vh;
+    margin: 0;
+    padding-left: 0;
+  }
+  .connections-list {
+    margin-right: 10px;
+    overflow-y: scroll;
+  }
+  .connections-form {
+    margin-right: 40px;
+  }
+
+  .connections-button {
+    margin-top: 20px;
+  }
+  .connections-buttons {
+    margin-top: 30px;
+    display: flex;
+    /* align-items: space-between;
+    justify-content: space-around; */
+    flex-direction: column;
+    max-height: 200px;
+  }
+  #connectionHead {
+    max-height: 500px;
+  }
+  .connections-form {
+    overflow-y: scroll;
+  }
+  .results {
+    margin-right: 0;
+  }
+  .query-console-and-results {
+    max-width: 50vw;
+  }
+  .savedQueriesAndActiveModels {
+    max-width: 20vw;
+  }
+  .savedQueries {
+    max-width: 16vw;
+    margin: 0;
+    margin-top: 10px;
+  }
+  .activeModels {
+    max-width: 16vw;
+    margin: 0;
+    margin-top: 5px;
+  }
+  .query-console-and-results {
+    margin-left: 30px;
+  }
+  .query-console {
+    max-width: 50vw;
+    margin-top: 10px;
+    margin-right: 0px;
+  }
+  .resultData {
+    max-width: 55vw;
+    margin-top: 5px;
+    height: 47vh;
+  }
+  .results {
+    max-width: 50vw;
+    margin-right: 0px;
+    height: 47vh;
+  }
+  .download-btn {
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+  }
+}
+
+.noDb {
+  display: flex;
+  font-size: 20px;
+  justify-content: center;
+  position: absolute;
+  top: 400px;
+  left: 300px;
+}

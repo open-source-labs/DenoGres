@@ -8,7 +8,8 @@ give you access to DenoGres's CLI functionality.
 
 > `deno install --allow-read --allow-write --allow-net --allow-env --allow-run --name denogres https://deno.land/x/denogres/mod.ts`
 
-After installation is complete, ensure deno is added to PATH.
+After installation is complete, following the instructions in your terminal to
+ensure DenoGres is added to PATH.
 
 ## Quick Start
 
@@ -92,6 +93,15 @@ To restore Models to a prior version, execute the following CLI command:
 
 > `denogres --restore [PREVIOUS_MODEL_FOLDER]`
 
+## Testing
+
+For develpers interested in contributing, to run all tests, use the command:
+
+> `deno task test`
+
+<i>Note</i>: integration tests will require environment variable `ENVIRONMENT`
+set to `test` as well as a `TEST_DB_URI`.
+
 ## Under Development
 
 DenoGres is continually evolving. Features currently in development include:
@@ -100,11 +110,18 @@ DenoGres is continually evolving. Features currently in development include:
   associations and composite unique keys.
 - "Compare" command (`denogres --compare`) will be implemented to display
   side-by-side diff between previous models.
+- A setter method will be appended to a model when an association is established
+  with another model.
+- The manyToMany function will create a new join table.
 - Migrations log will be visible within the GUI, so that users can
   track/view/compare model versions.
-- ERD-style diagrams will be generated within the GUI, so users can have a
-  comprehensive view of the data model.
+- Two-way ERD that allows users to change relational data that is then reflected
+  onto their actual database
 - Additional support for MySQL, SQL Server, etc.
+- A Diagram page will offer a live ERD to visualize the user's database (see
+  preview below)
+
+![](/denogres-gui/src/assets/ReactFlow.gif)
 
 ## Documentation
 
@@ -112,6 +129,28 @@ More information on how to use DenoGres and leverage all its wonderful
 abstraction functionality can be found here: https://denogres.deno.dev/
 
 ## Contributors
+
+### Version 4.0
+
+- Rachel Cheman | [GitHub](https://github.com/rcheman) |
+  [LinkedIn](https://www.linkedin.com/in/rachel-cheman/)
+- Mia Gussen | [GitHub](https://github.com/mjpg1) |
+  [LinkedIn](www.linkedin.com/in/mia-gussen)
+- Alexander Lin | [GitHub](https://github.com/alexanderlin) |
+  [LinkedIn](https://www.linkedin.com/in/alexander-lin-8aab79167/)
+- Jacob Martin | [GitHub](https://github.com/Solit95) |
+  [LinkedIn](www.linkedin.com/in/jmartin417)
+
+### Version 3.0
+
+- Azal Adeel | [GitHub](https://github.com/azaladeel) |
+  [LinkedIn](https://www.linkedin.com/in/azal-adeel/)
+- Joe Hynan | [GitHub](https://github.com/JoeH1020) |
+  [LinkedIn](https://www.linkedin.com/in/josephhynan/)
+- James Howat | [GitHub](https://github.com/jbhowat) |
+  [LinkedIn](https://www.linkedin.com/in/jamesbhowat/)
+- Hao Ze Lin| [GitHub](https://github.com/LinHAO-1) |
+  [LinkedIn](https://www.linkedin.com/in/linhaoze/)
 
 ### Version 2.0
 
