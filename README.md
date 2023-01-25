@@ -135,11 +135,11 @@ abstraction functionality can be found here: https://denogres.deno.dev/
 - Rachel Cheman | [GitHub](https://github.com/rcheman) |
   [LinkedIn](https://www.linkedin.com/in/rachel-cheman/)
 - Mia Gussen | [GitHub](https://github.com/mjpg1) |
-  [LinkedIn](www.linkedin.com/in/mia-gussen)
+  [LinkedIn](https://www.linkedin.com/in/mia-gussen/)
 - Alexander Lin | [GitHub](https://github.com/alexanderlin) |
   [LinkedIn](https://www.linkedin.com/in/alexander-lin-8aab79167/)
 - Jacob Martin | [GitHub](https://github.com/Solit95) |
-  [LinkedIn](www.linkedin.com/in/jmartin417)
+  [LinkedIn](https://www.linkedin.com/in/jmartin417)
 
 ### Version 3.0
 
