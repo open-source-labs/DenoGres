@@ -229,19 +229,11 @@ export class TCP extends ConnectionWrap {
     if (this.#listener) {
       this.#listener.ref();
     }
-
-    if (this[kStreamBaseField]) {
-      this[kStreamBaseField].ref();
-    }
   }
 
   override unref() {
     if (this.#listener) {
       this.#listener.unref();
-    }
-
-    if (this[kStreamBaseField]) {
-      this[kStreamBaseField].unref();
     }
   }
 
