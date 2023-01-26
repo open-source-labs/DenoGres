@@ -6,7 +6,7 @@ PostgreSQL and Deno.
 To begin, let's download DenoGres! Execute the below in the terminal - this will
 give you access to DenoGres's CLI functionality.
 
-> `deno install --allow-read --allow-write --allow-net --allow-env --allow-run --name denogres https://deno.land/x/denogres/mod.ts`
+> `deno install --allow-read --allow-write --allow-net --allow-env --allow-run --name denogres https://deno.land/x/denogres@v4.0.1/mod.ts`
 
 After installation is complete, following the instructions in your terminal to
 ensure DenoGres is added to PATH.
