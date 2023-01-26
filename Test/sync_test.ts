@@ -26,6 +26,11 @@ describe('sync function and helper functions', () => {
   let db: PoolClient;
 
   beforeAll(async () => {
+    if (Deno.env.get('ENVIRONMENT') !== 'test') {
+      throw new Error(
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
+      );
+    }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
     db = await pool.connect();
   });
@@ -87,8 +92,8 @@ describe('sync function and helper functions', () => {
     assertEquals(addedColumns.rows.length, 2);
 
     const idColumn = addedColumns.rows.find((col) => col.column_name === '_id');
-    const nameColumn = addedColumns.rows.find((col) =>
-      col.column_name === 'name'
+    const nameColumn = addedColumns.rows.find(
+      (col) => col.column_name === 'name',
     );
 
     // the id column should have the expected properties

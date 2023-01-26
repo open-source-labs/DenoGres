@@ -19,6 +19,11 @@ describe('model methods', () => {
   let db: PoolClient;
 
   beforeAll(async () => {
+    if (Deno.env.get('ENVIRONMENT') !== 'test') {
+      throw new Error(
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
+      );
+    }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
     db = await pool.connect();
     await db.queryObject(createTablesQuery);
@@ -246,7 +251,9 @@ describe('model methods', () => {
 
   describe('queryInstance method', () => {
     it('should create a new instance of the model with property value pairs representing the first row returned from the query', async () => {
-      Person['sql'] =
+      Person[
+        'sql'
+      ] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       const luke = await Person.queryInstance();
       assert(luke.name = 'Luke Skywalker');
@@ -256,13 +263,17 @@ describe('model methods', () => {
     });
 
     it('should throw an error on a malformed query', async () => {
-      Person['sql'] =
+      Person[
+        'sql'
+      ] =
         `SELECT name, weight, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       await assertRejects(async () => await Person.queryInstance(), Error);
     });
 
     it('should reset the "sql" property on the model to an empty string', async () => {
-      Person['sql'] =
+      Person[
+        'sql'
+      ] =
         `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       await Person.queryInstance();
       assertEquals(Person['sql'], '');
