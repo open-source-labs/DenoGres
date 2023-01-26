@@ -21,7 +21,7 @@ describe('model methods', () => {
   beforeAll(async () => {
     if (Deno.env.get('ENVIRONMENT') !== 'test') {
       throw new Error(
-        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests'
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
       );
     }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
@@ -36,7 +36,7 @@ describe('model methods', () => {
   });
 
   describe('save method', () => {
-    it("adds a new row to the user's database when invoked on a new instance with valid properties", async () => {
+    it('adds a new row to the user\'s database when invoked on a new instance with valid properties', async () => {
       // create a new instance, add properties to it, and invoke save method on it
       const newPlanet = new Planet();
       newPlanet.name = 'Mars';
@@ -45,7 +45,7 @@ describe('model methods', () => {
 
       // query the database for the newly added row
       const { rows } = await db.queryObject(
-        `SELECT * FROM planets WHERE name = 'Mars'`
+        `SELECT * FROM planets WHERE name = 'Mars'`,
       );
 
       // the query should return a single row
@@ -77,7 +77,7 @@ describe('model methods', () => {
 
       // query the database for the updated row
       const { rows } = await db.queryObject(
-        `SELECT * FROM planets WHERE name = 'Jupiter'`
+        `SELECT * FROM planets WHERE name = 'Jupiter'`,
       );
 
       // the query should return a single row
@@ -95,7 +95,7 @@ describe('model methods', () => {
 
       // there should no longer be a row with the old, un-updated properties
       const oldVersion = await db.queryObject(
-        `SELECT * FROM planets WHERE name = 'Mercury'`
+        `SELECT * FROM planets WHERE name = 'Mercury'`,
       );
       assert(oldVersion.rows.length === 0);
     });
@@ -106,7 +106,7 @@ describe('model methods', () => {
       await Planet.insert('name = turtle').transaction();
       await Planet.endTransaction();
       const planet = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'turtle'`
+        `SELECT name FROM planets WHERE name = 'turtle'`,
       );
       assertEquals(planet.rows, [{ name: 'turtle' }]);
     });
@@ -118,16 +118,16 @@ describe('model methods', () => {
       await Planet.insert('name = Rachel').transaction();
       await Planet.endTransaction();
       const planetAlex = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Alex'`
+        `SELECT name FROM planets WHERE name = 'Alex'`,
       );
       const planetJacob = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Jacob'`
+        `SELECT name FROM planets WHERE name = 'Jacob'`,
       );
       const planetMia = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Mia'`
+        `SELECT name FROM planets WHERE name = 'Mia'`,
       );
       const planetRachel = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Rachel'`
+        `SELECT name FROM planets WHERE name = 'Rachel'`,
       );
 
       assertEquals(planetAlex.rows, [{ name: 'Alex' }]);
@@ -141,7 +141,7 @@ describe('model methods', () => {
       await Person.insert('name = turtle1').transaction();
       await Planet.endTransaction();
       const planet = await db.queryObject(
-        `SELECT planets.name FROM planets INNER JOIN people ON planets.name = people.name`
+        `SELECT planets.name FROM planets INNER JOIN people ON planets.name = people.name`,
       );
       assertEquals(planet.rows, [{ name: 'turtle1' }]);
     });
@@ -152,16 +152,16 @@ describe('model methods', () => {
       await Person.insert('name = Shrike').transaction();
       await Person.insert('name = The Consul').endTransaction();
       const Hyperion = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Hyperion'`
+        `SELECT name FROM planets WHERE name = 'Hyperion'`,
       );
       const Endymion = await db.queryObject(
-        `SELECT name FROM planets WHERE name = 'Endymion'`
+        `SELECT name FROM planets WHERE name = 'Endymion'`,
       );
       const Shrike = await db.queryObject(
-        `SELECT name FROM people WHERE name = 'Shrike'`
+        `SELECT name FROM people WHERE name = 'Shrike'`,
       );
       const Consul = await db.queryObject(
-        `SELECT name FROM people WHERE name = 'The Consul'`
+        `SELECT name FROM people WHERE name = 'The Consul'`,
       );
       assertEquals(Hyperion.rows, [{ name: 'Hyperion' }]);
       assertEquals(Endymion.rows, [{ name: 'Endymion' }]);
@@ -184,7 +184,7 @@ describe('model methods', () => {
         await Person.select().endTransaction();
       } catch (_e) {
         const yoda = await db.queryObject(
-          `SELECT name from people WHERE name = 'Yoda'`
+          `SELECT name from people WHERE name = 'Yoda'`,
         );
         assertEquals(yoda.rows, [{ name: 'Yoda' }]);
       }
@@ -198,18 +198,18 @@ describe('model methods', () => {
         await Planet.delete().where('name = Luke Skywalker').endTransaction();
       } catch (_e) {
         const yoda = await db.queryObject(
-          `SELECT name from people WHERE name = 'Yoda'`
+          `SELECT name from people WHERE name = 'Yoda'`,
         );
         const han = await db.queryObject(
-          `SELECT name from people WHERE name = 'Han Solo'`
+          `SELECT name from people WHERE name = 'Han Solo'`,
         );
         const luke = await db.queryObject(
-          `SELECT name from people WHERE name = 'Luke Skywalker'`
+          `SELECT name from people WHERE name = 'Luke Skywalker'`,
         );
         let lukeInserted;
         try {
           lukeInserted = await db.queryObject(
-            `SELECT name from people WHERE name = Luke`
+            `SELECT name from people WHERE name = Luke`,
           );
         } catch (e) {
           console.log('ERROR', e);
@@ -253,25 +253,28 @@ describe('model methods', () => {
     it('should create a new instance of the model with property value pairs representing the first row returned from the query', async () => {
       Person[
         'sql'
-      ] = `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      ] =
+        `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       const luke = await Person.queryInstance();
-      assert((luke.name = 'Luke Skywalker'));
-      assert((luke.mass = '77'));
-      assert((luke.hair_color = 'blond'));
+      assert(luke.name = 'Luke Skywalker');
+      assert(luke.mass = '77');
+      assert(luke.hair_color = 'blond');
       assertInstanceOf(luke, Person);
     });
 
     it('should throw an error on a malformed query', async () => {
       Person[
         'sql'
-      ] = `SELECT name, weight, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      ] =
+        `SELECT name, weight, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       await assertRejects(async () => await Person.queryInstance(), Error);
     });
 
     it('should reset the "sql" property on the model to an empty string', async () => {
       Person[
         'sql'
-      ] = `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
+      ] =
+        `SELECT name, mass, hair_color FROM people WHERE name = 'Luke Skywalker'`;
       await Person.queryInstance();
       assertEquals(Person['sql'], '');
     });

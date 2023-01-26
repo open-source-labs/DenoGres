@@ -36,7 +36,7 @@ describe('association methods', () => {
   beforeAll(async () => {
     if (Deno.env.get('ENVIRONMENT') !== 'test') {
       throw new Error(
-        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests'
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
       );
     }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);

@@ -26,7 +26,7 @@ describe('introspect function and helper functions', () => {
   beforeAll(async () => {
     if (Deno.env.get('ENVIRONMENT') !== 'test') {
       throw new Error(
-        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests'
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
       );
     }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
@@ -64,7 +64,7 @@ describe('introspect function and helper functions', () => {
     const tableListObj = introspectTables(
       tableList,
       columnList,
-      constraintList
+      constraintList,
     );
 
     // each key in the tableListObj should correspond to a table from the tableList
@@ -83,7 +83,9 @@ describe('introspect function and helper functions', () => {
 
       // each column should have properties "type" and "notNull"
       assert(
-        Object.values(columns).every((col) => 'type' in col && 'notNull' in col)
+        Object.values(columns).every((col) =>
+          'type' in col && 'notNull' in col
+        ),
       );
 
       /**

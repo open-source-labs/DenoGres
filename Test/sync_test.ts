@@ -28,7 +28,7 @@ describe('sync function and helper functions', () => {
   beforeAll(async () => {
     if (Deno.env.get('ENVIRONMENT') !== 'test') {
       throw new Error(
-        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests'
+        'Environment is not set to test. Change the ENVIRONMENT variable to "test" to run tests',
       );
     }
     pool = new Pool(Deno.env.get('TEST_DB_URI'), 1);
@@ -72,7 +72,7 @@ describe('sync function and helper functions', () => {
 
     // make sure the table exists in the database
     const addedTable = await db.queryObject(
-      `SELECT * FROM pg_tables WHERE tablename = 'planets'`
+      `SELECT * FROM pg_tables WHERE tablename = 'planets'`,
     );
     assertEquals(addedTable.rows.length, 1);
 
@@ -93,7 +93,7 @@ describe('sync function and helper functions', () => {
 
     const idColumn = addedColumns.rows.find((col) => col.column_name === '_id');
     const nameColumn = addedColumns.rows.find(
-      (col) => col.column_name === 'name'
+      (col) => col.column_name === 'name',
     );
 
     // the id column should have the expected properties
@@ -118,13 +118,13 @@ describe('sync function and helper functions', () => {
   it('the tableSync function drops a table when removed from (or not in) the model.ts file', async () => {
     // manually add a table to the database and sync WITHOUT adding table to the model.ts file
     await db.queryObject(
-      'CREATE TABLE people ("_id" serial NOT NULL, "name" varchar NOT NULL)'
+      'CREATE TABLE people ("_id" serial NOT NULL, "name" varchar NOT NULL)',
     );
     await tableSync('./Test/temp_model.ts', true);
 
     // the table should no longer exist in the database
     const deletedTable = await db.queryObject(
-      `SELECT * FROM pg_tables WHERE tablename = 'people'`
+      `SELECT * FROM pg_tables WHERE tablename = 'people'`,
     );
     assertEquals(deletedTable.rows.length, 0);
   });
@@ -168,7 +168,7 @@ describe('sync function and helper functions', () => {
     await tableSync('./Test/temp_model.ts', true);
 
     const columns = await db.queryArray<[string]>(
-      `SELECT column_name FROM information_schema.columns WHERE table_name = 'people';`
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'people';`,
     );
 
     // the new column should be included in the table schema
@@ -207,7 +207,7 @@ describe('sync function and helper functions', () => {
 
     await tableSync('./Test/temp_model.ts', true);
     const columns = await db.queryArray<[string]>(
-      `SELECT column_name FROM information_schema.columns WHERE table_name = 'people';`
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'people';`,
     );
 
     // the name column should not longer be in the table schema
@@ -218,7 +218,7 @@ describe('sync function and helper functions', () => {
   it('the tableSync function updates a column with new constraints if added to the model.ts file', async () => {
     // manually add a table to the database
     await db.queryObject(
-      'CREATE TABLE pecies ("_id" serial NOT NULL, "name" varchar NOT NULL) WITH (OIDS=FALSE);'
+      'CREATE TABLE pecies ("_id" serial NOT NULL, "name" varchar NOT NULL) WITH (OIDS=FALSE);',
     );
 
     const tableWithPKConstraint = `
@@ -257,7 +257,7 @@ describe('sync function and helper functions', () => {
     // add a new enum to a temporary model.ts file
     await Deno.writeTextFile(
       './Test/temp_model.ts',
-      'export enum Weather {sunny,cloudy,rainy}'
+      'export enum Weather {sunny,cloudy,rainy}',
     );
 
     // attempt to sync new enum to the db
@@ -274,7 +274,7 @@ describe('sync function and helper functions', () => {
         JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
         GROUP BY enum_schema, enum_name
       )
-      SELECT * FROM enum_table WHERE enum_name = 'weather';`
+      SELECT * FROM enum_table WHERE enum_name = 'weather';`,
     );
 
     await db.queryObject('DROP type weather;'); // remove new enum from database
@@ -285,7 +285,7 @@ describe('sync function and helper functions', () => {
     assert(
       'enum_schema' in addedEnum.rows[0] &&
         'enum_name' in addedEnum.rows[0] &&
-        'enum_value' in addedEnum.rows[0]
+        'enum_value' in addedEnum.rows[0],
     );
     assertEquals(addedEnum.rows[0].enum_name, 'weather');
     assertEquals(addedEnum.rows[0].enum_value, 'sunny, cloudy, rainy');
