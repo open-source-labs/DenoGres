@@ -323,6 +323,15 @@ export class Model {
     return this;
   }
 
+  // OFFSET: index of starting rows count
+  static offset(index: number) {
+    // checks that the user is chaining this after other methods 
+    checkQueryString(this.sql.length, 'offset', Model, 'chain');
+    this.sql += ` OFFSET ${offset}`;
+    return this;
+  }
+
+
   // HAVING: add condition(s) involving aggregate functions to the current query
   static having(...condition: string[]) {
     // checks that the user is chaining this after other methods
