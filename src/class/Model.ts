@@ -268,7 +268,8 @@ export class Model {
       return this;
     } else {
       // check that the input column is one that is in the table
-      checkColumns(this.columns, column, Model);
+      const columns = column.filter(c=>(!c.includes('.') || c.split('.')[0] === this.table))
+      checkColumns(this.columns, columns, Model);
       this.sql += `SELECT ${column.toString()} FROM ${this.table}`;
       return this;
     }
